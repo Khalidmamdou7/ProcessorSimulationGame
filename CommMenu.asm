@@ -1,26 +1,30 @@
 .Model small
 .Stack 64
 .Data
-    Comm0 db 'Command 0  ','$'
-    Comm1 db 'Command 1  ','$'
-    Comm2 db 'Command 2  ','$'
-    Comm3 db 'Command 3  ','$'
-    Comm4 db 'Command 4  ','$'
-    Comm5 db 'Command 5  ','$'
-    Comm6 db 'Command 6  ','$'
-    Comm7 db 'Command 7  ','$'
-    Comm8 db 'Command 8  ','$'
-    Comm9 db 'Command 9  ','$'
-    Comm10 db 'Command 10 ','$'
-    Comm11 db 'Command 11 ','$'
-    Comm12 db 'Command 12 ','$'
-    Comm13 db 'Command 13 ','$'
-    Comm14 db 'Command 14 ','$'
-    Comm15 db 'Command 15 ','$'
+    NOPcom db 'NOP  ','$'
+    CLCcom db 'CLC  ','$'
+    MOVcom db 'MOV  ','$'
+    ADDcom db 'ADD  ','$'
+    PUSHcom db 'PUSH ','$'
+    POPcom db 'POP  ','$'
+    INCcom db 'INC  ','$'
+    DECcom db 'DEC  ','$'
+    MULcom db 'MUL  ','$'
+    DIVcom db 'DIV  ','$'
+    RORcom db 'ROR  ','$'
+    ROLcom db 'ROL  ','$'
+    RCRcom db 'RCR  ','$'
+    RCLcom db 'RCL  ','$'
+    SHLcom db 'SHL  ','$'
+    SHRcom db 'SHR  ','$'
     mes db 'You have selected Command #'
     selectedComm db ?, '$'
 
-    CommStringSize EQU  12
+    CommStringSize EQU  6
+    UpArrowScanCode EQU 72
+    DownArrowScanCode EQU 80
+    EnterScanCode EQU 28
+
     
 .Code
     Main proc far
@@ -31,7 +35,7 @@
         ; Display Command
         DisplayComm:
             mov ah, 9
-            mov dx, offset Comm1
+            mov dx, offset MOVcom
             int 21h
 
         ; Wait for a key pressed
@@ -53,11 +57,11 @@
         pop ax
 
         ; Check if pressed is Up or down or Enter
-        cmp ah, 72                                  ; Scan Code of Up:72
+        cmp ah, UpArrowScanCode                          
         jz CommUp 
-        cmp ah, 80                                  ; Scan Code of Down:80
+        cmp ah, DownArrowScanCode
         jz CommDown
-        cmp ah, 28                                  ; Scan Code of Enter:28
+        cmp ah, EnterScanCode
         jz Selected
 
 
@@ -66,7 +70,7 @@
             ; Check overflow
                 cmp dx,0
                 jnz NotOverflow
-                mov dx, offset Comm15
+                mov dx, offset SHRcom
                 add dx, CommStringSize
             NotOverflow:
                 sub dx, CommStringSize
@@ -76,9 +80,9 @@
         CommDown:
             mov ah, 9
             ; Check End of file
-                cmp dx, offset Comm15
+                cmp dx, offset SHRcom
                 jnz NotEOF
-                mov dx, offset Comm1
+                mov dx, offset NOPcom
                 sub dx, CommStringSize
             NotEOF:
                 add dx, CommStringSize
@@ -105,9 +109,10 @@
             int 21h
 
 
-        ; Return to dos
-        mov ah,4ch
-        int 21h
+        Exit:
+            ; Return to dos
+            mov ah,4ch
+            int 21h
 
 
     MAIN ENDP
