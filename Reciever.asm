@@ -1,15 +1,54 @@
 .Model small
 .Stack 64
 .Data
-    TestString db 10,'Recieved Successfully', '$'
+    InDATA  DB 30,?,30 DUP("$")
+    RecMes db 30 dup(?)
+    mesSend db "Enter a message to send: ", '$'
+    mesRec db "Recieved message : ", '$'
+    TestString db 10, 'Chat ended Successfully', '$'
 .Code
     Main proc far
         
         mov ax, @Data
         mov ds, ax
-        
-        ; Port initialization
 
+        CALL PortInitialization
+
+        CALL ClearScreen
+
+        lea dx, mesRec
+        CALL DisplayString
+
+        lea di, RecMes
+        CALL RecMsg
+
+        mov dx, 0100h
+        CALL SetCursor
+        lea dx, RecMes
+        CALL DisplayString
+
+        mov dx, 0200h
+        CALL SetCursor
+        lea dx, mesSend
+        CALL DisplayString
+
+        mov dx, 0300h
+        CALL SetCursor
+        mov dx, offset InDATA
+        CALL TakeString
+        
+        lea si, InDATA+2
+        CALL SendMsg
+
+        mov dx, offset TestString
+        CALL DisplayString         
+
+        CALL EXIT
+
+
+    MAIN ENDP
+
+    PortInitialization PROC
         ;Set Divisor Latch Access Bit 
         mov dx,3fbh 			; Line Control Register
         mov al,10000000b		; Set Divisor Latch Access Bit
@@ -35,55 +74,99 @@
                                 ; 11: 8bits
         out dx,al
 
+        ret
+    PortInitialization ENDP
+    SendData PROC  ; data transferred is pointed to by si (8 bits)
 
-        ; Receiving a value
+        ;Check that Transmitter Holding Register is Empty
+		mov dx , 3FDH		        ; Line Status Register
+        AGAIN:
+  	        In al, dx 			    ; Read Line Status
+  		    test al, 00100000b
+        JZ AGAIN                    ; Not empty
+
+        ;If empty put the VALUE in Transmit data register
+  		mov dx, 3F8H		        ; Transmit data register
+  		mov al, [si]
+  		out dx, al
+
+        ret
+    SendData ENDP
+    SendMsg PROC  ; Sent string offset is saved in si, ended with '$'
+        SendMessage:
+            CALL SendData
+            inc si
+            mov dl, '$'
+            cmp dl , byte ptr [si]-1
+            jnz SendMessage
+
+        RET
+    SendMsg ENDP
+    RecieveData PROC ; data is saved in BL
 
         ;Check that Data is Ready
-		mov dx , 3FDH		; Line Status Register
-	    CHK:
+        mov dx , 3FDH		; Line Status Register
+        CHK2:
             in al , dx 
-  		    test al , 1
-  		JZ CHK              ; Not Ready
+            test al , 1
+        JZ CHK2              ; Not Ready
 
         ; If Ready read the VALUE in Receive data register
-  		mov dx , 03F8H
-  		in al , dx 
-  		mov bl , al
+        mov dx , 03F8H
+        in al , dx 
+        mov bl , al
 
-        ; display recieved value
-        mov ah, 2
-        mov dl, bl
-        int 21h
+        ret
+    RecieveData ENDP
+    RecMsg PROC     ; Recieved string offset is saved in di
+        RecieveMsg:
+            CALL RecieveData
+            mov [di], bl
+            inc di
+            cmp bl, '$'
+            jnz RecieveMsg
 
-        ; Receiving a value
+        RET
+    RecMsg ENDP
+    ClearScreen PROC
+        ; Change to text mode (clear screen)
+        mov ah,0
+        mov al,3
+        int 10h
 
-        ;Check that Data is Ready
-		mov dx , 3FDH		; Line Status Register
-	    CHK2:
-            in al , dx 
-  		    test al , 1
-  		JZ CHK2              ; Not Ready
+        ret
+    ClearScreen ENDP
+    SetCursor PROC
+        ; position is saved in dx
+        mov ah,2
+        int 10h
 
-        ; If Ready read the VALUE in Receive data register
-  		mov dx , 03F8H
-  		in al , dx 
-  		mov bl , al
-
-        ; display recieved value
-        mov ah, 2
-        mov dl, bl
-        int 21h
-
-        ; display string
+        ret
+    SetCursor ENDP
+    DisplayString PROC ; string offset saved in DX
         mov ah, 9
-        mov dx, offset TestString
-        int 21h 
+        int 21h
 
+        RET
+    DisplayString ENDP
+    DisplayChar PROC    ; char is saved in dl
+        mov ah,2
+        int 21h
 
+        RET
+    DisplayChar ENDP
+    TakeString PROC     ; string offset saved in dx
+        mov ah,0AH
+        int 21h
+
+        RET
+    TakeString ENDP
+    EXIT PROC
         ; Return to dos
         mov ah,4ch
         int 21h
 
+        ret
+    EXIT ENDP
 
-    MAIN ENDP
     END MAIN
