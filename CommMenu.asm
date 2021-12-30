@@ -20,11 +20,13 @@
     SHRcom db 'SHR  ','$'
 
     Reg    db 'REG  ','$'
+    AddReg db '[REG]', '$'
     Memory db 'MEM  ','$'
     Value  db 'VAL  ','$'
-    RegIndex EQU 0
-    MemIndex EQU 1
-    ValIndex EQU 2 
+    RegIndex    EQU 0
+    AddRegIndex EQU 1
+    MemIndex    EQU 2
+    ValIndex    EQU 3 
     
     RegAX db 'AX   ','$'
     RegAL db 'AL   ','$'                
@@ -44,7 +46,24 @@
     RegSI db 'SI   ','$'
     RegDI db 'DI   ','$'
     
-    
+    AddRegAX db '[AX] ','$'
+    AddRegAL db '[AL] ','$'                
+    AddRegAH db '[AH] ','$'  
+    AddRegBX db '[BX] ','$'   
+    AddRegBL db '[BL] ','$'    
+    AddRegBH db '[BH] ','$'
+    AddRegCX db '[CX] ','$'                
+    AddRegCL db '[CL] ','$'  
+    AddRegCH db '[CH] ','$'   
+    AddRegDX db '[DX] ','$'
+    AddRegDL db '[DL] ','$'
+    AddRegDH db '[DH] ','$'                
+    AddRegSX db '[SX] ','$'  
+    AddRegSL db '[SL] ','$'   
+    AddRegSH db '[SH] ','$'
+    AddRegSI db '[SI] ','$'
+    AddRegDI db '[DI] ','$'
+
     Mem0 db '[0]  ','$'
     Mem1 db '[1]  ','$'
     Mem2 db '[2]  ','$'
@@ -62,23 +81,35 @@
     Mem14 db '[E]  ','$'
     Mem15 db '[F]  ','$'
     
+    ; Operand Value Needed Variables
+    ClearSpace db '     ', '$'
+    num db 30,?,30 DUP(?)       
+    StrSize db ?
 
     ; Variables Memory Locations and data
     CommStringSize EQU  6
 
 
+    ; Test Messages
     mesCom db 10,'You have selected Command #', '$'
     mesOp1Type db 10,'You have selected Operand 1 of Type #', '$'
     mesReg db 10, 'You have selected Reg #', '$'
     mesMem db 10, 'You have selected Mem #', '$'
+    mesVal db 10, 'You Entered value: ', '$'
+    error db 13,10,"Error Input",'$'
 
 
-    selectedComm db ?, '$'
-    selectedOp1Type db ?, '$'  
-    selectedReg  db ?, '$'
-    selectedMem  db ?, '$'
+
+    selectedComm db -1, '$'
+    selectedOp1Type db -1, '$'  
+    selectedReg  db -1, '$'
+    selectedAddReg db -1, '$'
+    selectedMem  db -1, '$'
+    Op1Val dw 0
+    Op1Valid db 1               ; 0 if Invalid 
+
     
-    num dw ?,'$'
+
 
 
     ; Keys Scan Codes
@@ -132,8 +163,14 @@
         add dl, '0'
         CALL DisplayChar
 
-        
-
+        mov dx, offset mesVal
+        CALL DisplayString
+        mov dl, byte ptr Op1Val
+        add dl, '0'
+        CALL DisplayChar
+        mov dl, byte ptr Op1Val+1
+        add dl, '0'
+        CALL DisplayChar
 
 
         Exit:
@@ -252,9 +289,6 @@
     WaitKeyPress ENDP
     Op1TypeMenu PROC
 
-        
-        
-
         mov ah, 9
         mov dx, offset Reg
         int 21h
@@ -339,6 +373,8 @@
         ; NEEDS TO CHANGE 
         CMP selectedOp1Type, RegIndex     
         JZ ChooseReg
+        CMP selectedOp1Type, AddRegIndex
+        JZ ChooseAddReg
         CMP selectedOp1Type, MemIndex
         JZ ChooseMem
         CMP selectedOp1Type, ValIndex
@@ -412,10 +448,73 @@
                 ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
                 JMP RETURN
 
-           
+        ChooseAddReg:
+
+            ; Display Command
+            mov ah, 9
+            mov dx, offset AddRegAX
+            int 21h
+
+            CheckKey_AddReg:
+                CALL WaitKeyPress
+
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, Op1CursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_AddReg 
+            cmp ah, DownArrowScanCode
+            jz CommDown_AddReg
+            cmp ah, EnterScanCode
+            jz Selected_AddReg
+            jmp CheckKey_AddReg
+
+
+            CommUp_AddReg:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset AddRegAX              ; RegFirstChoiceLocation ; the start of combobox
+                    jnz NotOverflow_AddReg
+                    mov dx, offset AddRegDI              ; RegLastChoiceLocation ; last one to overcome overflow
+                    add dx, CommStringSize
+                NotOverflow_AddReg:
+                    sub dx, CommStringSize
+                    int 21h
+                    jmp CheckKey_AddReg
             
+            CommDown_AddReg:
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset AddRegDI              ; RegLastChoiceLocation
+                    jnz NotEOF_AddReg
+                    mov dx, offset AddRegAX              ; RegFirstChoiceLocation
+                    sub dx, CommStringSize
+                NotEOF_AddReg:
+                    add dx, CommStringSize
+                    int 21h
+                    jmp CheckKey_AddReg
             
-            
+            Selected_AddReg:
+                ; Detecting index of selected command
+                mov ax, dx
+                SUB AX, offset AddRegAX              ; RegFirstChoiceLocation
+                mov bl, CommStringSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov selectedAddReg, al
+                ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
+                JMP RETURN
+        
         ChooseMem:
        
             ; Display memory
@@ -485,7 +584,116 @@
                 JMP RETURN
 
         EnterVal:
-            ; TODO
+
+            ; Clear the space which the user should enter the value into
+            mov dx, offset ClearSpace
+            CALL DisplayString
+
+            ; Reset Cursor
+            mov dx, Op1CursorLoc
+            CALL SetCursor
+
+            ; Take value as a String from User
+            mov ah,0Ah                   
+            mov dx,offset num
+            int 21h    
+            
+
+            mov cl,num+1                 ;save string size
+            mov StrSize,cl
+
+            mov ch,0
+            mov si,2                     ;si to get first number from string that is not zero
+            mov di,2  
+            
+            hoop2:
+                mov dl,num[di]               ; this loop to check zero in the first string
+                sub dl,30h
+                cmp dl,0 
+                jne hoop1
+                inc si
+                mov cl, StrSize
+                dec cl
+                mov StrSize,cl 
+                inc di
+            jmp hoop2
+            
+            hoop1:
+                cmp cl,4         ;check that value is hexa or Get error    
+                jng sk 
+                JMP InValidVal
+
+            sk:
+            
+            mov Bl,StrSize              ; loops to check num from 1 to 9 and A to F
+            numloop:
+                mov al,num[si] 
+                cmp al,30H
+                jnge notnum 
+                cmp al,39h
+                jnle notnum
+                sub al,30h  
+                jmp done   
+            
+            notnum: 
+                cmp al,41H
+                jnge notcharnum
+                cmp al,46h
+                jnle notcharnum
+                sub al,37h
+                jmp done  
+             
+            notcharnum:
+                cmp al,61H
+                jnge InValidVal
+                cmp al,66h
+                jnle InValidVal
+                sub al,57h
+                jmp done
+                
+                    
+            
+            done:  
+                inc si       
+                cmp bl,4                   ; first digit
+                jne ha1
+                mov cl,al 
+                mov ax,a 
+                mov ch,0
+                mul cx
+            ha1:  
+                cmp bl,3                   ;second digit
+                jne ha2
+                mov cl,al 
+                mov ax,b
+                mov ch,0
+                mul cx
+            
+            ha2:  
+                cmp bl,2                   ;third digit
+                jne ha3
+                mov cl,al 
+                mov ax,c
+                mov ch,0
+                mul cx
+            
+            ha3:
+                cmp bl,1                  ;fourth digit
+                jne ha4
+                mov ah,0
+            
+            ha4:
+                add Op1Val,ax  
+            
+            dec Bl                    ; check to exit 
+            cmp Bl,0   
+            je RETURN 
+            
+            jmp numloop
+
+            InValidVal:
+                MOV Op1Valid, 0
+                JMP RETURN    
 
         InvalidOp1Type:
             ; TODO
