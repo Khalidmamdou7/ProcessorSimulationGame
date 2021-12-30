@@ -22,30 +22,38 @@
     Sll db 'Sl      ','$'   
     Shh db 'Sh      ','$'
     
-    M1 db '0       ','$'
-    M2 db '1       ','$'
-    M3 db '2       ','$'
-    M4 db '3       ','$'
-    M5 db '4       ','$'
-    M6 db '5       ','$'
-    M7 db '6       ','$'
-    M8 db '7       ','$'
-    M9 db '8       ','$'
-    M10 db '9       ','$'
-    M11 db 'A       ','$'
-    M12 db 'B       ','$'
-    M13 db 'C       ','$'
-    M14 db 'D       ','$'
-    M15 db 'E       ','$'
-    M16 db 'F       ','$'
+    M1 db '[0]     ','$'
+    M2 db '[1]     ','$'
+    M3 db '[2]     ','$'
+    M4 db '[3]     ','$'
+    M5 db '[4]     ','$'
+    M6 db '[5]     ','$'
+    M7 db '[6]     ','$'
+    M8 db '[7]     ','$'
+    M9 db '[8]     ','$'
+    M10 db '[9]     ','$'
+    M11 db '[A]     ','$'
+    M12 db '[B]     ','$'
+    M13 db '[C]     ','$'
+    M14 db '[D]     ','$'
+    M15 db '[E]     ','$'
+    M16 db '[F]     ','$'
 
-    selectedComm db ?, '$'
+    selectedComm db ?, '$'  
+    selectedReg  db ?,'$'
+    selectedMem  db ?,'$'
+    
+    num dw ?,'$'
 
     CommStringSize EQU  6
     UpArrowScanCode EQU 72
     DownArrowScanCode EQU 80
     EnterScanCode EQU 28 
     
+    a EQU 1000
+    B EQU 100
+    C EQU 10
+ 
     CommSize EQU 9
     mes db 'You have selected Command #' 
 .Code
@@ -131,7 +139,7 @@
             ;mov dx, offset mes
             ;int 21h
             
-            cmp al,0                     ; open Register combobox
+            cmp al,0                     ;;;;;;;;;;;;;;;;;;;;;;;;;;; open Register combobox
             jne l1 
             
             ; Display Command
@@ -196,8 +204,8 @@
             mov ax, dx
             mov bl, CommSize
             div bl                                      ; Op=byte: AL:=AX / Op 
-            mov selectedComm, al
-            add selectedComm, '0'                       ; to convert digit to Ascii
+            mov selectedReg, al
+            add selectedReg, '0'                       ; to convert digit to Ascii
             
 
             ; Set Cursor
@@ -209,17 +217,119 @@
             
             
             
-            l1: cmp al,1
+            l1: cmp al,1          ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             jne l2 
             
+            ; Display memory
+        DisplayComm3:
+            mov ah, 9
+            mov dx, offset M1
+            int 21h
+
+        ; Wait for a key pressed
+        CHECK3: 
+            mov ah,1 
+            int 16h
+        jz CHECK3
+
+        Push ax
+        PUSH dx 
+            ; Clear buffer
+            mov ah,07
+            int 21h
+            ; Reset Cursor
+            mov ah,2
+            mov dx,0
+            int 10h
+        pop dx 
+        pop ax
+
+        ; Check if pressed is Up or down or Enter
+        cmp ah, UpArrowScanCode                          
+        jz CommUp3 
+        cmp ah, DownArrowScanCode
+        jz CommDown3
+        cmp ah, EnterScanCode
+        jz Selected3
+
+
+        CommUp3:
+            mov ah, 9
+            ; Check overflow
+                cmp dx,162         ; the start of combobox
+                jnz NotOverflow3
+                mov dx, offset M16 ; last one to overcome overflow
+                add dx, CommSize
+            NotOverflow3:
+                sub dx, CommSize
+                int 21h
+                jmp CHECK3
+        
+        CommDown3:
+            mov ah, 9
+            ; Check End of file
+                cmp dx, offset M16
+                jnz NotEOF3
+                mov dx, offset M1
+                sub dx, CommSize
+            NotEOF3:
+                add dx, CommSize
+                int 21h
+                jmp CHECK3
+        
+        Selected3:
+            ; Detecting index of selected command
+            mov ax, dx
+            mov bl, CommSize
+            div bl                                      ; Op=byte: AL:=AX / Op 
+            mov selectedMem, al
+            add selectedMem, '0'                       ; to convert digit to Ascii
             
+
+            ; Set Cursor
+            mov ah,2
+            mov dx,0100h
+            int 10h
+            
+            jmp s1
             
             jmp s2
             l2: cmp al,2
-            jne l3 
             
-            jmp s3
-            l3:
+            ; Set Cursor
+            mov ah,2
+            mov dx,0100h
+            int 10h 
+            
+            mov ah,1
+            int 21h
+            sub al,30h 
+            mov cx,a
+            mul cx
+            
+            mov num,cx
+            
+            mov ah,1
+            int 21h  
+            sub al,30h
+            mov cx,b
+            mul cx
+            
+            add num,cx
+            
+            mov ah,1
+            int 21h
+            sub al,30h
+            mov cx,c
+            mul cx
+            
+            add num,cx
+            
+            mov ah,1
+            int 21h
+            sub al,30h
+
+            add num,ax
             
             s1: 
             s2:
