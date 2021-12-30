@@ -1,10 +1,11 @@
-.Model small
+.Model Huge
+.386
 .Stack 64
 .Data
-    NOPcom db 'NOP  ','$'
-    CLCcom db 'CLC  ','$'
-    MOVcom db 'MOV  ','$'
-    ADDcom db 'ADD  ','$'
+    NOPcom db 'NOP  ','$'   
+    CLCcom db 'CLC  ','$'   
+    MOVcom db 'MOV  ','$'   
+    ADDcom db 'ADD  ','$'   
     PUSHcom db 'PUSH ','$'
     POPcom db 'POP  ','$'
     INCcom db 'INC  ','$'
@@ -17,32 +18,169 @@
     RCLcom db 'RCL  ','$'
     SHLcom db 'SHL  ','$'
     SHRcom db 'SHR  ','$'
-    mes db 'You have selected Command #'
-    selectedComm db ?, '$'
 
+    Reg    db 'REG  ','$'
+    Memory db 'MEM  ','$'
+    Value  db 'VAL  ','$'
+    RegIndex EQU 0
+    MemIndex EQU 1
+    ValIndex EQU 2 
+    
+    RegAX db 'AX   ','$'
+    RegAL db 'AL   ','$'                
+    RegAH db 'AH   ','$'  
+    RegBX db 'BX   ','$'   
+    RegBL db 'BL   ','$'    
+    RegBH db 'BH   ','$'
+    RegCX db 'CX   ','$'                
+    RegCL db 'CL   ','$'  
+    RegCH db 'CH   ','$'   
+    RegDX db 'DX   ','$'
+    RegDL db 'DL   ','$'
+    RegDH db 'DH   ','$'                
+    RegSX db 'SX   ','$'  
+    RegSL db 'SL   ','$'   
+    RegSH db 'SH   ','$'
+    RegSI db 'SI   ','$'
+    RegDI db 'DI   ','$'
+    
+    
+    Mem0 db '[0]  ','$'
+    Mem1 db '[1]  ','$'
+    Mem2 db '[2]  ','$'
+    Mem3 db '[3]  ','$'
+    Mem4 db '[4]  ','$'
+    Mem5 db '[5]  ','$'
+    Mem6 db '[6]  ','$'
+    Mem7 db '[7]  ','$'
+    Mem8 db '[8]  ','$'
+    Mem9 db '[9]  ','$'
+    Mem10 db '[A]  ','$'
+    Mem11 db '[B]  ','$'
+    Mem12 db '[C]  ','$'
+    Mem13 db '[D]  ','$'
+    Mem14 db '[E]  ','$'
+    Mem15 db '[F]  ','$'
+    
+
+    ; Variables Memory Locations and data
     CommStringSize EQU  6
+
+
+    mesCom db 10,'You have selected Command #', '$'
+    mesOp1Type db 10,'You have selected Operand 1 of Type #', '$'
+    mesReg db 10, 'You have selected Reg #', '$'
+    mesMem db 10, 'You have selected Mem #', '$'
+
+
+    selectedComm db ?, '$'
+    selectedOp1Type db ?, '$'  
+    selectedReg  db ?, '$'
+    selectedMem  db ?, '$'
+    
+    num dw ?,'$'
+
+
+    ; Keys Scan Codes
     UpArrowScanCode EQU 72
     DownArrowScanCode EQU 80
-    EnterScanCode EQU 28
+    EnterScanCode EQU 28 
 
+    ; Cursor Locations
+    MenmonicCursorLoc EQU 0000H
+    Op1CursorLoc EQU 0006H
+    Op2CursorLoc EQU 000CH
     
+    a EQU 1000
+    B EQU 100
+    C EQU 10
+ 
+    
+
 .Code
-    Main proc far
+    
+    CommMenu proc far
         
         mov ax, @Data
         mov ds, ax
+        CALL ClearScreen
+        
+        CALL MnemonicMenu
+        CALL Op1Menu
+
+        mov dx, offset mesCom
+        CALL DisplayString
+        mov dl, selectedComm
+        add dl, '0'
+        CALL DisplayChar
+
+        mov dx, offset mesOp1Type
+        CALL DisplayString
+        mov dl, selectedOp1Type
+        add dl, '0'
+        CALL DisplayChar
+
+        mov dx, offset mesReg
+        CALL DisplayString
+        mov dl, selectedReg
+        add dl, '0'
+        CALL DisplayChar
+
+        mov dx, offset mesMem
+        CALL DisplayString
+        mov dl, selectedMem
+        add dl, '0'
+        CALL DisplayChar
+
+        
+
+
+
+        Exit:
+            
+            ; Return to dos
+            mov ah,4ch
+            int 21h
+
+
+    CommMenu ENDP
+
+    ClearScreen PROC far
+        ; Change to text mode (clear screen)
+        mov ah,0
+        mov al,3
+        int 10h
+
+        ret
+    ClearScreen ENDP
+    DisplayString PROC ; string offset saved in DX
+        mov ah, 9
+        int 21h
+
+        RET
+    DisplayString ENDP
+    DisplayChar PROC    ; char is saved in dl
+        mov ah,2
+        int 21h
+
+        RET
+    DisplayChar ENDP
+    SetCursor PROC ; position is saved in dx   
+        mov ah,2
+        int 10h
+
+        ret
+    SetCursor ENDP
+    MnemonicMenu PROC
 
         ; Display Command
         DisplayComm:
             mov ah, 9
-            mov dx, offset MOVcom
+            mov dx, offset NOPcom
             int 21h
 
-        ; Wait for a key pressed
-        CHECK: 
-            mov ah,1
-            int 16h
-        jz CHECK
+        CheckKeyComType:
+            CALL WaitKeyPress
 
         Push ax
         PUSH dx 
@@ -51,7 +189,7 @@
             int 21h
             ; Reset Cursor
             mov ah,2
-            mov dx,0
+            mov dx, MenmonicCursorLoc
             int 10h
         pop dx 
         pop ax
@@ -63,57 +201,297 @@
         jz CommDown
         cmp ah, EnterScanCode
         jz Selected
+        jmp CheckKeyComType
 
 
         CommUp:
             mov ah, 9
             ; Check overflow
-                cmp dx,0
+                cmp dx, offset NOPcom            ; MenmonicFirstChoice
                 jnz NotOverflow
-                mov dx, offset SHRcom
+                mov dx, offset SHRcom             ; MnemonicLastChoiceLoc
                 add dx, CommStringSize
             NotOverflow:
                 sub dx, CommStringSize
                 int 21h
-                jmp CHECK
+                jmp CheckKeyComType
         
         CommDown:
             mov ah, 9
             ; Check End of file
-                cmp dx, offset SHRcom
+                cmp dx, offset SHRcom             ; MnemonicLastChoiceLoc
                 jnz NotEOF
-                mov dx, offset NOPcom
+                mov dx, offset NOPcom            ; MenmonicFirstChoice
                 sub dx, CommStringSize
             NotEOF:
                 add dx, CommStringSize
                 int 21h
-                jmp CHECK
+                jmp CheckKeyComType
         
         Selected:
             ; Detecting index of selected command
             mov ax, dx
+            sub ax, offset NOPcom            ; MenmonicFirstChoice
             mov bl, CommStringSize
-            div bl                                      ; Op=byte: AL:=AX / Op 
+            div bl                                      ; Op=byte: AL:=AX / Op
             mov selectedComm, al
-            add selectedComm, '0'                       ; to convert digit to Ascii
+            
             
 
-            ; Set Cursor
+
+        ret
+    MnemonicMenu ENDP
+    WaitKeyPress PROC ; AH:scancode,AL:ASCII
+        ; Wait for a key pressed
+        CHECK: 
+            mov ah,1
+            int 16h
+        jz CHECK
+
+        ret
+    WaitKeyPress ENDP
+    Op1TypeMenu PROC
+
+        
+        
+
+        mov ah, 9
+        mov dx, offset Reg
+        int 21h
+
+        CheckKeyOp1Type:
+            ; Clear buffer
+            mov ah,07
+            int 21h
+            CALL WaitKeyPress
+
+        Push ax
+        PUSH dx 
+            ; Clear buffer
+            mov ah,07
+            int 21h
+            ; Reset Cursor
             mov ah,2
-            mov dx,0100h
+            mov dx, Op1CursorLoc
             int 10h
+        pop dx 
+        pop ax
 
-            ; Display message
+        ; Check if pressed is Up or down or Enter
+        cmp ah, UpArrowScanCode                          
+        jz CommUp_1 
+        cmp ah, DownArrowScanCode
+        jz CommDown_1
+        cmp ah, EnterScanCode
+        jz Selected_1
+        JMP CheckKeyOp1Type
+
+
+        CommUp_1:
             mov ah, 9
-            mov dx, offset mes
+            ; Check overflow
+                cmp dx, offset Reg
+                jnz NotOverflow_1
+                mov dx, offset Value           ; Op1TypeLastChoiceLoc
+                add dx, CommStringSize
+            NotOverflow_1:
+                sub dx, CommStringSize
+                int 21h
+                jmp CheckKeyOp1Type
+        
+        CommDown_1:
+            mov ah, 9
+            ; Check End of file
+                cmp dx, offset Value           ; Op1TypeLastChoiceLoc
+                jnz NotEOF_1
+                mov dx, offset Reg
+                sub dx, CommStringSize
+            NotEOF_1:
+                add dx, CommStringSize
+                int 21h
+                jmp CheckKeyOp1Type
+        
+        Selected_1:
+            ; Detecting index of selected command
+            mov ax, dx
+            sub ax, offset Reg         ; Op1FirstChoiceLoc
+            mov bl, CommStringSize
+            div bl                                      ; Op=byte: AL:=AX / Op 
+            mov selectedOp1Type, al
+            
+        ret
+    Op1TypeMenu ENDP
+    Op1Menu PROC
+
+        ; Set Cursor
+        mov ah,2
+        mov dx, Op1CursorLoc 
+        int 10h
+
+        CALL Op1TypeMenu
+
+        ; Set Cursor
+        mov ah,2
+        mov dx, Op1CursorLoc 
+        int 10h
+
+
+        ; NEEDS TO CHANGE 
+        CMP selectedOp1Type, RegIndex     
+        JZ ChooseReg
+        CMP selectedOp1Type, MemIndex
+        JZ ChooseMem
+        CMP selectedOp1Type, ValIndex
+        JZ EnterVal
+        jmp InvalidOp1Type
+
+        ChooseReg: 
+
+            ; Display Command
+            mov ah, 9
+            mov dx, offset RegAX
             int 21h
 
+            CheckKeyRegType:
+                CALL WaitKeyPress
 
-        Exit:
-            ; Return to dos
-            mov ah,4ch
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, Op1CursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp2 
+            cmp ah, DownArrowScanCode
+            jz CommDown2
+            cmp ah, EnterScanCode
+            jz Selected2
+            jmp CheckKeyRegType
+
+
+            CommUp2:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset RegAX              ; RegFirstChoiceLocation ; the start of combobox
+                    jnz NotOverflow2
+                    mov dx, offset RegDI              ; RegLastChoiceLocation ; last one to overcome overflow
+                    add dx, CommStringSize
+                NotOverflow2:
+                    sub dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyRegType
+            
+            CommDown2:
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset RegDI              ; RegLastChoiceLocation
+                    jnz NotEOF2
+                    mov dx, offset RegAX              ; RegFirstChoiceLocation
+                    sub dx, CommStringSize
+                NotEOF2:
+                    add dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyRegType
+            
+            Selected2:
+                ; Detecting index of selected command
+                mov ax, dx
+                SUB AX, offset RegAX              ; RegFirstChoiceLocation
+                mov bl, CommStringSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov selectedReg, al
+                ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
+                JMP RETURN
+
+           
+            
+            
+            
+        ChooseMem:
+       
+            ; Display memory
+            
+            mov ah, 9
+            mov dx, offset Mem0
             int 21h
 
+            CheckKeyMemType:
+                CALL WaitKeyPress
 
-    MAIN ENDP
-    END MAIN
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, Op1CursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp3 
+            cmp ah, DownArrowScanCode
+            jz CommDown3
+            cmp ah, EnterScanCode
+            jz Selected3
+            jmp CheckKeyMemType
+
+
+            CommUp3:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset Mem0         ; the start of combobox
+                    jnz NotOverflow3
+                    mov dx, offset Mem15 ; last one to overcome overflow
+                    add dx, CommStringSize
+                NotOverflow3:
+                    sub dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyMemType
+            
+            CommDown3:
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset Mem15
+                    jnz NotEOF3
+                    mov dx, offset Mem0
+                    sub dx, CommStringSize
+                NotEOF3:
+                    add dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyMemType
+            
+            Selected3:
+                ; Detecting index of selected command
+                mov ax, dx
+                SUB AX, offset Mem0
+                mov bl, CommStringSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov selectedMem, al
+
+                JMP RETURN
+
+        EnterVal:
+            ; TODO
+
+        InvalidOp1Type:
+            ; TODO
+
+        RETURN:
+
+            RET
+    Op1Menu ENDP
+    END CommMenu
