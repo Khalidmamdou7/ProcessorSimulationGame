@@ -149,58 +149,46 @@
         CALL ClearScreen
         
         CALL MnemonicMenu
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
+        ; SelectedMenmonic index is saved, Call operands according to each operation (Menmonic)
+        CMP selectedComm, 0
+        jnz NOP_Comm
+        CMP selectedComm, 1
+        jnz CLC_Comm
+        CMP selectedComm, 2
+        JNZ MOV_Comm
+        JMP TODO_Comm
+        ; Continue comparing for all operations
 
-        ; Test Messages 
-        mov dx, offset mesCom
-        CALL DisplayString
-        mov dl, selectedComm
-        add dl, '0'
-        CALL DisplayChar
 
-        mov dx, offset mesOp1Type
-        CALL DisplayString
-        mov dl, selectedOp1Type
-        add dl, '0'
-        CALL DisplayChar
-
-        mov dx, offset mesReg
-        CALL DisplayString
-        mov dl, selectedOp1Reg
-        add dl, '0'
-        CALL DisplayChar
-
-        mov dx, offset mesMem
-        CALL DisplayString
-        mov dl, selectedOp1Mem
-        add dl, '0'
-        CALL DisplayChar
-
+        ; Commands (operations) Labels
+        NOP_Comm:
+            ; Execute Command
+            NOP
+            JMP Exit
         
+        CLC_Comm:
+            CLC
+            JMP Exit
+        
+        MOV_Comm:
+            CALL Op1Menu
 
+            ; TODO - Check Validations
 
-        mov dx, offset mesOp1Type
-        CALL DisplayString
-        mov dl, selectedOp2Type
-        add dl, '0'
-        CALL DisplayChar
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
 
-        mov dx, offset mesReg
-        CALL DisplayString
-        mov dl, selectedOp2Reg
-        add dl, '0'
-        CALL DisplayChar
+            ; TODO - Check Validations
 
-        mov dx, offset mesMem
-        CALL DisplayString
-        mov dl, selectedOp2Mem
-        add dl, '0'
-        CALL DisplayChar
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+
+        TODO_Comm:
+            ; TODO
+            JMP Exit
 
 
         Exit:
