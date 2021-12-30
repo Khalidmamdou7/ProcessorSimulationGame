@@ -1,5 +1,5 @@
 .Model small
-.Stack 64
+.Stack 64              
 .Data    
     Reg    db 'Register','$'
     Memory db 'Memory  ','$'
@@ -42,18 +42,21 @@
     selectedComm db ?, '$'  
     selectedReg  db ?,'$'
     selectedMem  db ?,'$'
-    
-    num dw ?,'$'
-
+    st11 db 13,10,"Enter Your Value : ",'$'
+       
+    num db 30,?,30 DUP(?)       
+    valuex dw 0      
+    size db ?
     CommStringSize EQU  6
     UpArrowScanCode EQU 72
     DownArrowScanCode EQU 80
     EnterScanCode EQU 28 
+    error db 13,10,"Error Input",'$'
     
-    a EQU 1000
-    B EQU 100
-    C EQU 10
- 
+    a EQU 1000h
+    b EQU 100h
+    C EQU 10h
+    
     CommSize EQU 9
     mes db 'You have selected Command #' 
 .Code
@@ -61,7 +64,8 @@
         
         mov ax, @Data
         mov ds, ax
-
+        
+        
         ; Display Command
         DisplayComm:
             mov ah, 9
@@ -293,52 +297,132 @@
             
             jmp s1
             
-            jmp s2
-            l2: cmp al,2
-            
-            ; Set Cursor
-            mov ah,2
+            l2: cmp al,2                              ; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                
+            mov ah,2       ; Set Cursor
             mov dx,0100h
-            int 10h 
+            int 10h  
             
-            mov ah,1
+            
+            
+            
+            
+            mov ah,0Ah                   ; display message to enter Value
+            mov dx,offset num 
+            int 21h    
+            
+            mov cl,num+1                 ;Get string size
+            mov size,cl
+            mov ch,0
+            mov si,2                     ;si to get first number from string that is not zero
+            
+            mov di,2  
+            
+hoop2:      mov dl,num[di]               ; this loop to check zero in the first string
+            sub dl,30h
+            cmp dl,0 
+            jne hoop1
+            inc si
+            mov cl,size
+            dec cl
+            mov size,cl 
+            inc di
+            jmp hoop2
+            
+  hoop1:    cmp cl,4         ;check that value is hexa or Get error    
+            jng sk 
+            
+ 
+            mov ah, 9               ; display error message and exit
+            mov dx, offset error
             int 21h
-            sub al,30h 
-            mov cx,a
+            jmp Exit
+            sk:
+            
+            
+            
+            mov Bl,size              ; loops to check num from 1 to 9 and A to F
+            numloop: 
+ 
+            mov al,num[si] 
+            cmp al,30H
+            jnge notnum 
+            cmp al,39h
+            jnle notnum
+            sub al,30h  
+            jmp done   
+            
+            notnum: cmp al,41H
+            jnge notcharnum
+            cmp al,46h
+            jnle notcharnum
+            sub al,37h
+            jmp done  
+             
+            notcharnum: cmp al,61H
+            jnge notcharnum
+            cmp al,66h
+            jnle notcharnum
+            sub al,57h
+            jmp done
+            
+            mov ah, 9                  ; error if it's not number
+            mov dx, offset error
+            int 21h 
+            
+            done:  
+            
+            inc si  
+            
+            cmp bl,4                   ; first digit
+            jne ha1
+            mov cl,al 
+            mov ax,a 
+            mov ch,0
             mul cx
+            ha1:  
             
-            mov num,cx
-            
-            mov ah,1
-            int 21h  
-            sub al,30h
-            mov cx,b
+            cmp bl,3                   ;second digit
+            jne ha2
+            mov cl,al 
+            mov ax,b
+            mov ch,0
             mul cx
+            ha2:  
             
-            add num,cx
-            
-            mov ah,1
-            int 21h
-            sub al,30h
-            mov cx,c
+            cmp bl,2                   ;third digit
+            jne ha3
+            mov cl,al 
+            mov ax,c
+            mov ch,0
             mul cx
+            ha3: 
             
-            add num,cx
+            cmp bl,1                  ;fourth digit
+            jne ha4
+            mov ah,0
+            ha4:
             
-            mov ah,1
-            int 21h
-            sub al,30h
-
-            add num,ax
+            add valuex,ax  
             
-            s1: 
-            s2:
-            s3:
+            dec Bl                    ; check to exit 
+            cmp Bl,0   
+            je Exit 
+            
+            jmp numloop    
+            
         Exit:
             ; Return to dos
             mov ah,4ch
             int 21h
-
+        s1:
 
     MAIN ENDP
     END MAIN
+
+
+    ; from line 300 to 412 , Value Part
+    ;IN Data Segment , num db 30,?,30 DUP(?)       
+  ;                   valuex dw 0      
+   ;                  size db ?
+   ;             error db 13,10,"Error Input",'$'  
