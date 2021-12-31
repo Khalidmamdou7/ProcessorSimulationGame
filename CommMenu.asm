@@ -1,7 +1,28 @@
 ; Macros
-    ExecPush MACRO Op
-        PUSH Op
-    ENDM
+ExecPush MACRO Op
+    mov bh, 0
+    mov bl, ValStackPointer
+    mov ax, Op
+    lea di, ValStack
+    mov [di][bx], ax
+    ADD ValStackPointer,2
+ENDM
+ExecPushMem MACRO Op
+    mov bh, 0
+    mov bl, ValStackPointer
+    mov ax, word ptr Op
+    lea di, ValStack
+    mov [di][bx], ax
+    ADD ValStackPointer,2
+ENDM
+ExecPop MACRO Op
+    mov bh, 0
+    mov bl, ValStackPointer
+    lea di, ValStack
+    mov ax, [di][bx]
+    mov Op, ax
+    SUB ValStackPointer,2
+ENDM
 ;================================================================================================================    
 .Model Huge
 .386
@@ -54,14 +75,14 @@
     RegSI db 'SI   ','$'
     RegDI db 'DI   ','$'
 
-    ValRegAX db 00h,00h 
-    ValRegBX db 00h,00h   
-    ValRegCX db 00h,00h                  
-    ValRegDX db 00h,00h                
-    ValRegBP dw 0000h
-    ValRegSP dw 0000h
-    ValRegSI dw 0000h
-    ValRegDI dw 0000h
+    ValRegAX db 'A','X' 
+    ValRegBX db 'B','X'   
+    ValRegCX db 'C','X'                  
+    ValRegDX db 'D','X'                
+    ValRegBP dw 'BP'
+    ValRegSP dw 'SP'
+    ValRegSI dw 'SI'
+    ValRegDI dw 'DI'
     
     AddRegAX db '[AX] ','$'
     AddRegAL db '[AL] ','$'                
@@ -78,6 +99,8 @@
     AddRegSX db '[SX] ','$'  
     AddRegSL db '[SL] ','$'   
     AddRegSH db '[SH] ','$'
+    AddRegBP db '[BP] ','$'
+    AddRegSP db '[SP] ','$'
     AddRegSI db '[SI] ','$'
     AddRegDI db '[DI] ','$'
 
@@ -98,8 +121,9 @@
     Mem14 db '[E]  ','$'
     Mem15 db '[F]  ','$'
 
-    ValMem db 16 dup(00h)
-    ValStack db 16 dup(00h)
+    ValMem db 16 dup('M'), '$'
+    ValStack db 16 dup('S'), '$'
+    ValStackPointer db 0
     ValCF db 0d
     
     ; Operand Value Needed Variables
@@ -120,8 +144,12 @@
     mesCom db 10,'You have selected Command #', '$'
     mesOp1Type db 10,'You have selected Operand 1 of Type #', '$'
     mesReg db 10, 'You have selected Reg #', '$'
-    mesMem db 10, 'You have selected Mem #', '$'
+    ;mesMem db 10, 'You have selected Mem #', '$'
     mesVal db 10, 'You Entered value: ', '$'
+
+    mesMem db 10, 'Values in memory as Ascii: ', 10, '$'
+    mesStack db 10, 'Values in stack as Ascii: ', 10, '$'
+    mesStackPointer db 10,  'Value of stack pointer: ', 10 ,  '$'
     error db 13,10,"Error Input",'$'
 
 
@@ -168,6 +196,8 @@
         mov ax, @Data
         mov ds, ax
         CALL ClearScreen
+
+        Start:
         
         CALL MnemonicMenu
         ; SelectedMenmonic index is saved, Call operands according to each operation (Menmonic)
@@ -253,37 +283,207 @@
             CALL Op1Menu
 
             ; Todo - CHECK VALIDATIONS
+            CMP selectedOp1Type, 0
+            JZ PushOpReg
+            CMP selectedOp1Type, 1
+            JZ PushOpAddReg
+            CMP selectedOp1Type, 2
+            JZ PushOpMem
+            CMP selectedOp1Type, 3
+            JZ PushOpVal
+            
 
             ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
             ; Reg as operands
-            PushOpRegAX:
-                ExecPush AX
-                JMP Exit
-            PushOpRegBX:
-                ExecPush BX
-                JMP Exit
-            PushOpRegCX:
-                ExecPush CX
-                JMP Exit
-            PushOpRegDX:
-                ExecPush DX
-                JMP Exit
-            PushOpRegBP:
-                ExecPush BP
-                JMP Exit
-            PushOpRegSP:
-                ExecPush SP
-                JMP Exit
-            PushOpRegSI:
-                ExecPush SI
-                JMP Exit
-            PushOpRegDI:
-                ExecPush DI
-                JMP Exit
+            PushOpReg:
+                
+                CMP selectedOp1Reg, 0
+                JZ PushOpRegAX
+                CMP selectedOp1Reg, 3
+                JZ PushOpRegBX
+                CMP selectedOp1Reg, 6
+                JZ PushOpRegCX
+                CMP selectedOp1Reg, 9
+                JZ PushOpRegDX
+                CMP selectedOp1Reg, 15
+                JZ PushOpRegBP
+                CMP selectedOp1Reg, 16
+                JZ PushOpRegSP
+                CMP selectedOp1Reg, 17
+                JZ PushOpRegSI
+                CMP selectedOp1Reg, 18
+                JZ PushOpRegDI
+                JMP InValidCommand
+
+
+                
+                PushOpRegAX:
+                    ExecPushMem ValRegAX
+                    JMP Exit
+                PushOpRegBX:
+                    ExecPushMem ValRegBX
+                    JMP Exit
+                PushOpRegCX:
+                    ExecPushMem ValRegCX
+                    JMP Exit
+                PushOpRegDX:
+                    ExecPushMem ValRegDX
+                    JMP Exit
+                PushOpRegBP:
+                    ExecPush ValRegBP
+                    JMP Exit
+                PushOpRegSP:
+                    ExecPush ValRegSP
+                    JMP Exit
+                PushOpRegSI:
+                    ExecPush ValRegSI
+                    JMP Exit
+                PushOpRegDI:
+                    ExecPush ValRegDI
+                    JMP Exit
 
             ; TODO - Mem as operand
+            PushOpMem:
 
+                CMP selectedOp1Mem, 0
+                JZ PushOpMem0
+                CMP selectedOp1Mem, 1
+                JZ PushOpMem1
+                CMP selectedOp1Mem, 2
+                JZ PushOpMem2
+                CMP selectedOp1Mem, 3
+                JZ PushOpMem3
+                CMP selectedOp1Mem, 4
+                JZ PushOpMem4
+                CMP selectedOp1Mem, 5
+                JZ PushOpMem5
+                CMP selectedOp1Mem, 6
+                JZ PushOpMem6
+                CMP selectedOp1Mem, 7
+                JZ PushOpMem7
+                CMP selectedOp1Mem, 8
+                JZ PushOpMem8
+                CMP selectedOp1Mem, 9
+                JZ PushOpMem9
+                CMP selectedOp1Mem, 10
+                JZ PushOpMem10
+                CMP selectedOp1Mem, 11
+                JZ PushOpMem11
+                CMP selectedOp1Mem, 12
+                JZ PushOpMem12
+                CMP selectedOp1Mem, 13
+                JZ PushOpMem13
+                CMP selectedOp1Mem, 14
+                JZ PushOpMem14
+                CMP selectedOp1Mem, 15
+                JZ PushOpMem15
+                JMP InValidCommand
+                
+                PushOpMem0:
+                    ExecPushMem ValMem
+                    JMP Exit
+                PushOpMem1:
+                    ExecPushMem ValMem+1
+                    JMP Exit
+                PushOpMem2:
+                    ExecPushMem ValMem+2
+                    JMP Exit
+                PushOpMem3:
+                    ExecPushMem ValMem+3
+                    JMP Exit
+                PushOpMem4:
+                    ExecPushMem ValMem+4
+                    JMP Exit
+                PushOpMem5:
+                    ExecPushMem ValMem+5
+                    JMP Exit
+                PushOpMem6:
+                    ExecPushMem ValMem+6
+                    JMP Exit
+                PushOpMem7:
+                    ExecPushMem ValMem+7
+                    JMP Exit
+                PushOpMem8:
+                    ExecPushMem ValMem+8
+                    JMP Exit
+                PushOpMem9:
+                    ExecPushMem ValMem+9
+                    JMP Exit
+                PushOpMem10:
+                    ExecPushMem ValMem+10
+                    JMP Exit
+                PushOpMem11:
+                    ExecPushMem ValMem+11
+                    JMP Exit
+                PushOpMem12:
+                    ExecPushMem ValMem+12
+                    JMP Exit
+                PushOpMem13:
+                    ExecPushMem ValMem+13
+                    JMP Exit
+                PushOpMem14:
+                    ExecPushMem ValMem+14
+                    JMP Exit
+                PushOpMem15:
+                    ExecPushMem ValMem+15
+                    JMP Exit
+
+            
             ; TODO - address reg as operands
+            PushOpAddReg:
+
+                CMP selectedOp1AddReg, 3
+                JZ PushOpAddRegBX
+                CMP selectedOp1AddReg, 15
+                JZ PushOpAddRegBP
+                CMP selectedOp1AddReg, 17
+                JZ PushOpAddRegSI
+                CMP selectedOp1AddReg, 18
+                JZ PushOpAddRegDI
+                JMP InValidCommand
+
+                PushOpAddRegBX:
+                    mov dx, word ptr ValRegBX
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, word ptr ValRegBX
+                    ExecPushMem ValMem[SI]
+                    JMP Exit
+                PushOpAddRegBP:
+                    mov dx, ValRegBP
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, ValRegBP
+                    ExecPushMem ValMem[SI]
+                    JMP Exit
+
+                PushOpAddRegSI:
+                    mov dx, ValRegSI
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, ValRegSI
+                    ExecPushMem ValMem[SI]
+                    JMP Exit
+                
+                PushOpAddRegDI:
+                    mov dx, ValRegDI
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, ValRegDI
+                    ExecPushMem ValMem[SI]
+                    JMP Exit
+
+
+            ; Value as operand
+            PushOpVal:
+                CMP Op1Valid, 0
+                jz InValidCommand
+                ExecPush Op1Val
+                JMP Exit
             
             JMP Exit
 
@@ -341,7 +541,7 @@
             ; TODO - Check Validations
 
             ; TODO - Execute Commands with different Combinations
-            JMP Exit
+            ;jmp Exit
         
         ROL_Comm:
             CALL Op1Menu
@@ -427,10 +627,37 @@
             mov dx, offset error
             CALL DisplayString
             JMP Exit
-
+        
+        InValidCommand:
+            mov dx, offset error
+            CALL DisplayString
 
         Exit:
             
+            ; Test Messages
+            lea dx, mesMem
+            CAll DisplayString
+            lea dx, ValMem
+            CALL DisplayString
+
+            lea dx, mesStack
+            CAll DisplayString
+            lea dx, ValStack
+            Call DisplayString
+
+            lea dx, mesStackPointer
+            CALL DisplayString
+            mov dl, ValStackPointer
+            add dl, '0'
+            Call DisplayChar
+
+            lea dx, mesVal
+            CALL DisplayString
+            mov dx, Op1Val
+            Call DisplayChar
+            
+
+            ;JMP Start
             ; Return to dos
             mov ah,4ch
             int 21h
@@ -469,7 +696,7 @@
         ; Display Command
         DisplayComm:
             mov ah, 9
-            mov dx, offset NOPcom
+            mov dx, offset PUSHcom
             int 21h
 
         CheckKeyComType:
@@ -543,6 +770,15 @@
 
         ret
     WaitKeyPress ENDP
+    CheckAddress proc     ; Value of register supposed to be in dx before calling the proc, if greater bl = 1 else bl = 0
+        cmp dx, 16
+        jg InValid
+        mov bl, 0
+        ret
+        Invalid: 
+        mov bl, 1
+        ret
+    CheckAddress ENDP
     Op1TypeMenu PROC
 
         mov ah, 9
@@ -714,6 +950,9 @@
             int 21h
 
             CheckKeyRegType:
+                ; Clear buffer
+                mov ah,07
+                int 21h
                 CALL WaitKeyPress
 
 
@@ -781,6 +1020,9 @@
             int 21h
 
             CheckKey_AddReg:
+                ; Clear buffer
+                mov ah,07
+                int 21h
                 CALL WaitKeyPress
 
 
@@ -849,6 +1091,9 @@
             int 21h
 
             CheckKeyMemType:
+                ; Clear buffer
+                mov ah,07
+                int 21h
                 CALL WaitKeyPress
 
 
@@ -917,6 +1162,10 @@
             ; Reset Cursor
             mov dx, Op1CursorLoc
             CALL SetCursor
+
+            ; Clear buffer
+            mov ah,07
+            int 21h
 
             ; Take value as a String from User
             mov ah,0Ah                   
