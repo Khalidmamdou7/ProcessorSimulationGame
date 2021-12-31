@@ -23,6 +23,14 @@ ExecPop MACRO Op
     mov Op, ax
     SUB ValStackPointer,2
 ENDM
+ExecPopMem MACRO Op
+    mov bh, 0
+    mov bl, ValStackPointer
+    lea di, ValStack
+    mov ax, [di][bx]
+    mov word ptr Op, ax
+    SUB ValStackPointer,2
+ENDM
 ;================================================================================================================    
 .Model Huge
 .386
@@ -75,10 +83,10 @@ ENDM
     RegSI db 'SI   ','$'
     RegDI db 'DI   ','$'
 
-    ValRegAX db 'A','X' 
-    ValRegBX db 'B','X'   
-    ValRegCX db 'C','X'                  
-    ValRegDX db 'D','X'                
+    ValRegAX dw 'AX' 
+    ValRegBX dw 'BX'   
+    ValRegCX dw 'CX'                  
+    ValRegDX dw 'DX'                
     ValRegBP dw 'BP'
     ValRegSP dw 'SP'
     ValRegSI dw 'SI'
@@ -318,16 +326,16 @@ ENDM
 
                 
                 PushOpRegAX:
-                    ExecPushMem ValRegAX
+                    ExecPush ValRegAX
                     JMP Exit
                 PushOpRegBX:
-                    ExecPushMem ValRegBX
+                    ExecPush ValRegBX
                     JMP Exit
                 PushOpRegCX:
-                    ExecPushMem ValRegCX
+                    ExecPush ValRegCX
                     JMP Exit
                 PushOpRegDX:
-                    ExecPushMem ValRegDX
+                    ExecPush ValRegDX
                     JMP Exit
                 PushOpRegBP:
                     ExecPush ValRegBP
@@ -443,11 +451,11 @@ ENDM
                 JMP InValidCommand
 
                 PushOpAddRegBX:
-                    mov dx, word ptr ValRegBX
+                    mov dx, ValRegBX
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
                     JZ InValidCommand
-                    mov SI, word ptr ValRegBX
+                    mov SI, ValRegBX
                     ExecPushMem ValMem[SI]
                     JMP Exit
                 PushOpAddRegBP:
@@ -491,8 +499,202 @@ ENDM
             CALL Op1Menu
 
             ; Todo - CHECK VALIDATIONS
+            CMP selectedOp1Type, 0
+            JZ PopOpReg
+            CMP selectedOp1Type, 1
+            JZ PopOpAddReg
+            CMP selectedOp1Type, 2
+            JZ PopOpMem
+            JMP InValidCommand
+            
 
             ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            ; Reg as operands
+            PopOpReg:
+                
+                CMP selectedOp1Reg, 0
+                JZ PopOpRegAX
+                CMP selectedOp1Reg, 3
+                JZ PopOpRegBX
+                CMP selectedOp1Reg, 6
+                JZ PopOpRegCX
+                CMP selectedOp1Reg, 9
+                JZ PopOpRegDX
+                CMP selectedOp1Reg, 15
+                JZ PopOpRegBP
+                CMP selectedOp1Reg, 16
+                JZ PopOpRegSP
+                CMP selectedOp1Reg, 17
+                JZ PopOpRegSI
+                CMP selectedOp1Reg, 18
+                JZ PopOpRegDI
+                JMP InValidCommand
+
+
+                
+                PopOpRegAX:
+                    ExecPop ValRegAX
+                    JMP Exit
+                PopOpRegBX:
+                    ExecPop ValRegBX
+                    JMP Exit
+                PopOpRegCX:
+                    ExecPop ValRegCX
+                    JMP Exit
+                PopOpRegDX:
+                    ExecPop ValRegDX
+                    JMP Exit
+                PopOpRegBP:
+                    ExecPop ValRegBP
+                    JMP Exit
+                PopOpRegSP:
+                    ExecPop ValRegSP
+                    JMP Exit
+                PopOpRegSI:
+                    ExecPop ValRegSI
+                    JMP Exit
+                PopOpRegDI:
+                    ExecPop ValRegDI
+                    JMP Exit
+
+            ; TODO - Mem as operand
+            PopOpMem:
+
+                CMP selectedOp1Mem, 0
+                JZ PopOpMem0
+                CMP selectedOp1Mem, 1
+                JZ PopOpMem1
+                CMP selectedOp1Mem, 2
+                JZ PopOpMem2
+                CMP selectedOp1Mem, 3
+                JZ PopOpMem3
+                CMP selectedOp1Mem, 4
+                JZ PopOpMem4
+                CMP selectedOp1Mem, 5
+                JZ PopOpMem5
+                CMP selectedOp1Mem, 6
+                JZ PopOpMem6
+                CMP selectedOp1Mem, 7
+                JZ PopOpMem7
+                CMP selectedOp1Mem, 8
+                JZ PopOpMem8
+                CMP selectedOp1Mem, 9
+                JZ PopOpMem9
+                CMP selectedOp1Mem, 10
+                JZ PopOpMem10
+                CMP selectedOp1Mem, 11
+                JZ PopOpMem11
+                CMP selectedOp1Mem, 12
+                JZ PopOpMem12
+                CMP selectedOp1Mem, 13
+                JZ PopOpMem13
+                CMP selectedOp1Mem, 14
+                JZ PopOpMem14
+                CMP selectedOp1Mem, 15
+                JZ PopOpMem15
+                JMP InValidCommand
+                
+                PopOpMem0:
+                    ExecPopMem ValMem
+                    JMP Exit
+                PopOpMem1:
+                    ExecPopMem ValMem+1
+                    JMP Exit
+                PopOpMem2:
+                    ExecPopMem ValMem+2
+                    JMP Exit
+                PopOpMem3:
+                    ExecPopMem ValMem+3
+                    JMP Exit
+                PopOpMem4:
+                    ExecPopMem ValMem+4
+                    JMP Exit
+                PopOpMem5:
+                    ExecPopMem ValMem+5
+                    JMP Exit
+                PopOpMem6:
+                    ExecPopMem ValMem+6
+                    JMP Exit
+                PopOpMem7:
+                    ExecPopMem ValMem+7
+                    JMP Exit
+                PopOpMem8:
+                    ExecPopMem ValMem+8
+                    JMP Exit
+                PopOpMem9:
+                    ExecPopMem ValMem+9
+                    JMP Exit
+                PopOpMem10:
+                    ExecPopMem ValMem+10
+                    JMP Exit
+                PopOpMem11:
+                    ExecPopMem ValMem+11
+                    JMP Exit
+                PopOpMem12:
+                    ExecPopMem ValMem+12
+                    JMP Exit
+                PopOpMem13:
+                    ExecPopMem ValMem+13
+                    JMP Exit
+                PopOpMem14:
+                    ExecPopMem ValMem+14
+                    JMP Exit
+                PopOpMem15:
+                    ExecPopMem ValMem+15
+                    JMP Exit
+
+            
+            ; TODO - address reg as operands
+            PopOpAddReg:
+
+                CMP selectedOp1AddReg, 3
+                JZ PopOpAddRegBX
+                CMP selectedOp1AddReg, 15
+                JZ PopOpAddRegBP
+                CMP selectedOp1AddReg, 17
+                JZ PopOpAddRegSI
+                CMP selectedOp1AddReg, 18
+                JZ PopOpAddRegDI
+                JMP InValidCommand
+
+                PopOpAddRegBX:
+                    mov dx, ValRegBX
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, ValRegBX
+                    ExecPopMem ValMem[SI]
+                    JMP Exit
+                PopOpAddRegBP:
+                    mov dx, ValRegBP
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, ValRegBP
+                    ExecPopMem ValMem[SI]
+                    JMP Exit
+
+                PopOpAddRegSI:
+                    mov dx, ValRegSI
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, ValRegSI
+                    ExecPopMem ValMem[SI]
+                    JMP Exit
+                
+                PopOpAddRegDI:
+                    mov dx, ValRegDI
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+                    mov SI, ValRegDI
+                    ExecPopMem ValMem[SI]
+                    JMP Exit
+
+
+            
+
             JMP Exit
         
         INC_Comm:
@@ -655,6 +857,8 @@ ENDM
             CALL DisplayString
             mov dx, Op1Val
             Call DisplayChar
+
+            
             
 
             ;JMP Start
@@ -1166,6 +1370,7 @@ ENDM
             ; Clear buffer
             mov ah,07
             int 21h
+            
 
             ; Take value as a String from User
             mov ah,0Ah                   
@@ -1273,7 +1478,7 @@ ENDM
             ; TODO
 
         RETURN:
-
+            
             RET
     Op1Menu ENDP
     Op2Menu PROC
