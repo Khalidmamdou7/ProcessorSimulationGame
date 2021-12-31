@@ -49,6 +49,8 @@
     RegSX db 'SX   ','$'  
     RegSL db 'SL   ','$'   
     RegSH db 'SH   ','$'
+    RegBP db 'BP   ','$'
+    RegSP db 'SP   ','$'
     RegSI db 'SI   ','$'
     RegDI db 'DI   ','$'
     
@@ -156,38 +158,39 @@
         
         CALL MnemonicMenu
         ; SelectedMenmonic index is saved, Call operands according to each operation (Menmonic)
+
         CMP selectedComm, 0
-        jnz NOP_Comm
+        JZ NOP_Comm
         CMP selectedComm, 1
-        jnz CLC_Comm
+        JZ CLC_Comm
         CMP selectedComm, 2
-        JNZ MOV_Comm
+        JZ MOV_Comm
         CMP selectedComm, 3
-        JNZ ADD_Comm
+        JZ ADD_Comm
         CMP selectedComm, 4
-        JNZ PUSH_Comm
+        JZ PUSH_Comm
         CMP selectedComm, 5
-        JNZ POP_Comm
+        JZ POP_Comm
         CMP selectedComm, 6
-        JNZ INC_Comm
+        JZ INC_Comm
         CMP selectedComm, 7
-        JNZ DEC_Comm
+        JZ DEC_Comm
         CMP selectedComm, 8
-        JNZ MUL_Comm
+        JZ MUL_Comm
         CMP selectedComm, 9
-        JNZ DIV_Comm
+        JZ DIV_Comm
         CMP selectedComm, 10
-        JNZ ROR_Comm
+        JZ ROR_Comm
         cmp selectedComm, 11
-        JNZ ROL_Comm
+        JZ ROL_Comm
         cmp selectedComm, 12
-        JNZ RCR_Comm
+        JZ RCR_Comm
         cmp selectedComm, 13
-        JNZ RCL_Comm
+        JZ RCL_Comm
         cmp selectedComm, 14
-        JNZ SHL_Comm
+        JZ SHL_Comm
         cmp selectedComm, 15
-        JNZ SHR_Comm
+        JZ SHR_Comm
 
         JMP TODO_Comm
         ; Continue comparing for all operations
@@ -205,9 +208,6 @@
         
         MOV_Comm:
             CALL Op1Menu
-
-            ; TODO - Check Validations
-
             MOV DX, CommaCursorLoc
             CALL SetCursor
             mov dl, ','
@@ -242,6 +242,36 @@
             ; Todo - CHECK VALIDATIONS
 
             ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            ; Reg as operands
+            PushOpRegAX:
+                ExecPush AX
+                JMP Exit
+            PushOpRegBX:
+                ExecPush BX
+                JMP Exit
+            PushOpRegCX:
+                ExecPush CX
+                JMP Exit
+            PushOpRegDX:
+                ExecPush DX
+                JMP Exit
+            PushOpRegBP:
+                ExecPush BP
+                JMP Exit
+            PushOpRegSP:
+                ExecPush SP
+                JMP Exit
+            PushOpRegSI:
+                ExecPush SI
+                JMP Exit
+            PushOpRegDI:
+                ExecPush DI
+                JMP Exit
+
+            ; TODO - Mem as operand
+
+            ; TODO - address reg as operands
+            
             JMP Exit
 
         POP_Comm:
@@ -381,7 +411,8 @@
             JMP Exit
         
         TODO_Comm:
-            ; TODO
+            mov dx, offset error
+            CALL DisplayString
             JMP Exit
 
 
