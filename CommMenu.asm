@@ -1,6 +1,12 @@
+; Macros
+    ExecPush MACRO Op
+        PUSH Op
+    ENDM
+;================================================================================================================    
 .Model Huge
 .386
 .Stack 64
+;================================================================================================================    
 .Data
     NOPcom db 'NOP  ','$'   
     CLCcom db 'CLC  ','$'   
@@ -138,7 +144,7 @@
     
     
  
-    
+;================================================================================================================    
 
 .Code
     
@@ -156,6 +162,33 @@
         jnz CLC_Comm
         CMP selectedComm, 2
         JNZ MOV_Comm
+        CMP selectedComm, 3
+        JNZ ADD_Comm
+        CMP selectedComm, 4
+        JNZ PUSH_Comm
+        CMP selectedComm, 5
+        JNZ POP_Comm
+        CMP selectedComm, 6
+        JNZ INC_Comm
+        CMP selectedComm, 7
+        JNZ DEC_Comm
+        CMP selectedComm, 8
+        JNZ MUL_Comm
+        CMP selectedComm, 9
+        JNZ DIV_Comm
+        CMP selectedComm, 10
+        JNZ ROR_Comm
+        cmp selectedComm, 11
+        JNZ ROL_Comm
+        cmp selectedComm, 12
+        JNZ RCR_Comm
+        cmp selectedComm, 13
+        JNZ RCL_Comm
+        cmp selectedComm, 14
+        JNZ SHL_Comm
+        cmp selectedComm, 15
+        JNZ SHR_Comm
+
         JMP TODO_Comm
         ; Continue comparing for all operations
 
@@ -184,8 +217,169 @@
             ; TODO - Check Validations
 
             ; TODO - Execute Commands with different Combinations
+            
             JMP Exit
 
+        ADD_Comm:
+            CALL Op1Menu
+
+            ; TODO - Check Validations
+
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
+
+            ; TODO - Check Validations
+
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+        
+        PUSH_Comm:
+            CALL Op1Menu
+
+            ; Todo - CHECK VALIDATIONS
+
+            ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            JMP Exit
+
+        POP_Comm:
+            CALL Op1Menu
+
+            ; Todo - CHECK VALIDATIONS
+
+            ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            JMP Exit
+        
+        INC_Comm:
+            CALL Op1Menu
+
+            ; Todo - CHECK VALIDATIONS
+
+            ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            JMP Exit
+        
+        DEC_Comm:
+            CALL Op1Menu
+
+            ; Todo - CHECK VALIDATIONS
+
+            ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            JMP Exit
+        
+        MUL_Comm:
+            CALL Op1Menu
+
+            ; Todo - CHECK VALIDATIONS
+
+            ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            JMP Exit
+        
+        DIV_Comm:
+            CALL Op1Menu
+
+            ; Todo - CHECK VALIDATIONS
+
+            ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+            JMP Exit
+        
+        ROR_Comm:
+            CALL Op1Menu
+
+            ; TODO - Check Validations
+
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
+
+            ; TODO - Check Validations
+
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+        
+        ROL_Comm:
+            CALL Op1Menu
+
+            ; TODO - Check Validations
+
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
+
+            ; TODO - Check Validations
+
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+        
+        RCR_Comm:
+            CALL Op1Menu
+
+            ; TODO - Check Validations
+
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
+
+            ; TODO - Check Validations
+
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+        
+        RCL_Comm:
+            CALL Op1Menu
+
+            ; TODO - Check Validations
+
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
+
+            ; TODO - Check Validations
+
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+
+        SHL_Comm:
+            CALL Op1Menu
+
+            ; TODO - Check Validations
+
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
+
+            ; TODO - Check Validations
+
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+        
+        SHR_Comm:
+            CALL Op1Menu
+
+            ; TODO - Check Validations
+
+            MOV DX, CommaCursorLoc
+            CALL SetCursor
+            mov dl, ','
+            CALL DisplayChar
+            CALL Op2Menu
+
+            ; TODO - Check Validations
+
+            ; TODO - Execute Commands with different Combinations
+            JMP Exit
+        
         TODO_Comm:
             ; TODO
             JMP Exit
@@ -199,7 +393,7 @@
 
 
     CommMenu ENDP
-
+;================================================================================================================
     ClearScreen PROC far
         ; Change to text mode (clear screen)
         mov ah,0
