@@ -1069,7 +1069,7 @@
             cmp ah, DownArrowScanCode
             jz CommDown_RegType_Op2Menu
             cmp ah, EnterScanCode
-            jz Selected2
+            jz Selected_RegType_Op2Menu
             jmp CheckKey_RegType_Op2Menu
 
 
