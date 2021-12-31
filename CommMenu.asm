@@ -53,6 +53,15 @@
     RegSP db 'SP   ','$'
     RegSI db 'SI   ','$'
     RegDI db 'DI   ','$'
+
+    ValRegAX db 00h,00h 
+    ValRegBX db 00h,00h   
+    ValRegCX db 00h,00h                  
+    ValRegDX db 00h,00h                
+    ValRegBP dw 0000h
+    ValRegSP dw 0000h
+    ValRegSI dw 0000h
+    ValRegDI dw 0000h
     
     AddRegAX db '[AX] ','$'
     AddRegAL db '[AL] ','$'                
@@ -88,6 +97,10 @@
     Mem13 db '[D]  ','$'
     Mem14 db '[E]  ','$'
     Mem15 db '[F]  ','$'
+
+    ValMem db 16 dup(00h)
+    ValStack db 16 dup(00h)
+    ValCF db 0d
     
     ; Operand Value Needed Variables
     ClearSpace db '     ', '$'
