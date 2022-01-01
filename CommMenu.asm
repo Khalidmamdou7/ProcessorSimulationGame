@@ -174,6 +174,7 @@ ENDM
     selectedOp1Reg  db -1, '$'
     selectedOp1AddReg db -1, '$'
     selectedOp1Mem  db -1, '$'
+    selectedOp1Size db 8, '$'
     Op1Val dw 0
     Op1Valid db 1               ; 0 if Invalid 
 
@@ -181,6 +182,7 @@ ENDM
     selectedOp2Reg  db -1, '$'
     selectedOp2AddReg db -1, '$'
     selectedOp2Mem  db -1, '$'
+    selectedOp2Size db 8, '$'
     Op2Val dw 0
     Op2Valid db 1               ; 0 if Invalid 
 
@@ -271,9 +273,405 @@ ENDM
             CALL DisplayChar
             CALL Op2Menu
 
-            ; TODO - Check Validations
+            
+            CMP selectedOp1Type, 0
+            JZ MovOp1Reg
+            CMP selectedOp1Type, 1
+            JZ MovOp1AddReg
+            CMP selectedOp1Type, 2
+            JZ MovOp1Mem
+            JMP InValidCommand
 
-            ; TODO - Execute Commands with different Combinations
+            MovOp1Reg:
+                CMP selectedOp1Reg, 0
+                JZ MovOp1RegAX
+                CMP selectedOp1Reg, 1
+                JZ MovOp1RegAL
+                CMP selectedOp1Reg, 2
+                JZ MovOp1RegAH
+                CMP selectedOp1Reg, 3
+                JZ MovOp1RegBX
+                CMP selectedOp1Reg, 4
+                JZ MovOp1RegBL
+                CMP selectedOp1Reg, 5
+                JZ MovOp1RegBH
+                CMP selectedOp1Reg, 6
+                JZ MovOp1RegCX
+                CMP selectedOp1Reg, 7
+                JZ MovOp1RegCL
+                CMP selectedOp1Reg, 8
+                JZ MovOp1RegCH
+                CMP selectedOp1Reg, 9
+                JZ MovOp1RegDX
+                CMP selectedOp1Reg, 10
+                JZ MovOp1RegDL
+                CMP selectedOp1Reg, 11
+                JZ MovOp1RegDH
+
+                CMP selectedOp1Reg, 15
+                JZ MovOp1RegBP
+                CMP selectedOp1Reg, 16
+                JZ MovOp1RegSP
+                CMP selectedOp1Reg, 17
+                JZ MovOp1RegSI
+                CMP selectedOp1Reg, 18
+                JZ MovOp1RegDI
+                
+
+                JMP InValidCommand
+
+                MovOp1RegAX:
+                    CALL GetSrcOp
+                    MOV ValRegAX, AX
+                    JMP Exit
+                MovOp1RegAL:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegAX, AL
+                    JMP Exit
+                MovOp1RegAH:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegAX+1, AL
+                    JMP Exit
+                MovOp1RegBX:
+                    CALL GetSrcOp
+                    MOV ValRegBX, AX
+                    JMP Exit
+                MovOp1RegBL:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegBX, AL
+                    JMP Exit
+                MovOp1RegBH:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegBX+1, AL
+                    JMP Exit
+                MovOp1RegCX:
+                    CALL GetSrcOp
+                    MOV ValRegCX, AX
+                    JMP Exit
+                MovOp1RegCL:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegCX, AL
+                    JMP Exit
+                MovOp1RegCH:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegCX+1, AL
+                    JMP Exit
+                MovOp1RegDX:
+                    CALL GetSrcOp
+                    MOV ValRegDX, AX
+                    JMP Exit
+                MovOp1RegDL:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegDX, AL
+                    JMP Exit
+                MovOp1RegDH:
+                    CALL GetSrcOp_8Bit
+                    MOV BYTE PTR ValRegDX+1, AL
+                    JMP Exit
+                MovOp1RegBP:
+                    CALL GetSrcOp
+                    MOV ValRegBP, AX
+                    JMP Exit
+                MovOp1RegSP:
+                    CALL GetSrcOp
+                    MOV ValRegSP, AX
+                    JMP Exit
+                MovOp1RegSI:
+                    CALL GetSrcOp
+                    MOV ValRegSI, AX
+                    JMP Exit
+                MovOp1RegDI:
+                    CALL GetSrcOp
+                    MOV ValRegDI, AX
+                    JMP Exit
+
+            MovOp1AddReg:
+
+                ; Check Memory-to-Memory operations
+                CMP selectedOp2Type, 1
+                JZ InValidCommand
+                CMP selectedOp2Type, 2
+                jz InValidCommand
+
+                CMP selectedOp1AddReg, 3
+                JZ MovOp1AddRegBX
+                CMP selectedOp1AddReg, 15
+                JZ MovOp1AddRegBP
+                CMP selectedOp1AddReg, 17
+                JZ MovOp1AddRegSI
+                CMP selectedOp1AddReg, 18
+                JZ MovOp1AddRegDI
+                JMP InValidCommand
+
+                MovOp1AddRegBX:
+
+                    mov dx, ValRegBX
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+
+                    CMP selectedOp2Size, 8
+                    jz MovOp1AddRegBX_Op2_8Bit 
+                    CALL GetSrcOp
+                    mov SI, ValRegBX
+                    MOV WORD PTR ValMem[SI], AX
+                    JMP Exit
+                    MovOp1AddRegBX_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV SI, ValRegBX
+                        MOV ValMem[SI], AL
+                    JMP Exit
+                MovOp1AddRegBP:
+                    mov dx, ValRegBP
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+
+                    CMP selectedOp2Size, 8
+                    jz MovOp1AddRegBP_Op2_8Bit 
+                    CALL GetSrcOp
+                    mov SI, ValRegBP
+                    MOV WORD PTR ValMem[SI], AX
+                    JMP Exit
+                    MovOp1AddRegBP_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV SI, ValRegBP
+                        MOV ValMem[SI], AL
+                    JMP Exit
+
+                MovOp1AddRegSI:
+                    mov dx, ValRegSI
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+
+                    CMP selectedOp2Size, 8
+                    jz MovOp1AddRegSI_Op2_8Bit 
+                    CALL GetSrcOp
+                    mov SI, ValRegSI
+                    MOV WORD PTR ValMem[SI], AX
+                    JMP Exit
+                    MovOp1AddRegSI_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV SI, ValRegSI
+                        MOV ValMem[SI], AL
+                    JMP Exit
+                
+                MovOp1AddRegDI:
+                    mov dx, ValRegDI
+                    CALL CheckAddress
+                    cmp bl, 1               ; Value is greater than 16
+                    JZ InValidCommand
+
+                    CMP selectedOp2Size, 8
+                    jz MovOp1AddRegDI_Op2_8Bit 
+                    CALL GetSrcOp
+                    mov SI, ValRegDI
+                    MOV WORD PTR ValMem[SI], AX
+                    JMP Exit
+                    MovOp1AddRegDI_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV SI, ValRegDI
+                        MOV ValMem[SI], AL
+                    JMP Exit
+
+            MovOp1Mem:
+                
+                CMP selectedOp1Mem, 0
+                JZ MovOp1Mem0
+                CMP selectedOp1Mem, 1
+                JZ MovOp1Mem1
+                CMP selectedOp1Mem, 2
+                JZ MovOp1Mem2
+                CMP selectedOp1Mem, 3
+                JZ MovOp1Mem3
+                CMP selectedOp1Mem, 4
+                JZ MovOp1Mem4
+                CMP selectedOp1Mem, 5
+                JZ MovOp1Mem5
+                CMP selectedOp1Mem, 6
+                JZ MovOp1Mem6
+                CMP selectedOp1Mem, 7
+                JZ MovOp1Mem7
+                CMP selectedOp1Mem, 8
+                JZ MovOp1Mem8
+                CMP selectedOp1Mem, 9
+                JZ MovOp1Mem9
+                CMP selectedOp1Mem, 10
+                JZ MovOp1Mem10
+                CMP selectedOp1Mem, 11
+                JZ MovOp1Mem11
+                CMP selectedOp1Mem, 12
+                JZ MovOp1Mem12
+                CMP selectedOp1Mem, 13
+                JZ MovOp1Mem13
+                CMP selectedOp1Mem, 14
+                JZ MovOp1Mem14
+                CMP selectedOp1Mem, 15
+                JZ MovOp1Mem15
+                JMP InValidCommand
+                
+                MovOp1Mem0:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem0_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem, AX
+
+                    MovOp1Mem0_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem, AL 
+                    JMP Exit
+                MovOp1Mem1:
+                   CMP selectedOp2Size, 8
+                    JZ MovOp1Mem1_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+1, AX
+
+                    MovOp1Mem1_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+1, AL 
+                    JMP Exit
+                MovOp1Mem2:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem2_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+2, AX
+
+                    MovOp1Mem2_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+2, AL 
+                    JMP Exit
+                MovOp1Mem3:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem3_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+3, AX
+
+                    MovOp1Mem3_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+3, AL 
+                    JMP Exit
+                MovOp1Mem4:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem4_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+4, AX
+
+                    MovOp1Mem4_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+4, AL 
+                    JMP Exit
+                MovOp1Mem5:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem5_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+5, AX
+
+                    MovOp1Mem5_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+5, AL 
+                    JMP Exit
+                MovOp1Mem6:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem6_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+6, AX
+
+                    MovOp1Mem6_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+6, AL 
+                    JMP Exit
+                MovOp1Mem7:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem7_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+7, AX
+
+                    MovOp1Mem7_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+7, AL 
+                    JMP Exit
+                MovOp1Mem8:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem8_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+8, AX
+
+                    MovOp1Mem8_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+8, AL 
+                    JMP Exit
+                MovOp1Mem9:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem9_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+9, AX
+
+                    MovOp1Mem9_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+9, AL 
+                    JMP Exit
+                MovOp1Mem10:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem10_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+10, AX
+
+                    MovOp1Mem10_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+10, AL 
+                    JMP Exit
+                MovOp1Mem11:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem11_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+11, AX
+
+                    MovOp1Mem11_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+11, AL 
+                    JMP Exit
+                MovOp1Mem12:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem12_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+12, AX
+
+                    MovOp1Mem12_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+12, AL 
+                    JMP Exit
+                MovOp1Mem13:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem13_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+13, AX
+
+                    MovOp1Mem13_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+13, AL 
+                    JMP Exit
+                MovOp1Mem14:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem14_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+14, AX
+                    
+                    MovOp1Mem14_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+14, AL 
+                    JMP Exit
+                MovOp1Mem15:
+                    CMP selectedOp2Size, 8
+                    JZ MovOp1Mem15_Op2_8Bit
+                    CALL GetSrcOp
+                    MOV WORD PTR ValMem+15, AX
+
+                    MovOp1Mem15_Op2_8Bit:
+                        CALL GetSrcOp_8Bit
+                        MOV ValMem+15, AL 
+                    JMP Exit
+
             
             JMP Exit
 
@@ -1376,7 +1774,7 @@ ENDM
         ; Display Command
         DisplayComm:
             mov ah, 9
-            mov dx, offset INCcom
+            mov dx, offset MOVcom
             int 21h
 
         CheckKeyComType:
@@ -1611,7 +2009,6 @@ ENDM
         int 10h
 
 
-        ; NEEDS TO CHANGE 
         CMP selectedOp1Type, RegIndex     
         JZ ChooseReg
         CMP selectedOp1Type, AddRegIndex
@@ -1954,9 +2351,108 @@ ENDM
             ; TODO
 
         RETURN:
-            
+            CALL CheckOp2Size
             RET
     Op1Menu ENDP
+    CheckOp1Size PROC
+        CMP selectedOp1Type, 0
+        jz Reg_CheckOp1Size
+        
+        ; Memory and value is 16-bit addressable
+        MOV selectedOp1Size, 16
+        
+        Reg_CheckOp1Size:
+            CMP selectedOp1Reg, 0
+            JZ CheckOp1Size_RegAX
+            CMP selectedOp1Reg, 1
+            JZ CheckOp1Size_RegAL
+            CMP selectedOp1Reg, 2
+            JZ CheckOp1Size_RegAH
+            CMP selectedOp1Reg, 3
+            JZ CheckOp1Size_RegBX
+            CMP selectedOp1Reg, 4
+            JZ CheckOp1Size_RegBL
+            CMP selectedOp1Reg, 5
+            JZ CheckOp1Size_RegBH
+            CMP selectedOp1Reg, 6
+            JZ CheckOp1Size_RegCX
+            CMP selectedOp1Reg, 7
+            JZ CheckOp1Size_RegCL
+            CMP selectedOp1Reg, 8
+            JZ CheckOp1Size_RegCH
+            CMP selectedOp1Reg, 9
+            JZ CheckOp1Size_RegDX
+            CMP selectedOp1Reg, 10
+            JZ CheckOp1Size_RegDL
+            CMP selectedOp1Reg, 11
+            JZ CheckOp1Size_RegDH
+
+            CMP selectedOp1Reg, 15
+            JZ CheckOp1Size_RegBP
+            CMP selectedOp1Reg, 16
+            JZ CheckOp1Size_RegSP
+            CMP selectedOp1Reg, 17
+            JZ CheckOp1Size_RegSI
+            CMP selectedOp1Reg, 18
+            JZ CheckOp1Size_RegDI
+            
+
+            ret
+
+            CheckOp1Size_RegAX:
+                MOV selectedOp1Size, 16
+                ret
+            CheckOp1Size_RegAL:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegAH:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegBX:
+                MOV selectedOp1Size, 16
+                ret
+            CheckOp1Size_RegBL:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegBH:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegCX:
+                MOV selectedOp1Size, 16
+                ret
+            CheckOp1Size_RegCL:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegCH:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegDX:
+                MOV selectedOp1Size, 16
+                ret
+            CheckOp1Size_RegDL:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegDH:
+                MOV selectedOp1Size, 8
+                ret
+            CheckOp1Size_RegBP:
+                MOV selectedOp1Size, 16
+                ret
+            CheckOp1Size_RegSP:
+                MOV selectedOp1Size, 16
+                ret
+            CheckOp1Size_RegSI:
+                MOV selectedOp1Size, 16
+                ret
+            CheckOp1Size_RegDI:
+                MOV selectedOp1Size, 16
+                ret
+
+
+
+
+        RET
+    ENDP
     Op2Menu PROC
 
         ; Set Cursor
@@ -1972,7 +2468,6 @@ ENDM
         int 10h
 
 
-        ; NEEDS TO CHANGE 
         CMP selectedOp2Type, RegIndex     
         JZ ChooseReg_Op2Menu
         CMP selectedOp2Type, AddRegIndex
@@ -1991,6 +2486,9 @@ ENDM
             int 21h
 
             CheckKey_RegType_Op2Menu:
+                ; Clear buffer
+                mov ah,07
+                int 21h
                 CALL WaitKeyPress
 
 
@@ -2058,6 +2556,9 @@ ENDM
             int 21h
 
             CheckKey_AddReg_Op2Menu:
+                ; Clear buffer
+                mov ah,07
+                int 21h
                 CALL WaitKeyPress
 
 
@@ -2126,6 +2627,9 @@ ENDM
             int 21h
 
             CheckKey_MemType_Op2Menu:
+                ; Clear buffer
+                mov ah,07
+                int 21h
                 CALL WaitKeyPress
 
 
@@ -2194,6 +2698,9 @@ ENDM
             ; Reset Cursor
             mov dx, Op2CursorLoc
             CALL SetCursor
+            ; Clear buffer
+                mov ah,07
+                int 21h
 
             ; Take value as a String from User
             mov ah,0Ah                   
@@ -2301,7 +2808,507 @@ ENDM
             ; TODO
 
         RETURN_Op2Menu:
-
+            CALL CheckOp2Size
             RET
     Op2Menu ENDP
+    CheckOp2Size PROC
+        CMP selectedOp2Type, 0
+        jz Reg_CheckOp2Size
+        
+        ; Memory and value is 16-bit addressable
+        MOV selectedOp2Size, 16
+        
+        Reg_CheckOp2Size:
+            CMP selectedOp2Reg, 0
+            JZ CheckOp2Size_RegAX
+            CMP selectedOp2Reg, 1
+            JZ CheckOp2Size_RegAL
+            CMP selectedOp2Reg, 2
+            JZ CheckOp2Size_RegAH
+            CMP selectedOp2Reg, 3
+            JZ CheckOp2Size_RegBX
+            CMP selectedOp2Reg, 4
+            JZ CheckOp2Size_RegBL
+            CMP selectedOp2Reg, 5
+            JZ CheckOp2Size_RegBH
+            CMP selectedOp2Reg, 6
+            JZ CheckOp2Size_RegCX
+            CMP selectedOp2Reg, 7
+            JZ CheckOp2Size_RegCL
+            CMP selectedOp2Reg, 8
+            JZ CheckOp2Size_RegCH
+            CMP selectedOp2Reg, 9
+            JZ CheckOp2Size_RegDX
+            CMP selectedOp2Reg, 10
+            JZ CheckOp2Size_RegDL
+            CMP selectedOp2Reg, 11
+            JZ CheckOp2Size_RegDH
+
+            CMP selectedOp2Reg, 15
+            JZ CheckOp2Size_RegBP
+            CMP selectedOp2Reg, 16
+            JZ CheckOp2Size_RegSP
+            CMP selectedOp2Reg, 17
+            JZ CheckOp2Size_RegSI
+            CMP selectedOp2Reg, 18
+            JZ CheckOp2Size_RegDI
+            
+
+            ret
+
+            CheckOp2Size_RegAX:
+                MOV selectedOp2Size, 16
+                ret
+            CheckOp2Size_RegAL:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegAH:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegBX:
+                MOV selectedOp2Size, 16
+                ret
+            CheckOp2Size_RegBL:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegBH:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegCX:
+                MOV selectedOp2Size, 16
+                ret
+            CheckOp2Size_RegCL:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegCH:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegDX:
+                MOV selectedOp2Size, 16
+                ret
+            CheckOp2Size_RegDL:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegDH:
+                MOV selectedOp2Size, 8
+                ret
+            CheckOp2Size_RegBP:
+                MOV selectedOp2Size, 16
+                ret
+            CheckOp2Size_RegSP:
+                MOV selectedOp2Size, 16
+                ret
+            CheckOp2Size_RegSI:
+                MOV selectedOp2Size, 16
+                ret
+            CheckOp2Size_RegDI:
+                MOV selectedOp2Size, 16
+                ret
+
+
+        RET
+    ENDP
+    GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
+        CMP selectedOp2Type, 0
+        JZ SrcOp2Reg_8Bit
+        CMP selectedOp2Type, 1
+        JZ SrcOp2AddReg_8Bit
+        CMP selectedOp2Type, 2
+        JZ SrcOp2Mem_8Bit
+        CMP selectedOp2Type, 3
+        JZ SrcOp2Val_8Bit
+        JMP InValidCommand
+
+        SrcOp2Reg_8Bit:
+            CMP selectedOp2Reg, 1
+            JZ SrcOp2RegAL_8Bit
+            CMP selectedOp2Reg, 2
+            JZ SrcOp2RegAH_8Bit
+
+            CMP selectedOp2Reg, 4
+            JZ SrcOp2RegBL_8Bit
+            CMP selectedOp2Reg, 5
+            JZ SrcOp2RegBH_8Bit
+
+            CMP selectedOp2Reg, 7
+            JZ SrcOp2RegCL_8Bit
+            CMP selectedOp2Reg, 8
+            JZ SrcOp2RegCH_8Bit
+
+            CMP selectedOp2Reg, 10
+            JZ SrcOp2RegDL_8Bit
+            CMP selectedOp2Reg, 11
+            JZ SrcOp2RegDH_8Bit
+
+            JMP InValidCommand
+
+            SrcOp2RegAL_8Bit:
+                mov al, BYTE PTR ValRegAX
+                RET
+            SrcOp2RegAH_8Bit:
+                mov al, BYTE PTR ValRegAX+1
+                RET
+            SrcOp2RegBL_8Bit:
+                mov al, BYTE PTR ValRegBX
+                RET
+            SrcOp2RegBH_8Bit:
+                mov al, BYTE PTR ValRegBX+1
+                RET
+            SrcOp2RegCL_8Bit:
+                mov al, BYTE PTR ValRegCX
+                RET
+            SrcOp2RegCH_8Bit:
+                mov al, BYTE PTR ValRegCX+1
+                RET
+            SrcOp2RegDL_8Bit:
+                mov al, BYTE PTR ValRegDX
+                RET
+            SrcOp2RegDH_8Bit:
+                mov al, BYTE PTR ValRegDX+1
+                RET
+            
+
+
+        SrcOp2AddReg_8Bit:
+
+            CMP selectedOp2AddReg, 3
+            JZ SrcOp2AddRegBX_8Bit
+            CMP selectedOp2AddReg, 15
+            JZ SrcOp2AddRegBP_8Bit
+            CMP selectedOp2AddReg, 17
+            JZ SrcOp2AddRegSI_8Bit
+            CMP selectedOp2AddReg, 18
+            JZ SrcOp2AddRegDI_8Bit
+
+            JMP InValidCommand
+
+            SrcOp2AddRegBX_8Bit:
+                MOV DX, ValRegBX
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegBX
+                MOV AL, [SI]
+                RET
+            SrcOp2AddRegBP_8Bit:
+                MOV DX, ValRegBP
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegBP
+                MOV AL, [SI]
+                RET
+            SrcOp2AddRegSI_8Bit:
+                MOV DX, ValRegSI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegSI
+                MOV AL, [SI]
+                RET
+            SrcOp2AddRegDI_8Bit:
+                MOV DX, ValRegDI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegDI
+                MOV AL, [SI]
+                RET
+
+        SrcOp2Mem_8Bit:
+
+            CMP selectedOp2Mem, 0
+            JZ SrcOp2Mem0_8Bit
+            CMP selectedOp2Mem, 1
+            JZ SrcOp2Mem1_8Bit
+            CMP selectedOp2Mem, 2
+            JZ SrcOp2Mem2_8Bit
+            CMP selectedOp2Mem, 3
+            JZ SrcOp2Mem3_8Bit
+            CMP selectedOp2Mem, 4
+            JZ SrcOp2Mem4_8Bit
+            CMP selectedOp2Mem, 5
+            JZ SrcOp2Mem5_8Bit
+            CMP selectedOp2Mem, 6
+            JZ SrcOp2Mem6_8Bit
+            CMP selectedOp2Mem, 7
+            JZ SrcOp2Mem7_8Bit
+            CMP selectedOp2Mem, 8
+            JZ SrcOp2Mem8_8Bit
+            CMP selectedOp2Mem, 9
+            JZ SrcOp2Mem9_8Bit
+            CMP selectedOp2Mem, 10
+            JZ SrcOp2Mem10_8Bit
+            CMP selectedOp2Mem, 11
+            JZ SrcOp2Mem11_8Bit
+            CMP selectedOp2Mem, 12
+            JZ SrcOp2Mem12_8Bit
+            CMP selectedOp2Mem, 13
+            JZ SrcOp2Mem13_8Bit
+            CMP selectedOp2Mem, 14
+            JZ SrcOp2Mem14_8Bit
+            CMP selectedOp2Mem, 15
+            JZ SrcOp2Mem15_8Bit
+            JMP InValidCommand
+            
+            SrcOp2Mem0_8Bit:
+                MOV AL, ValMem
+                RET
+            SrcOp2Mem1_8Bit:
+                MOV AL, ValMem+1
+                RET
+            SrcOp2Mem2_8Bit:
+                MOV AL, ValMem+2
+                RET
+            SrcOp2Mem3_8Bit:
+                MOV AL, ValMem+3
+                RET
+            SrcOp2Mem4_8Bit:
+                MOV AL, ValMem+4
+                RET
+            SrcOp2Mem5_8Bit:
+                MOV AL, ValMem+5
+                RET
+            SrcOp2Mem6_8Bit:
+                MOV AL, ValMem+6
+                RET
+            SrcOp2Mem7_8Bit:
+                MOV AL, ValMem+7
+                RET
+            SrcOp2Mem8_8Bit:
+                MOV AL, ValMem+8
+                RET
+            SrcOp2Mem9_8Bit:
+                MOV AL, ValMem+9
+                RET
+            SrcOp2Mem10_8Bit:
+                MOV AL, ValMem+10
+                RET
+            SrcOp2Mem11_8Bit:
+                MOV AL, ValMem+11
+                RET
+            SrcOp2Mem12_8Bit:
+                MOV AL, ValMem+12
+                RET
+            SrcOp2Mem13_8Bit:
+                MOV AL, ValMem+13
+                RET
+            SrcOp2Mem14_8Bit:
+                MOV AL, ValMem+14
+                RET
+            SrcOp2Mem15_8Bit:
+                MOV AL, ValMem+15
+                RET
+        SrcOp2Val_8Bit:
+            CMP Op2Valid, 0
+            jz InValidCommand
+            MOV AL, BYTE PTR Op2Val
+            RET
+
+
+        RET
+    GetSrcOp_8Bit ENDP
+    GetSrcOp PROC    ; Returned Value is saved in AX
+        CMP selectedOp2Type, 0
+        JZ SrcOp2Reg
+        CMP selectedOp2Type, 1
+        JZ SrcOp2AddReg
+        CMP selectedOp2Type, 2
+        JZ SrcOp2Mem
+        CMP selectedOp2Type, 3
+        JZ SrcOp2Val
+        JMP InValidCommand
+
+        SrcOp2Reg:
+
+            CMP selectedOp2Reg, 0
+            JZ SrcOp2RegAX
+
+            CMP selectedOp2Reg, 3
+            JZ SrcOp2RegBX
+
+            CMP selectedOp2Reg, 6
+            JZ SrcOp2RegCX
+
+            CMP selectedOp2Reg, 9
+            JZ SrcOp2pRegDX
+
+            CMP selectedOp2Reg, 15
+            JZ SrcOp2RegBP
+            CMP selectedOp2Reg, 16
+            JZ SrcOp2RegSP
+            CMP selectedOp2Reg, 17
+            JZ SrcOp2RegSI
+            CMP selectedOp2Reg, 18
+            JZ SrcOp2RegDI
+
+            JMP InValidCommand
+
+            SrcOp2RegAX:
+                MOV AX, ValRegAX
+                RET
+            SrcOp2RegBX:
+                MOV AX, ValRegBX
+                RET
+            SrcOp2RegCX:
+                MOV AX, ValRegCX
+                RET
+            SrcOp2pRegDX:
+                MOV AX, ValRegDX
+                RET
+            SrcOp2RegBP:
+                MOV AX, ValRegBP
+                RET
+            SrcOp2RegSP:
+                MOV AX, ValRegSP
+                RET
+            SrcOp2RegSI:
+                MOV AX, ValRegSI
+                RET
+            SrcOp2RegDI:
+                MOV AX, ValRegDI
+                RET
+            
+
+
+        SrcOp2AddReg:
+
+            CMP selectedOp2AddReg, 3
+            JZ SrcOp2AddRegBX
+            CMP selectedOp2AddReg, 15
+            JZ SrcOp2AddRegBP
+            CMP selectedOp2AddReg, 17
+            JZ SrcOp2AddRegSI
+            CMP selectedOp2AddReg, 18
+            JZ SrcOp2AddRegDI
+
+            JMP InValidCommand
+
+            SrcOp2AddRegBX:
+                MOV DX, ValRegBX
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegBX
+                MOV AX, [SI]
+                RET
+            SrcOp2AddRegBP:
+                MOV DX, ValRegBP
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegBP
+                MOV AX, [SI]
+                RET
+            SrcOp2AddRegSI:
+                MOV DX, ValRegSI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegSI
+                MOV AX, [SI]
+                RET
+            SrcOp2AddRegDI:
+                MOV DX, ValRegDI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ValRegDI
+                MOV AX, [SI]
+                RET
+
+        SrcOp2Mem:
+
+            CMP selectedOp2Mem, 0
+            JZ SrcOp2Mem0
+            CMP selectedOp2Mem, 1
+            JZ SrcOp2Mem1
+            CMP selectedOp2Mem, 2
+            JZ SrcOp2Mem2
+            CMP selectedOp2Mem, 3
+            JZ SrcOp2Mem3
+            CMP selectedOp2Mem, 4
+            JZ SrcOp2Mem4
+            CMP selectedOp2Mem, 5
+            JZ SrcOp2Mem5
+            CMP selectedOp2Mem, 6
+            JZ SrcOp2Mem6
+            CMP selectedOp2Mem, 7
+            JZ SrcOp2Mem7
+            CMP selectedOp2Mem, 8
+            JZ SrcOp2Mem8
+            CMP selectedOp2Mem, 9
+            JZ SrcOp2Mem9
+            CMP selectedOp2Mem, 10
+            JZ SrcOp2Mem10
+            CMP selectedOp2Mem, 11
+            JZ SrcOp2Mem11
+            CMP selectedOp2Mem, 12
+            JZ SrcOp2Mem12
+            CMP selectedOp2Mem, 13
+            JZ SrcOp2Mem13
+            CMP selectedOp2Mem, 14
+            JZ SrcOp2Mem14
+            CMP selectedOp2Mem, 15
+            JZ SrcOp2Mem15
+            JMP InValidCommand
+            
+            SrcOp2Mem0:
+                MOV AX, WORD PTR ValMem
+                RET
+            SrcOp2Mem1:
+                MOV AX, WORD PTR ValMem+1
+                RET
+            SrcOp2Mem2:
+                MOV AX, WORD PTR ValMem+2
+                RET
+            SrcOp2Mem3:
+                MOV AX, WORD PTR ValMem+3
+                RET
+            SrcOp2Mem4:
+                MOV AX, WORD PTR ValMem+4
+                RET
+            SrcOp2Mem5:
+                MOV AX, WORD PTR ValMem+5
+                RET
+            SrcOp2Mem6:
+                MOV AX, WORD PTR ValMem+6
+                RET
+            SrcOp2Mem7:
+                MOV AX, WORD PTR ValMem+7
+                RET
+            SrcOp2Mem8:
+                MOV AX, WORD PTR ValMem+8
+                RET
+            SrcOp2Mem9:
+                MOV AX, WORD PTR ValMem+9
+                RET
+            SrcOp2Mem10:
+                MOV AX, WORD PTR ValMem+10
+                RET
+            SrcOp2Mem11:
+                MOV AX, WORD PTR ValMem+11
+                RET
+            SrcOp2Mem12:
+                MOV AX, WORD PTR ValMem+12
+                RET
+            SrcOp2Mem13:
+                MOV AX, WORD PTR ValMem+13
+                RET
+            SrcOp2Mem14:
+                MOV AX, WORD PTR ValMem+14
+                RET
+            SrcOp2Mem15:
+                MOV AX, WORD PTR ValMem+15
+                RET
+        SrcOp2Val:
+            CMP Op2Valid, 0
+            jz InValidCommand
+            MOV AX, Op2Val
+            RET
+
+
+        RET
+    GetSrcOp ENDP
+    
     END CommMenu
