@@ -69,30 +69,30 @@ ENDM
     MemIndex    EQU 2
     ValIndex    EQU 3 
     
-    RegAX db 'AX   ','$'
-    RegAL db 'AL   ','$'                
-    RegAH db 'AH   ','$'  
-    RegBX db 'BX   ','$'   
-    RegBL db 'BL   ','$'    
-    RegBH db 'BH   ','$'
-    RegCX db 'CX   ','$'                
-    RegCL db 'CL   ','$'  
-    RegCH db 'CH   ','$'   
-    RegDX db 'DX   ','$'
-    RegDL db 'DL   ','$'
-    RegDH db 'DH   ','$'                
-    RegSX db 'SX   ','$'  
-    RegSL db 'SL   ','$'   
-    RegSH db 'SH   ','$'
-    RegBP db 'BP   ','$'
-    RegSP db 'SP   ','$'
-    RegSI db 'SI   ','$'
-    RegDI db 'DI   ','$'
+    RegAX db 'AX   ','$' ;0
+    RegAL db 'AL   ','$' ;1
+    RegAH db 'AH   ','$' ;2
+    RegBX db 'BX   ','$' ;3
+    RegBL db 'BL   ','$' ;4
+    RegBH db 'BH   ','$' ;5
+    RegCX db 'CX   ','$' ;6
+    RegCL db 'CL   ','$' ;7
+    RegCH db 'CH   ','$' ;8
+    RegDX db 'DX   ','$' ;9
+    RegDL db 'DL   ','$' ;10
+    RegDH db 'DH   ','$' ;11
+    RegSX db 'SX   ','$' ;12
+    RegSL db 'SL   ','$' ;13
+    RegSH db 'SH   ','$' ;14
+    RegBP db 'BP   ','$' ;15
+    RegSP db 'SP   ','$' ;16
+    RegSI db 'SI   ','$' ;17
+    RegDI db 'DI   ','$' ;18
 
-    ValRegAX dw 'AX' 
-    ValRegBX dw 'BX'   
-    ValRegCX dw 'CX'                  
-    ValRegDX dw 'DX'                
+    ValRegAX dw 'AX'
+    ValRegBX dw 'BX'
+    ValRegCX dw 'CX'
+    ValRegDX dw 'DX'
     ValRegBP dw 'BP'
     ValRegSP dw 'SP'
     ValRegSI dw 'SI'
@@ -1631,12 +1631,6 @@ ENDM
                 je Mul_Dl
                 cmp selectedOp1Reg, 11
                 je Mul_Dh
-                cmp selectedOp1Reg, 12
-                je Mul_invalid
-                cmp selectedOp1Reg, 13
-                je Mul_invalid
-                cmp selectedOp1Reg, 14
-                je Mul_invalid
                 cmp selectedOp1Reg, 15
                 je Mul_Bp
                 cmp selectedOp1Reg, 16
@@ -1645,6 +1639,7 @@ ENDM
                 je Mul_Si
                 cmp selectedOp1Reg, 18
                 je Mul_Di
+                jmp Mul_invalid
                 Mul_Ax:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
@@ -1754,40 +1749,15 @@ ENDM
                     mov ValRegDX,dx
                     jmp Exit
             Mul_AddMem:
-                cmp selectedOp1AddReg, 0
-                je Mul_invalid
-                cmp selectedOp1AddReg, 1
-                je Mul_invalid
-                cmp selectedOp1AddReg, 2
-                je Mul_invalid
                 cmp selectedOp1AddReg, 3
                 je Mul_AddBx
-                cmp selectedOp1AddReg, 4
-                je Mul_invalid
-                cmp selectedOp1AddReg, 5
-                je Mul_invalid
-                cmp selectedOp1AddReg, 6
-                je Mul_invalid
-                cmp selectedOp1AddReg, 7
-                je Mul_invalid
-                cmp selectedOp1AddReg, 8
-                je Mul_invalid
-                cmp selectedOp1AddReg, 9
-                je Mul_invalid
-                cmp selectedOp1AddReg, 10
-                je Mul_invalid
-                cmp selectedOp1AddReg, 11
-                je Mul_invalid
-                cmp selectedOp1AddReg, 12
-                je Mul_invalid
-                cmp selectedOp1AddReg, 13
-                je Mul_invalid
-                cmp selectedOp1AddReg, 14
-                je Mul_invalid
                 cmp selectedOp1AddReg, 15
+                je Mul_AddBp
+                cmp selectedOp1AddReg, 17
                 je Mul_AddSi
-                cmp selectedOp1AddReg, 16
+                cmp selectedOp1AddReg, 18
                 je Mul_AddDi
+                jmp Mul_invalid
                 Mul_AddBx:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
@@ -1795,6 +1765,16 @@ ENDM
                     cmp bx,15d
                     ja Mul_invalid
                     Mul ValMem[bx]
+                    mov ValRegAX,ax
+                    mov ValRegDX,dx
+                    jmp Exit
+                Mul_AddBp:
+                    mov ax,ValRegAX
+                    mov dx,ValRegDX
+                    mov bp,ValRegBP
+                    cmp bp,15d
+                    ja Mul_invalid
+                    Mul ValMem[bp]
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     jmp Exit
@@ -2123,8 +2103,10 @@ ENDM
                 cmp selectedOp1AddReg, 3
                 je Div_AddBx
                 cmp selectedOp1AddReg, 15
+                je Div_AddBp
+                cmp selectedOp1AddReg, 17
                 je Div_AddSi
-                cmp selectedOp1AddReg, 16
+                cmp selectedOp1AddReg, 18
                 je Div_AddDi
                 jmp Div_invalid
                 Div_AddBx:
@@ -2134,6 +2116,16 @@ ENDM
                     cmp bx,15d
                     ja Div_invalid
                     div ValMem[bx]
+                    mov ValRegAX,ax
+                    mov ValRegDX,dx
+                    jmp Exit
+                Div_AddBp:
+                    mov ax,ValRegAX
+                    mov dx,ValRegDX
+                    mov bp,ValRegBP
+                    cmp bp,15d
+                    ja Div_invalid
+                    div ValMem[bp]
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     jmp Exit
@@ -2340,12 +2332,6 @@ ENDM
                 je IMul_Dl
                 cmp selectedOp1Reg, 11
                 je IMul_Dh
-                cmp selectedOp1Reg, 12
-                je IMul_invalid
-                cmp selectedOp1Reg, 13
-                je IMul_invalid
-                cmp selectedOp1Reg, 14
-                je IMul_invalid
                 cmp selectedOp1Reg, 15
                 je IMul_Bp
                 cmp selectedOp1Reg, 16
@@ -2354,6 +2340,7 @@ ENDM
                 je IMul_Si
                 cmp selectedOp1Reg, 18
                 je IMul_Di
+                jmp IMul_invalid
                 IMul_Ax:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
@@ -2463,40 +2450,15 @@ ENDM
                     mov ValRegDX,dx
                     jmp Exit
             IMul_AddMem:
-                cmp selectedOp1AddReg, 0
-                je IMul_invalid
-                cmp selectedOp1AddReg, 1
-                je IMul_invalid
-                cmp selectedOp1AddReg, 2
-                je IMul_invalid
                 cmp selectedOp1AddReg, 3
                 je IMul_AddBx
-                cmp selectedOp1AddReg, 4
-                je IMul_invalid
-                cmp selectedOp1AddReg, 5
-                je IMul_invalid
-                cmp selectedOp1AddReg, 6
-                je IMul_invalid
-                cmp selectedOp1AddReg, 7
-                je IMul_invalid
-                cmp selectedOp1AddReg, 8
-                je IMul_invalid
-                cmp selectedOp1AddReg, 9
-                je IMul_invalid
-                cmp selectedOp1AddReg, 10
-                je IMul_invalid
-                cmp selectedOp1AddReg, 11
-                je IMul_invalid
-                cmp selectedOp1AddReg, 12
-                je IMul_invalid
-                cmp selectedOp1AddReg, 13
-                je IMul_invalid
-                cmp selectedOp1AddReg, 14
-                je IMul_invalid
                 cmp selectedOp1AddReg, 15
+                je IMul_AddBp
+                cmp selectedOp1AddReg, 17
                 je IMul_AddSi
-                cmp selectedOp1AddReg, 16
+                cmp selectedOp1AddReg, 18
                 je IMul_AddDi
+                jmp IMul_invalid
                 IMul_AddBx:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
@@ -2504,6 +2466,16 @@ ENDM
                     cmp bx,15d
                     ja IMul_invalid
                     IMul ValMem[bx]
+                    mov ValRegAX,ax
+                    mov ValRegDX,dx
+                    jmp Exit
+                IMul_AddBp:
+                    mov ax,ValRegAX
+                    mov dx,ValRegDX
+                    mov bp,ValRegBX
+                    cmp bp,15d
+                    ja IMul_invalid
+                    IMul ValMem[bp]
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     jmp Exit
@@ -2711,12 +2683,6 @@ ENDM
                 je IDiv_Dl
                 cmp selectedOp1Reg, 11
                 je IDiv_Dh
-                cmp selectedOp1Reg, 12
-                je IDiv_invalid
-                cmp selectedOp1Reg, 13
-                je IDiv_invalid
-                cmp selectedOp1Reg, 14
-                je IDiv_invalid
                 cmp selectedOp1Reg, 15
                 je IDiv_Bp
                 cmp selectedOp1Reg, 16
@@ -2725,6 +2691,7 @@ ENDM
                 je IDiv_Si
                 cmp selectedOp1Reg, 18
                 je IDiv_Di
+                jmp IDiv_invalid
                 IDiv_Ax:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
@@ -2834,40 +2801,15 @@ ENDM
                     mov ValRegDX,dx
                     jmp Exit
             IDiv_AddMem:
-                cmp selectedOp1AddReg, 0
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 1
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 2
-                je IDiv_invalid
                 cmp selectedOp1AddReg, 3
                 je IDiv_AddBx
-                cmp selectedOp1AddReg, 4
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 5
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 6
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 7
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 8
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 9
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 10
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 11
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 12
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 13
-                je IDiv_invalid
-                cmp selectedOp1AddReg, 14
-                je IDiv_invalid
                 cmp selectedOp1AddReg, 15
+                je IDiv_AddBp
+                cmp selectedOp1AddReg, 17
                 je IDiv_AddSi
-                cmp selectedOp1AddReg, 16
+                cmp selectedOp1AddReg, 18
                 je IDiv_AddDi
+                jmp IDiv_invalid
                 IDiv_AddBx:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
@@ -2875,6 +2817,16 @@ ENDM
                     cmp bx,15d
                     ja IDiv_invalid
                     IDiv ValMem[bx]
+                    mov ValRegAX,ax
+                    mov ValRegDX,dx
+                    jmp Exit
+                IDiv_AddBp:
+                    mov ax,ValRegAX
+                    mov dx,ValRegDX
+                    mov bp,ValRegBP
+                    cmp bp,15d
+                    ja IDiv_invalid
+                    IDiv ValMem[bp]
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     jmp Exit
@@ -3450,8 +3402,10 @@ ENDM
                 cmp selectedOp1AddReg,3
                 je ROR_AddBx
                 cmp selectedOp1AddReg,15
+                je ROR_AddBp
+                cmp selectedOp1AddReg,17
                 je ROR_AddSi
-                cmp selectedOp1AddReg,16
+                cmp selectedOp1AddReg,18
                 je ROR_AddDi
                 jmp ROR_invalid
                 ROR_AddBx:
@@ -3479,6 +3433,32 @@ ENDM
                         mov cx,Op2Val
                         ror ValMem[Bx],cl
                         mov ValRegBX,Bx
+                        jmp Exit
+                ROR_AddBp:
+                    cmp selectedOp2Type,0
+                    je ROR_AddBP_Reg
+                    cmp selectedOp2Type,3
+                    je ROR_AddBP_Val
+                    jmp ROR_invalid
+                    ROR_AddBP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne ROR_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja ROR_invalid
+                        mov cx,ValRegCX
+                        ror ValMem[BP],cl
+                        mov ValRegBP,BP
+                        jmp Exit
+                    ROR_AddBP_Val:
+                        cmp Op2Val,255d
+                        ja ROR_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja ROR_invalid
+                        mov cx,Op2Val
+                        ror ValMem[BP],cl
+                        mov ValRegBP,BP
                         jmp Exit
                 ROR_AddSi:
                     cmp selectedOp2Type,0
@@ -4262,8 +4242,10 @@ ENDM
                 cmp selectedOp1AddReg,3
                 je ROL_AddBx
                 cmp selectedOp1AddReg,15
+                je ROL_AddBp
+                cmp selectedOp1AddReg,17
                 je ROL_AddSi
-                cmp selectedOp1AddReg,16
+                cmp selectedOp1AddReg,18
                 je ROL_AddDi
                 jmp ROL_invalid
                 ROL_AddBx:
@@ -4291,6 +4273,32 @@ ENDM
                         mov cx,Op2Val
                         ROL ValMem[Bx],cl
                         mov ValRegBX,Bx
+                        jmp Exit
+                ROL_AddBp:
+                    cmp selectedOp2Type,0
+                    je ROL_AddBP_Reg
+                    cmp selectedOp2Type,3
+                    je ROL_AddBP_Val
+                    jmp ROL_invalid
+                    ROL_AddBP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne ROL_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja ROL_invalid
+                        mov cx,ValRegCX
+                        ROL ValMem[BP],cl
+                        mov ValRegBP,BP
+                        jmp Exit
+                    ROL_AddBP_Val:
+                        cmp Op2Val,255d
+                        ja ROL_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja ROL_invalid
+                        mov cx,Op2Val
+                        ROL ValMem[BP],cl
+                        mov ValRegBP,BP
                         jmp Exit
                 ROL_AddSi:
                     cmp selectedOp2Type,0
@@ -5170,8 +5178,10 @@ ENDM
                 cmp selectedOp1AddReg,3
                 je SHL_AddBx
                 cmp selectedOp1AddReg,15
+                je SHL_AddBp
+                cmp selectedOp1AddReg,17
                 je SHL_AddSi
-                cmp selectedOp1AddReg,16
+                cmp selectedOp1AddReg,18
                 je SHL_AddDi
                 jmp SHL_invalid
                 SHL_AddBx:
@@ -5202,6 +5212,36 @@ ENDM
                         clc
                         SHL ValMem[Bx],cl
                         mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                SHL_AddBp:
+                    cmp selectedOp2Type,0
+                    je SHL_AddBP_Reg
+                    cmp selectedOp2Type,3
+                    je SHL_AddBP_Val
+                    jmp SHL_invalid
+                    SHL_AddBP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne SHL_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja SHL_invalid
+                        mov cx,ValRegCX
+                        clc
+                        SHL ValMem[BP],cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                    SHL_AddBP_Val:
+                        cmp Op2Val,255d
+                        ja SHL_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja SHL_invalid
+                        mov cx,Op2Val
+                        clc
+                        SHL ValMem[BP],cl
+                        mov ValRegBP,BP
                         call SetCarryFlag
                         jmp Exit
                 SHL_AddSi:
@@ -6122,8 +6162,10 @@ ENDM
                 cmp selectedOp1AddReg,3
                 je SHR_AddBx
                 cmp selectedOp1AddReg,15
+                je SHR_AddBp
+                cmp selectedOp1AddReg,17
                 je SHR_AddSi
-                cmp selectedOp1AddReg,16
+                cmp selectedOp1AddReg,18
                 je SHR_AddDi
                 jmp SHR_invalid
                 SHR_AddBx:
@@ -6154,6 +6196,36 @@ ENDM
                         clc
                         SHR ValMem[Bx],cl
                         mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                SHR_AddBp:
+                    cmp selectedOp2Type,0
+                    je SHR_AddBP_Reg
+                    cmp selectedOp2Type,3
+                    je SHR_AddBP_Val
+                    jmp SHR_invalid
+                    SHR_AddBP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne SHR_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja SHR_invalid
+                        mov cx,ValRegCX
+                        clc
+                        SHR ValMem[BP],cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                    SHR_AddBP_Val:
+                        cmp Op2Val,255d
+                        ja SHR_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja SHR_invalid
+                        mov cx,Op2Val
+                        clc
+                        SHR ValMem[BP],cl
+                        mov ValRegBP,BP
                         call SetCarryFlag
                         jmp Exit
                 SHR_AddSi:
