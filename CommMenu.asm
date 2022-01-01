@@ -143,6 +143,13 @@ ENDM
     Mem14 db '[E]  ','$'
     Mem15 db '[F]  ','$'
 
+    NOPUP db 'None ','$'
+    PUP1 db 'PUp1 ','$'
+    PUP2 db 'PUp2 ','$'
+    PUP3 db 'PUp3 ','$'
+    PUP4 db 'PUp4 ','$'
+    PUP5 db 'PUp5 ','$'
+
     ValMem db 16 dup('M'), '$'
     ValStack db 16 dup('S'), '$'
     ValStackPointer db 0
@@ -154,9 +161,9 @@ ENDM
     StrSize db ?
     num2 db 30,?,30 DUP(?)       
     StrSize2 db ?
-    a EQU 1000
-    B EQU 100
-    C EQU 10
+    a EQU 1000h
+    B EQU 100h
+    C EQU 10h
 
     ; Variables Memory Locations and data
     CommStringSize EQU  6
@@ -192,6 +199,10 @@ ENDM
     selectedOp1AddReg db -1, '$'
     selectedOp1Mem  db -1, '$'
     selectedOp1Size db 8, '$'
+
+    selectedPUPType db -1, '$' 
+    
+
     Op1Val dw 0
     Op1Valid db 1               ; 0 if Invalid 
 
@@ -207,7 +218,23 @@ ENDM
     ; Game Variables
     ForbidChar db 'C'
 
+    ;OUR Regisesters
+    ourValRegAX dw 'AX'
+    ourValRegBX dw 'BX'
+    ourValRegCX dw 'CX'
+    ourValRegDX dw 'DX'
+    ourValRegBP dw 'BP'
+    ourValRegSP dw 'SP'
+    ourValRegSI dw 'SI'
+    ourValRegDI dw 'DI' 
 
+    ;Chance to use forbiden power up
+
+    UsedBeforeOrNot db 1
+
+    ;Player 1 points
+
+    Player1Points dw 0
 
     ; Keys Scan Codes
     UpArrowScanCode EQU 72
@@ -219,7 +246,8 @@ ENDM
     Op1CursorLoc EQU 0006H
     CommaCursorLoc EQU 000BH
     Op2CursorLoc EQU 000CH
-    
+    PUPCursorLoc EQU 0011H
+    ForbidPUPCursor EQU 0016H
     
  
 ;================================================================================================================    
@@ -278,12 +306,27 @@ ENDM
 
         ; Commands (operations) Labels
         NOP_Comm:
-            CheckForbidCharMacro NOPcom
-            NOP
+            CheckForbidCharMacro NOPcom           
+            call  PowerUpeMenu ; to choose power up
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1   ;-5 points
+            NOP      
+            sub Player1Points,5 
+            notthispower1:
+
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2  ;-3 points
+            NOP        
+            sub Player1Points,3
+            notthispower2:
+
+            
+
             JMP Exit
         
         CLC_Comm:
             CheckForbidCharMacro CLCcom
+            call  PowerUpeMenu ; to choose power up
             MOV ValCF, 0
             JMP Exit
         AND_Comm:
@@ -296,7 +339,8 @@ ENDM
             CALL DisplayChar
             CALL Op2Menu
 
-            
+            call  PowerUpeMenu ; to choose power up
+
             CMP selectedOp1Type, 0
             JZ AndOp1Reg
             CMP selectedOp1Type, 1
@@ -761,7 +805,8 @@ ENDM
             CALL DisplayChar
             CALL Op2Menu
 
-            
+            call  PowerUpeMenu ; to choose power up
+
             CMP selectedOp1Type, 0
             JZ MOVOp1Reg
             CMP selectedOp1Type, 1
@@ -1227,1734 +1272,17 @@ ENDM
             CALL DisplayChar
             CALL Op2Menu
 
-            cmp selectedOp1Type,0 ; check for Op1 Reg
-            jne notthiscom1
-
-            cmp selectedOp1Reg,0 ; check for Ax
-            jne notax
-
-            cmp selectedOp2Type,3 ; check for Op2 Value
-            jne Notvalue
-            addal:
-            mov ax,Op2Val
-            add ValRegAX,ax
-            jmp Exit
-            Notvalue:
-
-            cmp selectedOp2Type,2 ;check for Memory
-            jne Notmem1
-            mov si,0
-            SearchForMem1:
-            mov cx,si
-            mov ch,0h 
-            cmp selectedOp2Mem,cl
-            jne notit1
-            mov ax,word ptr ValMem[si]
-            add ValRegAX,ax
-            jmp Exit 
-            notit1:
-            inc si 
-            jmp SearchForMem1
-            Notmem1:
-
-            cmp selectedOp2Type,1 ;check for addresing
-            jne Notaddmem
-
-            cmp selectedOp2AddReg,3 ; check for bx
-            jne notaddbx
-            cmp ValRegBX,0FH
-            jg NotValidAddress
-            mov si,ValRegBX
-            mov ax,word ptr ValMem[si]
-            add ValRegAX,ax
-            jmp Exit
-            notaddbx:
-
-            cmp selectedOp2AddReg,15 ; check for SI
-            jne notaddSI
-            cmp ValRegSI,0FH
-            jg NotValidAddress
-            mov si,ValRegSI
-            mov ax,word ptr ValMem[si]
-            add ValRegAX,ax
-            jmp Exit
-            notaddSI:
-
-            cmp selectedOp2AddReg,16 ; check for DI
-            jne notaddDI
-            cmp ValRegDI,0FH
-            jg NotValidAddress
-            mov si,ValRegDI
-            mov ax,word ptr ValMem[si]
-            add ValRegAX,ax
-            jmp Exit
-            notaddDI:
-
-            cmp selectedOp2AddReg,2 ; check for BP
-            jne notaddBP
-            cmp ValRegBP,0FH
-            jg NotValidAddress
-            mov si,ValRegBP
-            mov ax,word ptr ValMem[si]
-            add ValRegAX,ax
-            jmp Exit
-            notaddBP:
-
-            Notaddmem:
-
-            cmp selectedOp2Type,0 ; check for Register
-            jne NotReg
-            cmp selectedOp2Reg,0 ; check for operand 2 ax
-            jne notax2
-            mov ax,ValRegAX
-            add ValRegAX,ax
-            jmp Exit
-            notax2:
-
-            cmp selectedOp2Reg,3 ; check for operand 2 bx
-            jne notbx2
-            mov ax,ValRegBX
-            add ValRegAX,ax
-            jmp Exit
-            notbx2:
-
-            cmp selectedOp2Reg,6 ; check for operand 2 cx
-            jne notcx2
-            mov ax,ValRegCX
-            add ValRegAX,ax
-            jmp Exit
-            notcx2:
-
-            cmp selectedOp2Reg,9 ; check for operand 2 dx
-            jne notdx2
-            mov ax,ValRegDX
-            add ValRegAX,ax
-            jmp Exit
-            notdx2:
-            NotReg:
-            jmp NotValidAddress
-            ; display error message
-            NotValidAddress:
-            mov ah, 9               
-            mov dx, offset error
-            int 21h
-            jmp InValidCommand
-
-            notax:      
-                        cmp selectedOp1Reg,3 ; check for Bx
-                        jne NotBx
-
-                        cmp selectedOp2Type,3 ; check for Op2 Value
-                        jne Notvalue2
-                        mov ax,Op2Val
-                        add ValRegBX,ax
-                        jmp Exit
-                        Notvalue2:
-                    
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem2
-                        mov si,0
-                        SearchForMem2:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit2
-                        mov ax,word ptr ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit 
-                        notit2:
-                        inc si 
-                        jmp SearchForMem2
-                        Notmem2:
-
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem2
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx2
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov ax,word ptr ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddbx2:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI2
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov ax,word ptr ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddSI2:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI2
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov ax,word ptr ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddDI2:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP2
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov ax,word ptr ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddBP2:
-
-                        Notaddmem2:
-
-                        cmp selectedOp2Type,0 ; check for Register
-                        jne NotReg2
-                        cmp selectedOp2Reg,0 ; check for operand 2 ax
-                        jne notax3
-                        mov ax,ValRegAX
-                        add ValRegBX,ax
-                        jmp Exit
-                        notax3:
-
-                        cmp selectedOp2Reg,3 ; check for operand 2 bx
-                        jne notbx3
-                        mov ax,ValRegBX
-                        add ValRegBX,ax
-                        jmp Exit
-                        notbx3:
-
-                        cmp selectedOp2Reg,6 ; check for operand 2 cx
-                        jne notcx3
-                        mov ax,ValRegCX
-                        add ValRegBX,ax
-                        jmp Exit
-                        notcx3:
-
-                        cmp selectedOp2Reg,9 ; check for operand 2 dx
-                        jne notdx3
-                        mov ax,ValRegDX
-                        add ValRegBX,ax
-                        jmp Exit
-                        notdx3:
-                        NotReg2:
-
-                        jmp NotValidAddress
-            NotBx:
-                        cmp selectedOp1Reg,6 ; check for Cx
-                        jne NotCx
-
-                        cmp selectedOp2Type,3 ; check for Op2 Value
-                        jne Notvalue3
-                        mov ax,Op2Val
-                        add ValRegCX,ax
-                        jmp Exit
-                        Notvalue3:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem3
-                        mov si,0
-                        SearchForMem3:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit3
-                        mov ax,word ptr ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit 
-                        notit3:
-                        inc si 
-                        jmp SearchForMem3
-                        Notmem3:
-
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem3
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx3
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddbx3:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI2
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov ax,word ptr ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddSI3:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI3
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov ax,word ptr ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddDI3:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP3
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov ax,word ptr ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddBP3:
-
-                        Notaddmem3:
-
-                        cmp selectedOp2Type,0 ; check for Register
-                        jne NotReg3
-                        cmp selectedOp2Reg,0 ; check for operand 2 ax
-                        jne notax4
-                        mov ax,ValRegAX
-                        add ValRegCX,ax
-                        jmp Exit
-                        notax4:
-
-                        cmp selectedOp2Reg,3 ; check for operand 2 bx
-                        jne notbx4
-                        mov ax,ValRegBX
-                        add ValRegCX,ax
-                        jmp Exit
-                        notbx4:
-
-                        cmp selectedOp2Reg,6 ; check for operand 2 cx
-                        jne notcx4
-                        mov ax,ValRegCX
-                        add ValRegCX,ax
-                        jmp Exit
-                        notcx4:
-
-                        cmp selectedOp2Reg,9 ; check for operand 2 dx
-                        jne notdx4
-                        mov ax,ValRegDX
-                        add ValRegCX,ax
-                        jmp Exit
-                        notdx4:
-                        NotReg3:
-
-                        jmp NotValidAddress
-            NotCx:
-                        cmp selectedOp1Reg,9 ; check for Dx
-                        jne NotDx
-
-                        cmp selectedOp2Type,3 ; check for Op2 Value
-                        jne Notvalue4
-                        mov ax,Op2Val
-                        add ValRegDX,ax
-                        jmp Exit
-                        Notvalue4:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem
-                        mov si,0
-                        SearchForMem:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit
-                        mov ax,word ptr ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit 
-                        notit:
-                        inc si 
-                        jmp SearchForMem
-                        Notmem:
-
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem4
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx4
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov ax,word ptr ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddbx4:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI4
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov ax,word ptr ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddSI4:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI4
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov ax,word ptr ValMem[si]
-                        add ValRegDX,ax
-                        notaddDI4:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP4
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov ax,word ptr ValMem[si]
-                        add ValRegDX,ax
-                        notaddBP4:
-
-                        Notaddmem4:
-
-                        cmp selectedOp2Type,0 ; check for Register
-                        jne NotReg4
-                        cmp selectedOp2Reg,0 ; check for operand 2 ax
-                        jne notax5
-                        mov ax,ValRegAX
-                        add ValRegDX,ax
-                        notax5:
-
-                        cmp selectedOp2Reg,3 ; check for operand 2 bx
-                        jne notbx5
-                        mov ax,ValRegBX
-                        add ValRegDX,ax
-                        notbx5:
-
-                        cmp selectedOp2Reg,6 ; check for operand 2 cx
-                        jne notcx5
-                        mov ax,ValRegCX
-                        add ValRegDX,ax
-                        notcx5:
-
-                        cmp selectedOp2Reg,9 ; check for operand 2 dx
-                        jne notdx5
-                        mov ax,ValRegDX
-                        add ValRegDX,ax
-                        notdx5:
-                        NotReg4:
-
-                        jmp NotValidAddress
-            NotDx:
-                        cmp selectedOp1Reg,0 ; check for Al
-                        jne notal
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue5
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        jmp addal
-                        notvalue5:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem5
-                        mov si,0
-                        SearchForMem5:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit4
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit 
-                        notit4:
-                        inc si 
-                        jmp SearchForMem5
-                        Notmem5:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg10
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal1
-                        mov ax,ValRegAX
-                        add al,al
-                        add ValRegAX,ax
-                        jmp Exit
-            notal1:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah1
-                        mov ax,ValRegAX
-                        add al,ah
-                        add ValRegAX,ax
-                        jmp Exit
-
-            notah1:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl1
-                        mov bx,ValRegBX
-                        add al,bl
-                        add ValRegAX,ax
-                        jmp Exit
-            notbl1:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbl1
-                        mov bx,ValRegBX
-                        add al,bh
-                        add ValRegAX,ax
-                        jmp Exit
-            notbh1:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl1
-                        mov cx,ValRegCX
-                        add al,cl
-                        add ValRegAX,ax
-                        jmp Exit
-            notcl1:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch1
-                        mov cx,ValRegCX
-                        add al,ch
-                        add ValRegAX,ax
-                        jmp Exit
-            notch1:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl1
-                        mov dx,ValRegDX
-                        add al,dl
-                        add ValRegAX,ax
-                        jmp Exit
-            notdl1:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh1
-                        mov dx,ValRegDX
-                        add al,dh
-                        add ValRegAX,ax
-                        jmp Exit
-            notdh1:
-
-
-
-            NotReg10:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem5
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx5
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddbx5:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI5
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddSI5:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI5
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddDI5:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP5
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddBP5:
-
-                        Notaddmem5:
-
-
-                        jmp NotValidAddress           
-            notal:
-                        
-                        cmp selectedOp1Reg,2 ; check for Ah
-                        jne notah
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue6
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        mov ax,Op2Val
-                        add ValRegAX,ax
-                        notvalue6:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem6
-                        mov si,0
-                        SearchForMem6:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit5
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit 
-                        notit5:
-                        inc si 
-                        jmp SearchForMem6
-                        Notmem6:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg20
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal2
-                        mov ax,ValRegAX
-                        add ah,al
-                        add ValRegAX,ax
-                        jmp Exit
-            notal2:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah2
-                        mov ax,ValRegAX
-                        add ah,ah
-                        add ValRegAX,ax
-                        jmp Exit
-
-            notah2:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl2
-                        mov bx,ValRegBX
-                        add ah,bl
-                        add ValRegAX,ax
-                        jmp Exit
-            notbl2:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbh2
-                        mov bx,ValRegBX
-                        add ah,bh
-                        add ValRegAX,ax
-                        jmp Exit
-            notbh2:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl2
-                        mov cx,ValRegCX
-                        add ah,cl
-                        add ValRegAX,ax
-                        jmp Exit
-            notcl2:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch2
-                        mov cx,ValRegCX
-                        add ah,ch
-                        add ValRegAX,ax
-                        jmp Exit
-            notch2:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl2
-                        mov dx,ValRegDX
-                        add ah,dl
-                        add ValRegAX,ax
-                        jmp Exit
-            notdl2:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh2
-                        mov dx,ValRegDX
-                        add ah,dh
-                        add ValRegAX,ax
-                        jmp Exit
-            notdh2:
-
-            NotReg20:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem6
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx6
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddbx6:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI6
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddSI6:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI6
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddDI6:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP6
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegAX,ax
-                        jmp Exit
-                        notaddBP6:
-
-                        Notaddmem6:
-
-
-                        jmp NotValidAddress           
-            notah:
-                        cmp selectedOp1Reg,4 ; check for bl
-                        jne notbl
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue7
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        mov bx,Op2Val
-                        add ValRegBX,bx
-                        notvalue7:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem7
-                        mov si,0
-                        SearchForMem7:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit6
-                        mov bh,0
-                        mov bl,ValMem[si]
-                        add ValRegBX,bx
-                        jmp Exit 
-                        notit6:
-                        inc si 
-                        jmp SearchForMem7
-                        Notmem7:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg30
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal3
-                        mov ax,ValRegAX
-                        add bl,al
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notal3:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah3
-                        mov ax,ValRegAX
-                        add bl,ah
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-
-            notah3:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl3
-                        mov bx,ValRegBX
-                        add bl,bl
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notbl3:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbh3
-                        mov bx,ValRegBX
-                        add bl,bh
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notbh3:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl3
-                        mov cx,ValRegCX
-                        add BL,cl
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notcl3:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch3
-                        mov cx,ValRegCX
-                        add BL,ch
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notch3:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl3
-                        mov dx,ValRegDX
-                        add bl,dl
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notdl3:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh3
-                        mov dx,ValRegDX
-                        add bl,dh
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notdh3:
-
-            NotReg30:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem7
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx7
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddbx7:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI7
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddSI7:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI7
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddDI7:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP7
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddBP7:
-
-                        Notaddmem7:
-
-
-                        jmp NotValidAddress           
-            notbl:
-                        cmp selectedOp1Reg,5 ; check for bh
-                        jne notbh
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue8
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        mov bx,Op2Val
-                        add ValRegBX,bx
-                        notvalue8:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem8
-                        mov si,0
-                        SearchForMem8:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit7
-                        mov bl,0
-                        mov bh,ValMem[si]
-                        add ValRegBX,bx
-                        jmp Exit 
-                        notit7:
-                        inc si 
-                        jmp SearchForMem8
-                        Notmem8:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg40
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal4
-                        mov ax,ValRegAX
-                        add bh,al
-                        mov bl,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notal4:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah4
-                        mov ax,ValRegAX
-                        add bh,ah
-                        mov bl,0
-                        add ValRegBX,bx
-                        jmp Exit
-
-            notah4:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl4
-                        mov bx,ValRegBX
-                        add bh,bl
-                        mov bl,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notbl4:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbh4
-                        mov bx,ValRegBX
-                        add bl,bh
-                        mov bh,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notbh4:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl4
-                        mov cx,ValRegCX
-                        add Bh,cl
-                        mov bl,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notcl4:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch4
-                        mov cx,ValRegCX
-                        add Bh,ch
-                        mov bl,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notch4:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl4
-                        mov dx,ValRegDX
-                        add bh,dl
-                        mov bl,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notdl4:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh4
-                        mov dx,ValRegDX
-                        add bh,dh
-                        mov bl,0
-                        add ValRegBX,bx
-                        jmp Exit
-            notdh4:
-
-            NotReg40:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem8
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx8
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddbx8:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI8
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddSI8:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI8
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddDI8:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP8
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegBX,ax
-                        jmp Exit
-                        notaddBP8:
-
-                        Notaddmem8:
-
-
-                        jmp NotValidAddress           
-            notbh:
-            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        cmp selectedOp1Reg,7 ; check for Cl
-                        jne notcl
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue9
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        mov bx,Op2Val
-                        add ValRegCX,bx
-                        notvalue9:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem9
-                        mov si,0
-                        SearchForMem9:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit8
-                        mov bh,0
-                        mov bl,ValMem[si]
-                        add ValRegCX,bx
-                        jmp Exit 
-                        notit8:
-                        inc si 
-                        jmp SearchForMem9
-                        Notmem9:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg50
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal5
-                        mov ax,ValRegAX
-                        add bl,al
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notal5:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah5
-                        mov ax,ValRegAX
-                        add bl,ah
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-
-            notah5:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl5
-                        mov bx,ValRegBX
-                        add bl,bl
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notbl5:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbh5
-                        mov bx,ValRegBX
-                        add bl,bh
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notbh5:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl5
-                        mov cx,ValRegCX
-                        add BL,cl
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notcl5:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch5
-                        mov cx,ValRegCX
-                        add BL,ch
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notch5:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl5
-                        mov dx,ValRegDX
-                        add bl,dl
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notdl5:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh5
-                        mov dx,ValRegDX
-                        add bl,dh
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notdh5:
-
-            NotReg50:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem9
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx9
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddbx9:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI9
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddSI9:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI9
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddDI9:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP9
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddBP9:
-
-                        Notaddmem9:
-
-
-                        jmp NotValidAddress           
-            notcl:
-                        cmp selectedOp1Reg,8 ; check for Ch
-                        jne notCh
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue10
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        mov bx,Op2Val
-                        add ValRegBX,bx
-                        notvalue10:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem8
-                        mov si,0
-                        SearchForMem10:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit9
-                        mov bl,0
-                        mov bh,ValMem[si]
-                        add ValRegCX,bx
-                        jmp Exit 
-                        notit9:
-                        inc si 
-                        jmp SearchForMem10
-                        Notmem10:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg60
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal6
-                        mov ax,ValRegAX
-                        add bh,al
-                        mov bl,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notal6:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah6
-                        mov ax,ValRegAX
-                        add bh,ah
-                        mov bl,0
-                        add ValRegCX,bx
-                        jmp Exit
-
-            notah6:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl6
-                        mov bx,ValRegBX
-                        add bh,bl
-                        mov bl,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notbl6:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbh6
-                        mov bx,ValRegBX
-                        add bl,bh
-                        mov bh,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notbh6:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl6
-                        mov cx,ValRegCX
-                        add Bh,cl
-                        mov bl,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notcl6:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch6
-                        mov cx,ValRegCX
-                        add Bh,ch
-                        mov bl,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notch6:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl6
-                        mov dx,ValRegDX
-                        add bh,dl
-                        mov bl,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notdl6:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh6
-                        mov dx,ValRegDX
-                        add bh,dh
-                        mov bl,0
-                        add ValRegCX,bx
-                        jmp Exit
-            notdh6:
-
-            NotReg60:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem10
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx10
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddbx10:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI10
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddSI10:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI10
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddDI10:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP10
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegCX,ax
-                        jmp Exit
-                        notaddBP10:
-
-                        Notaddmem10:
-
-
-                        jmp NotValidAddress           
-            notCh:
-            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        cmp selectedOp1Reg,7 ; check for dl
-                        jne notdl
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue11
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        mov bx,Op2Val
-                        add ValRegDX,bx
-                        notvalue11:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem11
-                        mov si,0
-                        SearchForMem11:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit11
-                        mov bh,0
-                        mov bl,ValMem[si]
-                        add ValRegDX,bx
-                        jmp Exit 
-                        notit11:
-                        inc si 
-                        jmp SearchForMem11
-                        Notmem11:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg70
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal7
-                        mov ax,ValRegAX
-                        add bl,al
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notal7:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah60
-                        mov ax,ValRegAX
-                        add bl,ah
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-
-            notah60:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl60
-                        mov bx,ValRegBX
-                        add bl,bl
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notbl60:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbh60
-                        mov bx,ValRegBX
-                        add bl,bh
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notbh60:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl60
-                        mov cx,ValRegCX
-                        add BL,cl
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notcl60:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch60
-                        mov cx,ValRegCX
-                        add BL,ch
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notch60:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl60
-                        mov dx,ValRegDX
-                        add bl,dl
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notdl60:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh7
-                        mov dx,ValRegDX
-                        add bl,dh
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notdh7:
-
-            NotReg70:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem11
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx11
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddbx11:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI11
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddSI11:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI11
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddDI11:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP11
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov ah,0
-                        mov al,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddBP11:
-
-                        Notaddmem11:
-
-
-                        jmp NotValidAddress           
-            notdl:
-                        cmp selectedOp1Reg,12 ; check for Dh
-                        jne notdh
-
-                        cmp selectedOp2Type,3 ;check for value
-                        jne notvalue12
-
-                        cmp Op2Val,0FFh   ; check that it's 8 bits
-                        jg NotValidAddress
-                        mov bx,Op2Val
-                        add ValRegDX,bx
-                        notvalue12:
-
-                        cmp selectedOp2Type,2 ;check for Memory
-                        jne Notmem12
-                        mov si,0
-                        SearchForMem12:
-                        mov cx,si
-                        mov ch,0h 
-                        cmp selectedOp2Mem,cl
-                        jne notit110
-                        mov bl,0
-                        mov bh,ValMem[si]
-                        add ValRegDX,bx
-                        jmp Exit 
-                        notit110:
-                        inc si 
-                        jmp SearchForMem12
-                        Notmem12:
-
-                        cmp selectedOp2Type,1 ; check for Register
-                        jne NotReg80
-                        cmp selectedOp2Reg,1 ; check for operand 2 al
-                        jne notal8
-                        mov ax,ValRegAX
-                        add bh,al
-                        mov bl,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notal8:
-
-                        cmp selectedOp2Reg,2 ; check for operand 2 ah
-                        jne notah8
-                        mov ax,ValRegAX
-                        add bh,ah
-                        mov bl,0
-                        add ValRegDX,bx
-                        jmp Exit
-
-            notah8:
-                        cmp selectedOp2Reg,4 ; check for operand 2 bl
-                        jne notbl8
-                        mov bx,ValRegBX
-                        add bh,bl
-                        mov bl,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notbl8:
-                        cmp selectedOp2Reg,5 ; check for operand 2 bh 
-                        jne notbh8
-                        mov bx,ValRegBX
-                        add bl,bh
-                        mov bh,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notbh8:
-                        cmp selectedOp2Reg,7 ; check for operand 2 cl 
-                        jne notcl8
-                        mov cx,ValRegCX
-                        add Bh,cl
-                        mov bl,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notcl8:
-                        cmp selectedOp2Reg,8 ; check for operand 2 ch 
-                        jne notch8
-                        mov cx,ValRegCX
-                        add Bh,ch
-                        mov bl,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notch8:
-                        cmp selectedOp2Reg,10 ; check for operand 2 dl 
-                        jne notdl8
-                        mov dx,ValRegDX
-                        add bh,dl
-                        mov bl,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notdl8:
-                        cmp selectedOp2Reg,11 ; check for operand 2 dh
-                        jne notdh8
-                        mov dx,ValRegDX
-                        add bh,dh
-                        mov bl,0
-                        add ValRegDX,bx
-                        jmp Exit
-            notdh8:
-
-            NotReg80:
-                        cmp selectedOp2Type,1 ;check for addresing
-                        jne Notaddmem12
-
-                        cmp selectedOp2AddReg,3 ; check for bx
-                        jne notaddbx12
-                        cmp ValRegBX,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBX
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddbx12:
-
-                        cmp selectedOp2AddReg,15 ; check for SI
-                        jne notaddSI12
-                        cmp ValRegSI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegSI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddSI12:
-
-                        cmp selectedOp2AddReg,16 ; check for DI
-                        jne notaddDI12
-                        cmp ValRegDI,0FH
-                        jg NotValidAddress
-                        mov si,ValRegDI
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddDI12:
-
-                        cmp selectedOp2AddReg,2 ; check for BP
-                        jne notaddBP12
-                        cmp ValRegBP,0FH
-                        jg NotValidAddress
-                        mov si,ValRegBP
-                        mov al,0
-                        mov ah,ValMem[si]
-                        add ValRegDX,ax
-                        jmp Exit
-                        notaddBP12:
-
-                        Notaddmem12:
-
-
-                        jmp NotValidAddress           
-            notdh:
-            jmp NotValidAddress
-            notthiscom1:
-            cmp selectedOp1Type,2
-            jne notthiscom2
-
-            cmp selectedOp2Type,3 ; check for Op2 Value
-            jne Notvalue30
-            mov ax,Op2Val
-            mov word ptr ValMem,ax
-            jmp Exit
-            Notvalue30:
-
-            cmp selectedOp2Type,0 ; check for Reg
-            jne Notthiss
-
-            cmp selectedOp2Reg,0 ;check for ax
-            jne notthisax
-            mov ax,ValRegAX
-            add word ptr ValMem,ax
-            jmp Exit
-            notthisax:
-
-            cmp selectedOp2Reg,1 ;check for al
-            jne notthisal
-            mov ax,ValRegAX
-            add ValMem,al
-            jmp Exit
-            notthisal:
-
-            cmp selectedOp2Reg,2 ;check for ah
-            jne notthisah
-            mov ax,ValRegAX
-            add ValMem,ah
-            jmp Exit
-            notthisah:
-
-            cmp selectedOp2Reg,3 ;check for Bx
-            jne notthisbx
-            mov ax,ValRegBX
-            add word ptr ValMem,ax
-            jmp Exit
-            notthisbx:
-
-            cmp selectedOp2Reg,4 ;check for Bl
-            jne notthisbl
-            mov ax,ValRegBX
-            add ValMem,al
-            jmp Exit
-            notthisbl:
-
-            cmp selectedOp2Reg,5 ;check for Bh
-            jne notthisbh
-            mov ax,ValRegBX
-            add ValMem,ah
-            jmp Exit
-            notthisbh:
-
-            cmp selectedOp2Reg,6 ;check for Cx
-            jne notthiscx
-            mov ax,ValRegCX
-            add word ptr ValMem,ax
-            jmp Exit
-            notthiscx:
-
-            cmp selectedOp2Reg,7 ;check for cl
-            jne notthiscl
-            mov ax,ValRegCX
-            add ValMem,al
-            jmp Exit
-            notthiscl:
-
-            cmp selectedOp2Reg,8 ;check for ch
-            jne notthisch
-            mov ax,ValRegCX
-            add ValMem,ah
-            jmp Exit
-            notthisch:
-
-            cmp selectedOp2Reg,6 ;check for Dx
-            jne notthisdx
-            mov ax,ValRegDX
-            add word ptr ValMem,ax
-            jmp Exit
-            notthisdx:
-
-            cmp selectedOp2Reg,7 ;check for Dl
-            jne notthisdl
-            mov ax,ValRegDX
-            add ValMem,al
-            jmp Exit
-            notthisdl:
-
-            cmp selectedOp2Reg,8 ;check for dh
-            jne notthisdh
-            mov ax,ValRegDX
-            add ValMem,ah
-            jmp Exit
-            notthisdh:
-
-            notthiss:
-            notthiscom2:
-            jmp InValidCommand
+            call  PowerUpeMenu ; to choose power up
 
             ; TODO - Check Validations
             ; TODO - Execute Commands with different Combinations
             JMP Exit
-        
         PUSH_Comm:
             CheckForbidCharMacro PUSHcom
 
             CALL Op1Menu
+
+            call  PowerUpeMenu ; to choose power up
 
             ; Todo - CHECK VALIDATIONS
             CMP selectedOp1Type, 0
@@ -3197,6 +1525,8 @@ ENDM
         POP_Comm:
             CALL Op1Menu
 
+            call  PowerUpeMenu ; to choose power up
+
             ; Todo - CHECK VALIDATIONS
             CMP selectedOp1Type, 0
             JZ PopOpReg
@@ -3399,6 +1729,8 @@ ENDM
         INC_Comm:
             CALL Op1Menu
             
+            call  PowerUpeMenu ; to choose power up
+
             CMP selectedOp1Type, 0
             JZ IncOpReg
             CMP selectedOp1Type, 1
@@ -3642,6 +1974,8 @@ ENDM
         DEC_Comm:
             CALL Op1Menu
 
+            call  PowerUpeMenu ; to choose power up
+
             CMP selectedOp1Type, 0
             JZ DecOpReg
             CMP selectedOp1Type, 1
@@ -3884,6 +2218,9 @@ ENDM
         
         MUL_Comm:
             CALL Op1Menu
+
+            call  PowerUpeMenu ; to choose power up
+
             cmp selectedOp1Type, 0
             je Mul_Reg
             cmp selectedOp1Type, 1
@@ -4235,6 +2572,9 @@ ENDM
         
         DIV_Comm:
             CALL Op1Menu
+
+            call  PowerUpeMenu ; to choose power up
+
             cmp selectedOp1Type, 0
             je Div_Reg
             cmp selectedOp1Type, 1
@@ -4585,6 +2925,9 @@ ENDM
             JMP Exit
         IMul_Comm:
             CALL Op1Menu
+
+            call  PowerUpeMenu ; to choose power up
+
             cmp selectedOp1Type, 0
             je IMul_Reg
             cmp selectedOp1Type, 1
@@ -4936,6 +3279,8 @@ ENDM
         
         IDiv_Comm:
             CALL Op1Menu
+
+            call  PowerUpeMenu ; to choose power up
             cmp selectedOp1Type, 0
             je IDiv_Reg
             cmp selectedOp1Type, 1
@@ -5291,6 +3636,9 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
+
+            call  PowerUpeMenu ; to choose power up
+
             cmp selectedOp1Type,0
             je ROR_Reg
             cmp selectedOp1Type,1
@@ -6131,6 +4479,9 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
+
+            call  PowerUpeMenu ; to choose power up
+
             cmp selectedOp1Type,0
             je ROL_Reg
             cmp selectedOp1Type,1
@@ -6975,6 +5326,7 @@ ENDM
             CALL DisplayChar
             CALL Op2Menu
 
+            call  PowerUpeMenu ; to choose power up
             ; TODO - Check Validations
 
             ; TODO - Execute Commands with different Combinations
@@ -6990,7 +5342,8 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
-
+            
+            call  PowerUpeMenu ; to choose power up
             ; TODO - Check Validations
 
             ; TODO - Execute Commands with different Combinations
@@ -7003,6 +5356,9 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
+
+            call  PowerUpeMenu ; to choose power up
+
             cmp selectedOp1Type,0
             je SHL_Reg
             cmp selectedOp1Type,1
@@ -7987,6 +6343,9 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
+
+            call  PowerUpeMenu ; to choose power up
+
             cmp selectedOp1Type,0
             je SHR_Reg
             cmp selectedOp1Type,1
@@ -8974,7 +7333,51 @@ ENDM
             CALL DisplayString
 
         Exit:
+
+            cmp selectedPUPType,3 ;Changing the forbidden character only once 
+            jne notthispower3  ;-8 points 
             
+            cmp UsedBeforeOrNot,1
+            jne notthispower3
+            dec UsedBeforeOrNot
+
+            ; Reset Cursor
+                mov ah,2
+                mov dx, ForbidPUPCursor
+                int 10h
+
+            mov ah,1 ; set forbidchar
+            int 21h
+            mov ForbidChar,al 
+
+            sub Player1Points,8
+        notthispower3:
+
+            cmp selectedPUPType,5   ;Making one of the data lines stuck at zero or at one for a single instruction
+            jne notthispower5
+            mov ValRegAX,0
+            mov ValRegBX,0
+            mov ValRegCX,0
+            mov ValRegDX,0 
+        
+            mov ValRegBP,0
+            mov ValRegSP,0
+            mov ValRegSI,0
+            mov ValRegDI,0
+        
+            mov ourValRegAX,0
+            mov ourValRegBX,0
+            mov ourValRegCX,0
+            mov ourValRegDX,0
+        
+            mov ourValRegBP,0
+            mov ourValRegSP,0
+            mov ourValRegSI,0
+            mov ourValRegDI,0
+
+            sub Player1Points,30
+        notthispower5:    
+        
             ; Test Messages
             lea dx, mesMem
             CAll DisplayString
@@ -9281,6 +7684,81 @@ ENDM
             
         ret
     Op1TypeMenu ENDP
+
+    PowerUpeMenu PROC
+
+       ; Reset Cursor
+            mov ah,2
+            mov dx, PUPCursorLoc
+            int 10h
+            
+        mov ah, 9
+        mov dx, offset NOPUP
+        int 21h
+
+        CheckKeyOp1Type2:
+            ; Clear buffer
+            mov ah,07
+            int 21h
+            CALL WaitKeyPress
+
+        Push ax
+        PUSH dx 
+            ; Clear buffer
+            mov ah,07
+            int 21h
+            ; Reset Cursor
+            mov ah,2
+            mov dx, PUPCursorLoc
+            int 10h
+        pop dx 
+        pop ax
+
+        ; Check if pressed is Up or down or Enter
+        cmp ah, UpArrowScanCode                          
+        jz CommUp_2 
+        cmp ah, DownArrowScanCode
+        jz CommDown_2
+        cmp ah, EnterScanCode
+        jz Selected_2
+        JMP CheckKeyOp1Type
+
+
+        CommUp_2:
+            mov ah, 9
+            ; Check overflow
+                cmp dx, offset NOPUP          ;Power Up firstChoiceLoc
+                jnz NotOverflow_2
+                mov dx, offset PUp5           ; Power Up LastChoiceLoc
+                add dx, CommStringSize
+            NotOverflow_2:
+                sub dx, CommStringSize
+                int 21h
+                jmp CheckKeyOp1Type2
+        
+        CommDown_2:
+            mov ah, 9
+            ; Check End of file
+                cmp dx, offset PUp5          ; Power Up LastChoiceLoc
+                jnz NotEOF_2
+                mov dx, offset NOPUP
+                sub dx, CommStringSize
+            NotEOF_2:
+                add dx, CommStringSize
+                int 21h
+                jmp CheckKeyOp1Type2
+        
+        Selected_2:
+            ; Detecting index of selected command
+            mov ax, dx
+            sub ax, offset NOPUP         ; Op1FirstChoiceLoc
+            mov bl, CommStringSize
+            div bl                                      ; Op=byte: AL:=AX / Op 
+            mov selectedPUPType, al
+            
+        ret
+    PowerUpeMenu ENDP
+
     Op2TypeMenu PROC
 
         
