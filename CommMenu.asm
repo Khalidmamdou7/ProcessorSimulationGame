@@ -3721,7 +3721,7 @@ ENDM
                     mov ValRegDX,dx
                     jmp Exit
             Mul_invalid:
-            ; TODO what happens if invalid operation
+            jmp InValidCommand
             JMP Exit
         
         DIV_Comm:
@@ -4076,7 +4076,7 @@ ENDM
                     mov ValRegDX,dx
                     jmp Exit
             Div_invalid:
-            ; TODO what happens if invalid operation
+            jmp InValidCommand
             JMP Exit
         IMul_Comm:
             CALL Op1Menu
@@ -4430,7 +4430,7 @@ ENDM
                     mov ValRegDX,dx
                     jmp Exit
             IMul_invalid:
-            ; TODO what happens if invalid operation
+            jmp InValidCommand
             JMP Exit
         
         IDiv_Comm:
@@ -4785,7 +4785,7 @@ ENDM
                     mov ValRegDX,dx
                     jmp Exit
             IDiv_invalid:
-            ; TODO what happens if invalid operation
+            jmp InValidCommand
             JMP Exit
         ROR_Comm:
             CALL Op1Menu
@@ -5628,7 +5628,7 @@ ENDM
                         ror ValMem[15],cl
                         jmp Exit
             ROR_invalid:
-            ; TODO what happens when invalid
+            jmp InValidCommand
             JMP Exit
         
         ROL_Comm:
@@ -6472,7 +6472,7 @@ ENDM
                         ROL ValMem[15],cl
                         jmp Exit
             ROL_invalid:
-            ; TODO what happens when invalid
+            jmp InValidCommand
             JMP Exit
         
         RCR_Comm:
@@ -6486,29 +6486,1967 @@ ENDM
             call  PowerUpeMenu ; to choose power up
             CALL CheckForbidCharProc
 
-            ; TODO - Check Validations
+            cmp selectedOp1Type,0
+            je RCR_Reg
+            cmp selectedOp1Type,1
+            je RCR_AddReg
+            cmp selectedOp1Type,2
+            je RCR_Mem
+            cmp selectedOp1Type,3
+            je RCR_invalid
 
-            ; TODO - Execute Commands with different Combinations
+            RCR_Reg:
+                cmp selectedOp1Reg,0
+                je RCR_Ax
+                cmp selectedOp1Reg,1
+                je RCR_Al
+                cmp selectedOp1Reg,2
+                je RCR_Ah
+                cmp selectedOp1Reg,3
+                je RCR_bx
+                cmp selectedOp1Reg,4
+                je RCR_Bl
+                cmp selectedOp1Reg,5
+                je RCR_Bh
+                cmp selectedOp1Reg,6
+                je RCR_Cx
+                cmp selectedOp1Reg,7
+                je RCR_Cl
+                cmp selectedOp1Reg,8
+                je RCR_Ch
+                cmp selectedOp1Reg,9
+                je RCR_Dx
+                cmp selectedOp1Reg,10
+                je RCR_Dl
+                cmp selectedOp1Reg,11
+                je RCR_Dh
+                cmp selectedOp1Reg,15
+                je RCR_Bp
+                cmp selectedOp1Reg,16
+                je RCR_Sp
+                cmp selectedOp1Reg,17
+                je RCR_Si
+                cmp selectedOp1Reg,18
+                je RCR_Di
+                jmp RCR_invalid
+                RCR_Ax:
+                    cmp selectedOp2Type,0
+                    je RCR_Ax_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Ax_Val
+                    jmp RCR_invalid
+                    RCR_Ax_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov ax,ValRegAX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Ax,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Ax_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov ax,ValRegAX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ax,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Al:
+                    cmp selectedOp2Type,0
+                    je RCR_Al_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Al_Val
+                    jmp RCR_invalid
+                    RCR_Al_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov ax,ValRegAX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Al,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Al_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov ax,ValRegAX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR al,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Ah:
+                    cmp selectedOp2Type,0
+                    je RCR_Ah_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Ah_Val
+                    jmp RCR_invalid
+                    RCR_Ah_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov ax,ValRegAX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Ah,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Ah_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov ax,ValRegAX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ah,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Bx:
+                    cmp selectedOp2Type,0
+                    je RCR_Bx_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Bx_Val
+                    jmp RCR_invalid
+                    RCR_Bx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Bx,ValRegBX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Bx,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Bx_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Bx,ValRegBX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR Bx,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Bl:
+                    cmp selectedOp2Type,0
+                    je RCR_Bl_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Bl_Val
+                    jmp RCR_invalid
+                    RCR_Bl_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Bx,ValRegBX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Bl,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Bl_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Bx,ValRegBX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR Bl,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Bh:
+                    cmp selectedOp2Type,0
+                    je RCR_Bh_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Bh_Val
+                    jmp RCR_invalid
+                    RCR_Bh_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Bx,ValRegBX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Bh,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Bh_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Bx,ValRegBX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR Bh,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Cx:
+                    cmp selectedOp2Type,0
+                    je RCR_Cx_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Cx_Val
+                    jmp RCR_invalid
+                    RCR_Cx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Cx,ValRegCx
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Cx,cl
+                        mov ValRegCx,Cx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Cx_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov bx,ValRegCx
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR bx,cl
+                        mov ValRegCx,bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Cl:
+                    cmp selectedOp2Type,0
+                    je RCR_Cl_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Cl_Val
+                    jmp RCR_invalid
+                    RCR_Cl_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Cl,cl
+                        mov ValRegCX,Cx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Cl_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Bx,ValRegCX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR Bl,cl
+                        mov ValRegCX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Ch:
+                    cmp selectedOp2Type,0
+                    je RCR_Ch_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Ch_Val
+                    jmp RCR_invalid
+                    RCR_Ch_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Ch,cl
+                        mov ValRegCX,Cx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Ch_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Bx,ValRegCX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR bh,cl
+                        mov ValRegCX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Dx:
+                    cmp selectedOp2Type,0
+                    je RCR_Dx_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Dx_Val
+                    jmp RCR_invalid
+                    RCR_Dx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Dx,ValRegDX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Dx,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Dx_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Dx,ValRegDX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR Dx,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Dl:
+                    cmp selectedOp2Type,0
+                    je RCR_Dl_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Dl_Val
+                    jmp RCR_invalid
+                    RCR_Dl_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Dx,ValRegDX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Dl,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Dl_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Dx,ValRegDX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR Dl,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Dh:
+                    cmp selectedOp2Type,0
+                    je RCR_Dh_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Dh_Val
+                    jmp RCR_invalid
+                    RCR_Dh_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Dx,ValRegDX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR Dh,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Dh_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Dx,ValRegDX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR Dh,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Bp:
+                    cmp selectedOp2Type,0
+                    je RCR_Bp_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Bp_Val
+                    jmp RCR_invalid
+                    RCR_Bp_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Bp,ValRegBP
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR BP,cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_BP_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov BP,ValRegBP
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR BP,cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Sp:
+                    cmp selectedOp2Type,0
+                    je RCR_SP_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_SP_Val
+                    jmp RCR_invalid
+                    RCR_SP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov SP,ValRegSP
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR SP,cl
+                        mov ValRegSP,SP
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_SP_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov SP,ValRegSP
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR SP,cl
+                        mov ValRegSP,SP
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Si:
+                    cmp selectedOp2Type,0
+                    je RCR_SI_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_SI_Val
+                    jmp RCR_invalid
+                    RCR_SI_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov SI,ValRegSI
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR SI,cl
+                        mov ValRegSI,SI
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_SI_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov SI,ValRegSI
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR SI,cl
+                        mov ValRegSI,SI
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Di:
+                    cmp selectedOp2Type,0
+                    je RCR_DI_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_DI_Val
+                    jmp RCR_invalid
+                    RCR_DI_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov DI,ValRegDI
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR DI,cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_DI_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov DI,ValRegDI
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR DI,cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+            RCR_AddReg:
+                cmp selectedOp1AddReg,3
+                je RCR_AddBx
+                cmp selectedOp1AddReg,15
+                je RCR_AddBp
+                cmp selectedOp1AddReg,17
+                je RCR_AddSi
+                cmp selectedOp1AddReg,18
+                je RCR_AddDi
+                jmp RCR_invalid
+                RCR_AddBx:
+                    cmp selectedOp2Type,0
+                    je RCR_AddBx_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_AddBx_Val
+                    jmp RCR_invalid
+                    RCR_AddBx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Bx,ValRegBX
+                        cmp Bx,15d
+                        ja RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[Bx],cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_AddBx_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Bx,ValRegBX
+                        cmp Bx,15d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[Bx],cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_AddBp:
+                    cmp selectedOp2Type,0
+                    je RCR_AddBP_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_AddBP_Val
+                    jmp RCR_invalid
+                    RCR_AddBP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[BP],cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_AddBP_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[BP],cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_AddSi:
+                    cmp selectedOp2Type,0
+                    je RCR_AddSi_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_AddSi_Val
+                    jmp RCR_invalid
+                    RCR_AddSi_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov Si,ValRegSI
+                        cmp Si,15d
+                        ja RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[Si],cl
+                        mov ValRegSI,Si
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_AddSi_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov Si,ValRegSI
+                        cmp Si,15d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[Si],cl
+                        mov ValRegSI,Si
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_AddDi:
+                    cmp selectedOp2Type,0
+                    je RCR_AddDI_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_AddDI_Val
+                    jmp RCR_invalid
+                    RCR_AddDI_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov DI,ValRegDI
+                        cmp DI,15d
+                        ja RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[DI],cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_AddDI_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov DI,ValRegDI
+                        cmp DI,15d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[DI],cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+            RCR_Mem:
+                cmp selectedOp1Mem,0
+                je RCR_Mem0
+                cmp selectedOp1Mem,1
+                je RCR_Mem1
+                cmp selectedOp1Mem,2
+                je RCR_Mem2
+                cmp selectedOp1Mem,3
+                je RCR_Mem3
+                cmp selectedOp1Mem,4
+                je RCR_Mem4
+                cmp selectedOp1Mem,5
+                je RCR_Mem5
+                cmp selectedOp1Mem,6
+                je RCR_Mem6
+                cmp selectedOp1Mem,7
+                je RCR_Mem7
+                cmp selectedOp1Mem,8
+                je RCR_Mem8
+                cmp selectedOp1Mem,9
+                je RCR_Mem9
+                cmp selectedOp1Mem,10
+                je RCR_Mem10
+                cmp selectedOp1Mem,11
+                je RCR_Mem11
+                cmp selectedOp1Mem,12
+                je RCR_Mem12
+                cmp selectedOp1Mem,13
+                je RCR_Mem13
+                cmp selectedOp1Mem,14
+                je RCR_Mem14
+                cmp selectedOp1Mem,15
+                je RCR_Mem15
+                jmp RCR_invalid
+                RCR_Mem0:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem0_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem0_Val
+                    jmp RCR_invalid
+                    RCR_Mem0_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[0],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem0_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[0],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem1:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem1_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem1_Val
+                    jmp RCR_invalid
+                    RCR_Mem1_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[1],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem1_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[1],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem2:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem2_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem2_Val
+                    jmp RCR_invalid
+                    RCR_Mem2_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[2],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem2_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[2],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem3:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem3_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem3_Val
+                    jmp RCR_invalid
+                    RCR_Mem3_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[3],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem3_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[3],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem4:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem4_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem4_Val
+                    jmp RCR_invalid
+                    RCR_Mem4_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[4],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem4_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[4],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem5:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem5_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem5_Val
+                    jmp RCR_invalid
+                    RCR_Mem5_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[5],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem5_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[5],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem6:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem6_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem6_Val
+                    jmp RCR_invalid
+                    RCR_Mem6_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[6],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem6_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[6],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem7:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem7_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem7_Val
+                    jmp RCR_invalid
+                    RCR_Mem7_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[7],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem7_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[7],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem8:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem8_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem8_Val
+                    jmp RCR_invalid
+                    RCR_Mem8_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[8],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem8_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[8],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem9:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem9_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem9_Val
+                    jmp RCR_invalid
+                    RCR_Mem9_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[9],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem9_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[9],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem10:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem10_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem10_Val
+                    jmp RCR_invalid
+                    RCR_Mem10_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[10],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem10_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[10],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem11:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem11_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem11_Val
+                    jmp RCR_invalid
+                    RCR_Mem11_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[11],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem11_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[11],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem12:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem12_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem12_Val
+                    jmp RCR_invalid
+                    RCR_Mem12_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[12],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem12_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[12],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem13:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem13_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem13_Val
+                    jmp RCR_invalid
+                    RCR_Mem13_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[13],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem13_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[13],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem14:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem14_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem14_Val
+                    jmp RCR_invalid
+                    RCR_Mem14_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[14],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem14_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[14],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCR_Mem15:
+                    cmp selectedOp2Type,0
+                    je RCR_Mem15_Reg
+                    cmp selectedOp2Type,3
+                    je RCR_Mem15_Val
+                    jmp RCR_invalid
+                    RCR_Mem15_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCR_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCR ValMem[15],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCR_Mem15_Val:
+                        cmp Op2Val,255d
+                        ja RCR_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCR ValMem[15],cl
+                        call SetCarryFlag
+                        jmp Exit
+            RCR_invalid:
+            jmp InValidCommand
             JMP Exit
         
         RCL_Comm:
             CALL Op1Menu
-
             MOV DX, CommaCursorLoc
             CALL SetCursor
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
-            
-            call  PowerUpeMenu ; to choose power up
+            cmp selectedOp1Type,0
+            je RCL_Reg
+            cmp selectedOp1Type,1
+            je RCL_AddReg
+            cmp selectedOp1Type,2
+            je RCL_Mem
+            cmp selectedOp1Type,3
+            je RCL_invalid
 
-            CALL CheckForbidCharProc
-
-            ; TODO - Check Validations
-
-            ; TODO - Execute Commands with different Combinations
+            RCL_Reg:
+                cmp selectedOp1Reg,0
+                je RCL_Ax
+                cmp selectedOp1Reg,1
+                je RCL_Al
+                cmp selectedOp1Reg,2
+                je RCL_Ah
+                cmp selectedOp1Reg,3
+                je RCL_bx
+                cmp selectedOp1Reg,4
+                je RCL_Bl
+                cmp selectedOp1Reg,5
+                je RCL_Bh
+                cmp selectedOp1Reg,6
+                je RCL_Cx
+                cmp selectedOp1Reg,7
+                je RCL_Cl
+                cmp selectedOp1Reg,8
+                je RCL_Ch
+                cmp selectedOp1Reg,9
+                je RCL_Dx
+                cmp selectedOp1Reg,10
+                je RCL_Dl
+                cmp selectedOp1Reg,11
+                je RCL_Dh
+                cmp selectedOp1Reg,15
+                je RCL_Bp
+                cmp selectedOp1Reg,16
+                je RCL_Sp
+                cmp selectedOp1Reg,17
+                je RCL_Si
+                cmp selectedOp1Reg,18
+                je RCL_Di
+                jmp RCL_invalid
+                RCL_Ax:
+                    cmp selectedOp2Type,0
+                    je RCL_Ax_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Ax_Val
+                    jmp RCL_invalid
+                    RCL_Ax_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov ax,ValRegAX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Ax,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Ax_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov ax,ValRegAX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ax,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Al:
+                    cmp selectedOp2Type,0
+                    je RCL_Al_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Al_Val
+                    jmp RCL_invalid
+                    RCL_Al_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov ax,ValRegAX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Al,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Al_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov ax,ValRegAX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL al,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Ah:
+                    cmp selectedOp2Type,0
+                    je RCL_Ah_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Ah_Val
+                    jmp RCL_invalid
+                    RCL_Ah_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov ax,ValRegAX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Ah,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Ah_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov ax,ValRegAX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ah,cl
+                        mov ValRegAX,ax
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Bx:
+                    cmp selectedOp2Type,0
+                    je RCL_Bx_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Bx_Val
+                    jmp RCL_invalid
+                    RCL_Bx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Bx,ValRegBX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Bx,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Bx_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Bx,ValRegBX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL Bx,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Bl:
+                    cmp selectedOp2Type,0
+                    je RCL_Bl_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Bl_Val
+                    jmp RCL_invalid
+                    RCL_Bl_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Bx,ValRegBX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Bl,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Bl_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Bx,ValRegBX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL Bl,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Bh:
+                    cmp selectedOp2Type,0
+                    je RCL_Bh_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Bh_Val
+                    jmp RCL_invalid
+                    RCL_Bh_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Bx,ValRegBX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Bh,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Bh_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Bx,ValRegBX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL Bh,cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Cx:
+                    cmp selectedOp2Type,0
+                    je RCL_Cx_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Cx_Val
+                    jmp RCL_invalid
+                    RCL_Cx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Cx,ValRegCx
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Cx,cl
+                        mov ValRegCx,Cx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Cx_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov bx,ValRegCx
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL bx,cl
+                        mov ValRegCx,bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Cl:
+                    cmp selectedOp2Type,0
+                    je RCL_Cl_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Cl_Val
+                    jmp RCL_invalid
+                    RCL_Cl_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Cl,cl
+                        mov ValRegCX,Cx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Cl_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Bx,ValRegCX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL Bl,cl
+                        mov ValRegCX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Ch:
+                    cmp selectedOp2Type,0
+                    je RCL_Ch_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Ch_Val
+                    jmp RCL_invalid
+                    RCL_Ch_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Ch,cl
+                        mov ValRegCX,Cx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Ch_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Bx,ValRegCX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL bh,cl
+                        mov ValRegCX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Dx:
+                    cmp selectedOp2Type,0
+                    je RCL_Dx_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Dx_Val
+                    jmp RCL_invalid
+                    RCL_Dx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Dx,ValRegDX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Dx,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Dx_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Dx,ValRegDX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL Dx,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Dl:
+                    cmp selectedOp2Type,0
+                    je RCL_Dl_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Dl_Val
+                    jmp RCL_invalid
+                    RCL_Dl_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Dx,ValRegDX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Dl,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Dl_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Dx,ValRegDX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL Dl,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Dh:
+                    cmp selectedOp2Type,0
+                    je RCL_Dh_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Dh_Val
+                    jmp RCL_invalid
+                    RCL_Dh_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Dx,ValRegDX
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL Dh,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Dh_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Dx,ValRegDX
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL Dh,cl
+                        mov ValRegDX,Dx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Bp:
+                    cmp selectedOp2Type,0
+                    je RCL_Bp_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Bp_Val
+                    jmp RCL_invalid
+                    RCL_Bp_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Bp,ValRegBP
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL BP,cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_BP_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov BP,ValRegBP
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL BP,cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Sp:
+                    cmp selectedOp2Type,0
+                    je RCL_SP_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_SP_Val
+                    jmp RCL_invalid
+                    RCL_SP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov SP,ValRegSP
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL SP,cl
+                        mov ValRegSP,SP
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_SP_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov SP,ValRegSP
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL SP,cl
+                        mov ValRegSP,SP
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Si:
+                    cmp selectedOp2Type,0
+                    je RCL_SI_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_SI_Val
+                    jmp RCL_invalid
+                    RCL_SI_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov SI,ValRegSI
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL SI,cl
+                        mov ValRegSI,SI
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_SI_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov SI,ValRegSI
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL SI,cl
+                        mov ValRegSI,SI
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Di:
+                    cmp selectedOp2Type,0
+                    je RCL_DI_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_DI_Val
+                    jmp RCL_invalid
+                    RCL_DI_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov DI,ValRegDI
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL DI,cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_DI_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov DI,ValRegDI
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL DI,cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+            RCL_AddReg:
+                cmp selectedOp1AddReg,3
+                je RCL_AddBx
+                cmp selectedOp1AddReg,15
+                je RCL_AddBp
+                cmp selectedOp1AddReg,17
+                je RCL_AddSi
+                cmp selectedOp1AddReg,18
+                je RCL_AddDi
+                jmp RCL_invalid
+                RCL_AddBx:
+                    cmp selectedOp2Type,0
+                    je RCL_AddBx_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_AddBx_Val
+                    jmp RCL_invalid
+                    RCL_AddBx_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Bx,ValRegBX
+                        cmp Bx,15d
+                        ja RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[Bx],cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_AddBx_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Bx,ValRegBX
+                        cmp Bx,15d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[Bx],cl
+                        mov ValRegBX,Bx
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_AddBp:
+                    cmp selectedOp2Type,0
+                    je RCL_AddBP_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_AddBP_Val
+                    jmp RCL_invalid
+                    RCL_AddBP_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[BP],cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_AddBP_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov BP,ValRegBP
+                        cmp BP,15d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[BP],cl
+                        mov ValRegBP,BP
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_AddSi:
+                    cmp selectedOp2Type,0
+                    je RCL_AddSi_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_AddSi_Val
+                    jmp RCL_invalid
+                    RCL_AddSi_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov Si,ValRegSI
+                        cmp Si,15d
+                        ja RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[Si],cl
+                        mov ValRegSI,Si
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_AddSi_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov Si,ValRegSI
+                        cmp Si,15d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[Si],cl
+                        mov ValRegSI,Si
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_AddDi:
+                    cmp selectedOp2Type,0
+                    je RCL_AddDI_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_AddDI_Val
+                    jmp RCL_invalid
+                    RCL_AddDI_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov DI,ValRegDI
+                        cmp DI,15d
+                        ja RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[DI],cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_AddDI_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov DI,ValRegDI
+                        cmp DI,15d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[DI],cl
+                        mov ValRegDI,DI
+                        call SetCarryFlag
+                        jmp Exit
+            RCL_Mem:
+                cmp selectedOp1Mem,0
+                je RCL_Mem0
+                cmp selectedOp1Mem,1
+                je RCL_Mem1
+                cmp selectedOp1Mem,2
+                je RCL_Mem2
+                cmp selectedOp1Mem,3
+                je RCL_Mem3
+                cmp selectedOp1Mem,4
+                je RCL_Mem4
+                cmp selectedOp1Mem,5
+                je RCL_Mem5
+                cmp selectedOp1Mem,6
+                je RCL_Mem6
+                cmp selectedOp1Mem,7
+                je RCL_Mem7
+                cmp selectedOp1Mem,8
+                je RCL_Mem8
+                cmp selectedOp1Mem,9
+                je RCL_Mem9
+                cmp selectedOp1Mem,10
+                je RCL_Mem10
+                cmp selectedOp1Mem,11
+                je RCL_Mem11
+                cmp selectedOp1Mem,12
+                je RCL_Mem12
+                cmp selectedOp1Mem,13
+                je RCL_Mem13
+                cmp selectedOp1Mem,14
+                je RCL_Mem14
+                cmp selectedOp1Mem,15
+                je RCL_Mem15
+                jmp RCL_invalid
+                RCL_Mem0:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem0_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem0_Val
+                    jmp RCL_invalid
+                    RCL_Mem0_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[0],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem0_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[0],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem1:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem1_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem1_Val
+                    jmp RCL_invalid
+                    RCL_Mem1_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[1],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem1_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[1],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem2:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem2_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem2_Val
+                    jmp RCL_invalid
+                    RCL_Mem2_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[2],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem2_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[2],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem3:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem3_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem3_Val
+                    jmp RCL_invalid
+                    RCL_Mem3_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[3],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem3_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[3],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem4:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem4_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem4_Val
+                    jmp RCL_invalid
+                    RCL_Mem4_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[4],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem4_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[4],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem5:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem5_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem5_Val
+                    jmp RCL_invalid
+                    RCL_Mem5_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[5],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem5_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[5],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem6:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem6_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem6_Val
+                    jmp RCL_invalid
+                    RCL_Mem6_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[6],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem6_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[6],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem7:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem7_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem7_Val
+                    jmp RCL_invalid
+                    RCL_Mem7_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[7],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem7_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[7],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem8:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem8_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem8_Val
+                    jmp RCL_invalid
+                    RCL_Mem8_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[8],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem8_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[8],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem9:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem9_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem9_Val
+                    jmp RCL_invalid
+                    RCL_Mem9_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[9],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem9_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[9],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem10:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem10_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem10_Val
+                    jmp RCL_invalid
+                    RCL_Mem10_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[10],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem10_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[10],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem11:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem11_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem11_Val
+                    jmp RCL_invalid
+                    RCL_Mem11_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[11],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem11_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[11],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem12:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem12_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem12_Val
+                    jmp RCL_invalid
+                    RCL_Mem12_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[12],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem12_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[12],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem13:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem13_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem13_Val
+                    jmp RCL_invalid
+                    RCL_Mem13_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[13],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem13_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[13],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem14:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem14_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem14_Val
+                    jmp RCL_invalid
+                    RCL_Mem14_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[14],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem14_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[14],cl
+                        call SetCarryFlag
+                        jmp Exit
+                RCL_Mem15:
+                    cmp selectedOp2Type,0
+                    je RCL_Mem15_Reg
+                    cmp selectedOp2Type,3
+                    je RCL_Mem15_Val
+                    jmp RCL_invalid
+                    RCL_Mem15_Reg:
+                        cmp selectedOp2Reg,7
+                        jne RCL_invalid
+                        mov cx,ValRegCX
+                        call GetCarryFlag
+                        RCL ValMem[15],cl
+                        call SetCarryFlag
+                        jmp Exit
+                    RCL_Mem15_Val:
+                        cmp Op2Val,255d
+                        ja RCL_invalid
+                        mov cx,Op2Val
+                        call GetCarryFlag
+                        RCL ValMem[15],cl
+                        call SetCarryFlag
+                        jmp Exit
+            RCL_invalid:
+            jmp InValidCommand
             JMP Exit
-
+        
         SHL_Comm:
             CALL Op1Menu
             MOV DX, CommaCursorLoc
@@ -6516,10 +8454,6 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
-
-            call  PowerUpeMenu ; to choose power up
-            CALL CheckForbidCharProc
-
             cmp selectedOp1Type,0
             je SHL_Reg
             cmp selectedOp1Type,1
@@ -7494,7 +9428,7 @@ ENDM
                         call SetCarryFlag
                         jmp Exit
             SHL_invalid:
-            ; TODO what happens when invalid
+            jmp InValidCommand
             JMP Exit
         
         SHR_Comm:
@@ -8482,7 +10416,7 @@ ENDM
                         call SetCarryFlag
                         jmp Exit
             SHR_invalid:
-            ; TODO what happens when invalid
+            jmp InValidCommand
             JMP Exit
         
         TODO_Comm:
