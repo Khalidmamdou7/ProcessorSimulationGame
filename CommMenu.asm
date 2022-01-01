@@ -37,6 +37,12 @@ ENDM
 ExecDEC MACRO Op
     DEC Op
 ENDM
+CheckForbidCharMacro MACRO comm
+    lea di, comm
+    Call CheckForbiddenChar
+    CMP bl, 1
+    jz InValidCommand
+ENDM
 ;================================================================================================================    
 .Model Huge
 .386
@@ -198,6 +204,8 @@ ENDM
     Op2Valid db 1               ; 0 if Invalid 
 
     
+    ; Game Variables
+    ForbidChar db 'C'
 
 
 
@@ -222,6 +230,7 @@ ENDM
         
         mov ax, @Data
         mov ds, ax
+        mov es, ax
         CALL ClearScreen
 
         Start:
@@ -269,14 +278,17 @@ ENDM
 
         ; Commands (operations) Labels
         NOP_Comm:
-            ; Execute Command
+            CheckForbidCharMacro NOPcom
             NOP
             JMP Exit
         
         CLC_Comm:
+            CheckForbidCharMacro CLCcom
             MOV ValCF, 0
             JMP Exit
         AND_Comm:
+            CheckForbidCharMacro ANDcom
+
             CALL Op1Menu
             mov DX, CommaCursorLoc
             CALL SetCursor
@@ -332,66 +344,82 @@ ENDM
                 JMP InValidCommand
 
                 AndOp1RegAX:
+                    CheckForbidCharMacro RegAX
                     CALL GetSrcOp
                     And ValRegAX, AX
                     JMP Exit
                 AndOp1RegAL:
+                    CheckForbidCharMacro RegAL
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegAX, AL
                     JMP Exit
                 AndOp1RegAH:
+                    CheckForbidCharMacro RegAH
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegAX+1, AL
                     JMP Exit
                 AndOp1RegBX:
+                    CheckForbidCharMacro RegBX
                     CALL GetSrcOp
                     And ValRegBX, AX
                     JMP Exit
                 AndOp1RegBL:
+                    CheckForbidCharMacro RegBL
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegBX, AL
                     JMP Exit
                 AndOp1RegBH:
+                    CheckForbidCharMacro RegBH
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegBX+1, AL
                     JMP Exit
                 AndOp1RegCX:
+                    CheckForbidCharMacro RegCX
                     CALL GetSrcOp
                     And ValRegCX, AX
                     JMP Exit
                 AndOp1RegCL:
+                    CheckForbidCharMacro RegCL
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegCX, AL
                     JMP Exit
                 AndOp1RegCH:
+                    CheckForbidCharMacro RegCH
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegCX+1, AL
                     JMP Exit
                 AndOp1RegDX:
+                    CheckForbidCharMacro RegDX
                     CALL GetSrcOp
                     And ValRegDX, AX
                     JMP Exit
                 AndOp1RegDL:
+                    CheckForbidCharMacro RegDL
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegDX, AL
                     JMP Exit
                 AndOp1RegDH:
+                    CheckForbidCharMacro RegDH
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegDX+1, AL
                     JMP Exit
                 AndOp1RegBP:
+                    CheckForbidCharMacro RegBP
                     CALL GetSrcOp
                     And ValRegBP, AX
                     JMP Exit
                 AndOp1RegSP:
+                    CheckForbidCharMacro RegSP
                     CALL GetSrcOp
                     And ValRegSP, AX
                     JMP Exit
                 AndOp1RegSI:
+                    CheckForbidCharMacro RegSI
                     CALL GetSrcOp
                     And ValRegSI, AX
                     JMP Exit
                 AndOp1RegDI:
+                    CheckForbidCharMacro RegDI
                     CALL GetSrcOp
                     And ValRegDI, AX
                     JMP Exit
@@ -415,7 +443,7 @@ ENDM
                 JMP InValidCommand
 
                 AndOp1AddRegBX:
-
+                    CheckForbidCharMacro AddRegBX
                     And dx, ValRegBX
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -433,6 +461,8 @@ ENDM
                         And ValMem[SI], AL
                     JMP Exit
                 AndOp1AddRegBP:
+                    CheckForbidCharMacro AddRegBP
+
                     And dx, ValRegBP
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -451,6 +481,8 @@ ENDM
                     JMP Exit
 
                 AndOp1AddRegSI:
+                    CheckForbidCharMacro AddRegSI
+
                     And dx, ValRegSI
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -469,6 +501,8 @@ ENDM
                     JMP Exit
                 
                 AndOp1AddRegDI:
+                    CheckForbidCharMacro AddRegDI
+
                     And dx, ValRegDI
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -523,6 +557,8 @@ ENDM
                 JMP InValidCommand
                 
                 AndOp1Mem0:
+                    CheckForbidCharMacro Mem0
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem0_Op2_8Bit
                     CALL GetSrcOp
@@ -533,7 +569,9 @@ ENDM
                         And ValMem, AL 
                     JMP Exit
                 AndOp1Mem1:
-                   CMP selectedOp2Size, 8
+                    CheckForbidCharMacro Mem1
+                    
+                    CMP selectedOp2Size, 8
                     JZ AndOp1Mem1_Op2_8Bit
                     CALL GetSrcOp
                     And WORD PTR ValMem+1, AX
@@ -543,6 +581,8 @@ ENDM
                         And ValMem+1, AL 
                     JMP Exit
                 AndOp1Mem2:
+                    CheckForbidCharMacro Mem2
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem2_Op2_8Bit
                     CALL GetSrcOp
@@ -553,6 +593,8 @@ ENDM
                         And ValMem+2, AL 
                     JMP Exit
                 AndOp1Mem3:
+                    CheckForbidCharMacro Mem3
+                    
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem3_Op2_8Bit
                     CALL GetSrcOp
@@ -563,6 +605,8 @@ ENDM
                         And ValMem+3, AL 
                     JMP Exit
                 AndOp1Mem4:
+                    CheckForbidCharMacro Mem4
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem4_Op2_8Bit
                     CALL GetSrcOp
@@ -573,6 +617,8 @@ ENDM
                         And ValMem+4, AL 
                     JMP Exit
                 AndOp1Mem5:
+                    CheckForbidCharMacro Mem5
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem5_Op2_8Bit
                     CALL GetSrcOp
@@ -583,6 +629,8 @@ ENDM
                         And ValMem+5, AL 
                     JMP Exit
                 AndOp1Mem6:
+                    CheckForbidCharMacro Mem6
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem6_Op2_8Bit
                     CALL GetSrcOp
@@ -593,6 +641,8 @@ ENDM
                         And ValMem+6, AL 
                     JMP Exit
                 AndOp1Mem7:
+                    CheckForbidCharMacro Mem7
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem7_Op2_8Bit
                     CALL GetSrcOp
@@ -603,6 +653,8 @@ ENDM
                         And ValMem+7, AL 
                     JMP Exit
                 AndOp1Mem8:
+                    CheckForbidCharMacro Mem8
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem8_Op2_8Bit
                     CALL GetSrcOp
@@ -613,6 +665,8 @@ ENDM
                         And ValMem+8, AL 
                     JMP Exit
                 AndOp1Mem9:
+                    CheckForbidCharMacro Mem9
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem9_Op2_8Bit
                     CALL GetSrcOp
@@ -623,6 +677,8 @@ ENDM
                         And ValMem+9, AL 
                     JMP Exit
                 AndOp1Mem10:
+                    CheckForbidCharMacro Mem10
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem10_Op2_8Bit
                     CALL GetSrcOp
@@ -633,6 +689,8 @@ ENDM
                         And ValMem+10, AL 
                     JMP Exit
                 AndOp1Mem11:
+                    CheckForbidCharMacro Mem11
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem11_Op2_8Bit
                     CALL GetSrcOp
@@ -643,6 +701,8 @@ ENDM
                         And ValMem+11, AL 
                     JMP Exit
                 AndOp1Mem12:
+                    CheckForbidCharMacro Mem12
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem12_Op2_8Bit
                     CALL GetSrcOp
@@ -653,6 +713,8 @@ ENDM
                         And ValMem+12, AL 
                     JMP Exit
                 AndOp1Mem13:
+                    CheckForbidCharMacro Mem13
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem13_Op2_8Bit
                     CALL GetSrcOp
@@ -663,6 +725,8 @@ ENDM
                         And ValMem+13, AL 
                     JMP Exit
                 AndOp1Mem14:
+                    CheckForbidCharMacro Mem14
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem14_Op2_8Bit
                     CALL GetSrcOp
@@ -673,6 +737,8 @@ ENDM
                         And ValMem+14, AL 
                     JMP Exit
                 AndOp1Mem15:
+                    CheckForbidCharMacro Mem15
+
                     CMP selectedOp2Size, 8
                     JZ AndOp1Mem15_Op2_8Bit
                     CALL GetSrcOp
@@ -686,8 +752,10 @@ ENDM
             
             JMP Exit
         MOV_Comm:
+            CheckForbidCharMacro MOVcom
+
             CALL Op1Menu
-            MOV DX, CommaCursorLoc
+            mov DX, CommaCursorLoc
             CALL SetCursor
             mov dl, ','
             CALL DisplayChar
@@ -695,117 +763,133 @@ ENDM
 
             
             CMP selectedOp1Type, 0
-            JZ MovOp1Reg
+            JZ MOVOp1Reg
             CMP selectedOp1Type, 1
-            JZ MovOp1AddReg
+            JZ MOVOp1AddReg
             CMP selectedOp1Type, 2
-            JZ MovOp1Mem
+            JZ MOVOp1Mem
             JMP InValidCommand
 
-            MovOp1Reg:
+            MOVOp1Reg:
                 CMP selectedOp1Reg, 0
-                JZ MovOp1RegAX
+                JZ MOVOp1RegAX
                 CMP selectedOp1Reg, 1
-                JZ MovOp1RegAL
+                JZ MOVOp1RegAL
                 CMP selectedOp1Reg, 2
-                JZ MovOp1RegAH
+                JZ MOVOp1RegAH
                 CMP selectedOp1Reg, 3
-                JZ MovOp1RegBX
+                JZ MOVOp1RegBX
                 CMP selectedOp1Reg, 4
-                JZ MovOp1RegBL
+                JZ MOVOp1RegBL
                 CMP selectedOp1Reg, 5
-                JZ MovOp1RegBH
+                JZ MOVOp1RegBH
                 CMP selectedOp1Reg, 6
-                JZ MovOp1RegCX
+                JZ MOVOp1RegCX
                 CMP selectedOp1Reg, 7
-                JZ MovOp1RegCL
+                JZ MOVOp1RegCL
                 CMP selectedOp1Reg, 8
-                JZ MovOp1RegCH
+                JZ MOVOp1RegCH
                 CMP selectedOp1Reg, 9
-                JZ MovOp1RegDX
+                JZ MOVOp1RegDX
                 CMP selectedOp1Reg, 10
-                JZ MovOp1RegDL
+                JZ MOVOp1RegDL
                 CMP selectedOp1Reg, 11
-                JZ MovOp1RegDH
+                JZ MOVOp1RegDH
 
                 CMP selectedOp1Reg, 15
-                JZ MovOp1RegBP
+                JZ MOVOp1RegBP
                 CMP selectedOp1Reg, 16
-                JZ MovOp1RegSP
+                JZ MOVOp1RegSP
                 CMP selectedOp1Reg, 17
-                JZ MovOp1RegSI
+                JZ MOVOp1RegSI
                 CMP selectedOp1Reg, 18
-                JZ MovOp1RegDI
+                JZ MOVOp1RegDI
                 
 
                 JMP InValidCommand
 
-                MovOp1RegAX:
+                MOVOp1RegAX:
+                    CheckForbidCharMacro RegAX
                     CALL GetSrcOp
                     MOV ValRegAX, AX
                     JMP Exit
-                MovOp1RegAL:
+                MOVOp1RegAL:
+                    CheckForbidCharMacro RegAL
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegAX, AL
                     JMP Exit
-                MovOp1RegAH:
+                MOVOp1RegAH:
+                    CheckForbidCharMacro RegAH
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegAX+1, AL
                     JMP Exit
-                MovOp1RegBX:
+                MOVOp1RegBX:
+                    CheckForbidCharMacro RegBX
                     CALL GetSrcOp
                     MOV ValRegBX, AX
                     JMP Exit
-                MovOp1RegBL:
+                MOVOp1RegBL:
+                    CheckForbidCharMacro RegBL
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegBX, AL
                     JMP Exit
-                MovOp1RegBH:
+                MOVOp1RegBH:
+                    CheckForbidCharMacro RegBH
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegBX+1, AL
                     JMP Exit
-                MovOp1RegCX:
+                MOVOp1RegCX:
+                    CheckForbidCharMacro RegCX
                     CALL GetSrcOp
                     MOV ValRegCX, AX
                     JMP Exit
-                MovOp1RegCL:
+                MOVOp1RegCL:
+                    CheckForbidCharMacro RegCL
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegCX, AL
                     JMP Exit
-                MovOp1RegCH:
+                MOVOp1RegCH:
+                    CheckForbidCharMacro RegCH
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegCX+1, AL
                     JMP Exit
-                MovOp1RegDX:
+                MOVOp1RegDX:
+                    CheckForbidCharMacro RegDX
                     CALL GetSrcOp
                     MOV ValRegDX, AX
                     JMP Exit
-                MovOp1RegDL:
+                MOVOp1RegDL:
+                    CheckForbidCharMacro RegDL
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegDX, AL
                     JMP Exit
-                MovOp1RegDH:
+                MOVOp1RegDH:
+                    CheckForbidCharMacro RegDH
                     CALL GetSrcOp_8Bit
                     MOV BYTE PTR ValRegDX+1, AL
                     JMP Exit
-                MovOp1RegBP:
+                MOVOp1RegBP:
+                    CheckForbidCharMacro RegBP
                     CALL GetSrcOp
                     MOV ValRegBP, AX
                     JMP Exit
-                MovOp1RegSP:
+                MOVOp1RegSP:
+                    CheckForbidCharMacro RegSP
                     CALL GetSrcOp
                     MOV ValRegSP, AX
                     JMP Exit
-                MovOp1RegSI:
+                MOVOp1RegSI:
+                    CheckForbidCharMacro RegSI
                     CALL GetSrcOp
                     MOV ValRegSI, AX
                     JMP Exit
-                MovOp1RegDI:
+                MOVOp1RegDI:
+                    CheckForbidCharMacro RegDI
                     CALL GetSrcOp
                     MOV ValRegDI, AX
                     JMP Exit
 
-            MovOp1AddReg:
+            MOVOp1AddReg:
 
                 ; Check Memory-to-Memory operations
                 CMP selectedOp2Type, 1
@@ -814,286 +898,325 @@ ENDM
                 jz InValidCommand
 
                 CMP selectedOp1AddReg, 3
-                JZ MovOp1AddRegBX
+                JZ MOVOp1AddRegBX
                 CMP selectedOp1AddReg, 15
-                JZ MovOp1AddRegBP
+                JZ MOVOp1AddRegBP
                 CMP selectedOp1AddReg, 17
-                JZ MovOp1AddRegSI
+                JZ MOVOp1AddRegSI
                 CMP selectedOp1AddReg, 18
-                JZ MovOp1AddRegDI
+                JZ MOVOp1AddRegDI
                 JMP InValidCommand
 
-                MovOp1AddRegBX:
-
-                    mov dx, ValRegBX
+                MOVOp1AddRegBX:
+                    CheckForbidCharMacro AddRegBX
+                    MOV dx, ValRegBX
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
                     JZ InValidCommand
 
                     CMP selectedOp2Size, 8
-                    jz MovOp1AddRegBX_Op2_8Bit 
+                    jz MOVOp1AddRegBX_Op2_8Bit 
                     CALL GetSrcOp
-                    mov SI, ValRegBX
+                    MOV SI, ValRegBX
                     MOV WORD PTR ValMem[SI], AX
                     JMP Exit
-                    MovOp1AddRegBX_Op2_8Bit:
+                    MOVOp1AddRegBX_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV SI, ValRegBX
                         MOV ValMem[SI], AL
                     JMP Exit
-                MovOp1AddRegBP:
-                    mov dx, ValRegBP
+                MOVOp1AddRegBP:
+                    CheckForbidCharMacro AddRegBP
+
+                    MOV dx, ValRegBP
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
                     JZ InValidCommand
 
                     CMP selectedOp2Size, 8
-                    jz MovOp1AddRegBP_Op2_8Bit 
+                    jz MOVOp1AddRegBP_Op2_8Bit 
                     CALL GetSrcOp
-                    mov SI, ValRegBP
+                    MOV SI, ValRegBP
                     MOV WORD PTR ValMem[SI], AX
                     JMP Exit
-                    MovOp1AddRegBP_Op2_8Bit:
+                    MOVOp1AddRegBP_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV SI, ValRegBP
                         MOV ValMem[SI], AL
                     JMP Exit
 
-                MovOp1AddRegSI:
-                    mov dx, ValRegSI
+                MOVOp1AddRegSI:
+                    CheckForbidCharMacro AddRegSI
+
+                    MOV dx, ValRegSI
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
                     JZ InValidCommand
 
                     CMP selectedOp2Size, 8
-                    jz MovOp1AddRegSI_Op2_8Bit 
+                    jz MOVOp1AddRegSI_Op2_8Bit 
                     CALL GetSrcOp
-                    mov SI, ValRegSI
+                    MOV SI, ValRegSI
                     MOV WORD PTR ValMem[SI], AX
                     JMP Exit
-                    MovOp1AddRegSI_Op2_8Bit:
+                    MOVOp1AddRegSI_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV SI, ValRegSI
                         MOV ValMem[SI], AL
                     JMP Exit
                 
-                MovOp1AddRegDI:
-                    mov dx, ValRegDI
+                MOVOp1AddRegDI:
+                    CheckForbidCharMacro AddRegDI
+
+                    MOV dx, ValRegDI
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
                     JZ InValidCommand
 
                     CMP selectedOp2Size, 8
-                    jz MovOp1AddRegDI_Op2_8Bit 
+                    jz MOVOp1AddRegDI_Op2_8Bit 
                     CALL GetSrcOp
-                    mov SI, ValRegDI
+                    MOV SI, ValRegDI
                     MOV WORD PTR ValMem[SI], AX
                     JMP Exit
-                    MovOp1AddRegDI_Op2_8Bit:
+                    MOVOp1AddRegDI_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV SI, ValRegDI
                         MOV ValMem[SI], AL
                     JMP Exit
 
-            MovOp1Mem:
+            MOVOp1Mem:
                 
                 CMP selectedOp1Mem, 0
-                JZ MovOp1Mem0
+                JZ MOVOp1Mem0
                 CMP selectedOp1Mem, 1
-                JZ MovOp1Mem1
+                JZ MOVOp1Mem1
                 CMP selectedOp1Mem, 2
-                JZ MovOp1Mem2
+                JZ MOVOp1Mem2
                 CMP selectedOp1Mem, 3
-                JZ MovOp1Mem3
+                JZ MOVOp1Mem3
                 CMP selectedOp1Mem, 4
-                JZ MovOp1Mem4
+                JZ MOVOp1Mem4
                 CMP selectedOp1Mem, 5
-                JZ MovOp1Mem5
+                JZ MOVOp1Mem5
                 CMP selectedOp1Mem, 6
-                JZ MovOp1Mem6
+                JZ MOVOp1Mem6
                 CMP selectedOp1Mem, 7
-                JZ MovOp1Mem7
+                JZ MOVOp1Mem7
                 CMP selectedOp1Mem, 8
-                JZ MovOp1Mem8
+                JZ MOVOp1Mem8
                 CMP selectedOp1Mem, 9
-                JZ MovOp1Mem9
+                JZ MOVOp1Mem9
                 CMP selectedOp1Mem, 10
-                JZ MovOp1Mem10
+                JZ MOVOp1Mem10
                 CMP selectedOp1Mem, 11
-                JZ MovOp1Mem11
+                JZ MOVOp1Mem11
                 CMP selectedOp1Mem, 12
-                JZ MovOp1Mem12
+                JZ MOVOp1Mem12
                 CMP selectedOp1Mem, 13
-                JZ MovOp1Mem13
+                JZ MOVOp1Mem13
                 CMP selectedOp1Mem, 14
-                JZ MovOp1Mem14
+                JZ MOVOp1Mem14
                 CMP selectedOp1Mem, 15
-                JZ MovOp1Mem15
+                JZ MOVOp1Mem15
                 JMP InValidCommand
                 
-                MovOp1Mem0:
+                MOVOp1Mem0:
+                    CheckForbidCharMacro Mem0
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem0_Op2_8Bit
+                    JZ MOVOp1Mem0_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem, AX
 
-                    MovOp1Mem0_Op2_8Bit:
+                    MOVOp1Mem0_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem, AL 
                     JMP Exit
-                MovOp1Mem1:
-                   CMP selectedOp2Size, 8
-                    JZ MovOp1Mem1_Op2_8Bit
+                MOVOp1Mem1:
+                    CheckForbidCharMacro Mem1
+                    
+                    CMP selectedOp2Size, 8
+                    JZ MOVOp1Mem1_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+1, AX
 
-                    MovOp1Mem1_Op2_8Bit:
+                    MOVOp1Mem1_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+1, AL 
                     JMP Exit
-                MovOp1Mem2:
+                MOVOp1Mem2:
+                    CheckForbidCharMacro Mem2
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem2_Op2_8Bit
+                    JZ MOVOp1Mem2_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+2, AX
 
-                    MovOp1Mem2_Op2_8Bit:
+                    MOVOp1Mem2_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+2, AL 
                     JMP Exit
-                MovOp1Mem3:
+                MOVOp1Mem3:
+                    CheckForbidCharMacro Mem3
+                    
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem3_Op2_8Bit
+                    JZ MOVOp1Mem3_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+3, AX
 
-                    MovOp1Mem3_Op2_8Bit:
+                    MOVOp1Mem3_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+3, AL 
                     JMP Exit
-                MovOp1Mem4:
+                MOVOp1Mem4:
+                    CheckForbidCharMacro Mem4
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem4_Op2_8Bit
+                    JZ MOVOp1Mem4_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+4, AX
 
-                    MovOp1Mem4_Op2_8Bit:
+                    MOVOp1Mem4_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+4, AL 
                     JMP Exit
-                MovOp1Mem5:
+                MOVOp1Mem5:
+                    CheckForbidCharMacro Mem5
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem5_Op2_8Bit
+                    JZ MOVOp1Mem5_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+5, AX
 
-                    MovOp1Mem5_Op2_8Bit:
+                    MOVOp1Mem5_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+5, AL 
                     JMP Exit
-                MovOp1Mem6:
+                MOVOp1Mem6:
+                    CheckForbidCharMacro Mem6
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem6_Op2_8Bit
+                    JZ MOVOp1Mem6_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+6, AX
 
-                    MovOp1Mem6_Op2_8Bit:
+                    MOVOp1Mem6_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+6, AL 
                     JMP Exit
-                MovOp1Mem7:
+                MOVOp1Mem7:
+                    CheckForbidCharMacro Mem7
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem7_Op2_8Bit
+                    JZ MOVOp1Mem7_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+7, AX
 
-                    MovOp1Mem7_Op2_8Bit:
+                    MOVOp1Mem7_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+7, AL 
                     JMP Exit
-                MovOp1Mem8:
+                MOVOp1Mem8:
+                    CheckForbidCharMacro Mem8
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem8_Op2_8Bit
+                    JZ MOVOp1Mem8_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+8, AX
 
-                    MovOp1Mem8_Op2_8Bit:
+                    MOVOp1Mem8_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+8, AL 
                     JMP Exit
-                MovOp1Mem9:
+                MOVOp1Mem9:
+                    CheckForbidCharMacro Mem9
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem9_Op2_8Bit
+                    JZ MOVOp1Mem9_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+9, AX
 
-                    MovOp1Mem9_Op2_8Bit:
+                    MOVOp1Mem9_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+9, AL 
                     JMP Exit
-                MovOp1Mem10:
+                MOVOp1Mem10:
+                    CheckForbidCharMacro Mem10
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem10_Op2_8Bit
+                    JZ MOVOp1Mem10_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+10, AX
 
-                    MovOp1Mem10_Op2_8Bit:
+                    MOVOp1Mem10_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+10, AL 
                     JMP Exit
-                MovOp1Mem11:
+                MOVOp1Mem11:
+                    CheckForbidCharMacro Mem11
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem11_Op2_8Bit
+                    JZ MOVOp1Mem11_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+11, AX
 
-                    MovOp1Mem11_Op2_8Bit:
+                    MOVOp1Mem11_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+11, AL 
                     JMP Exit
-                MovOp1Mem12:
+                MOVOp1Mem12:
+                    CheckForbidCharMacro Mem12
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem12_Op2_8Bit
+                    JZ MOVOp1Mem12_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+12, AX
 
-                    MovOp1Mem12_Op2_8Bit:
+                    MOVOp1Mem12_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+12, AL 
                     JMP Exit
-                MovOp1Mem13:
+                MOVOp1Mem13:
+                    CheckForbidCharMacro Mem13
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem13_Op2_8Bit
+                    JZ MOVOp1Mem13_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+13, AX
 
-                    MovOp1Mem13_Op2_8Bit:
+                    MOVOp1Mem13_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+13, AL 
                     JMP Exit
-                MovOp1Mem14:
+                MOVOp1Mem14:
+                    CheckForbidCharMacro Mem14
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem14_Op2_8Bit
+                    JZ MOVOp1Mem14_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+14, AX
                     
-                    MovOp1Mem14_Op2_8Bit:
+                    MOVOp1Mem14_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+14, AL 
                     JMP Exit
-                MovOp1Mem15:
+                MOVOp1Mem15:
+                    CheckForbidCharMacro Mem15
+
                     CMP selectedOp2Size, 8
-                    JZ MovOp1Mem15_Op2_8Bit
+                    JZ MOVOp1Mem15_Op2_8Bit
                     CALL GetSrcOp
                     MOV WORD PTR ValMem+15, AX
 
-                    MovOp1Mem15_Op2_8Bit:
+                    MOVOp1Mem15_Op2_8Bit:
                         CALL GetSrcOp_8Bit
                         MOV ValMem+15, AL 
                     JMP Exit
 
             
             JMP Exit
+        
 
         ADD_Comm:
             CALL Op1Menu
@@ -2829,6 +2952,8 @@ ENDM
             JMP Exit
         
         PUSH_Comm:
+            CheckForbidCharMacro PUSHcom
+
             CALL Op1Menu
 
             ; Todo - CHECK VALIDATIONS
@@ -2867,27 +2992,35 @@ ENDM
 
                 
                 PushOpRegAX:
+                    CheckForbidCharMacro RegAX
                     ExecPush ValRegAX
                     JMP Exit
                 PushOpRegBX:
+                    CheckForbidCharMacro RegBX
                     ExecPush ValRegBX
                     JMP Exit
                 PushOpRegCX:
+                    CheckForbidCharMacro RegCX
                     ExecPush ValRegCX
                     JMP Exit
                 PushOpRegDX:
+                    CheckForbidCharMacro RegDX
                     ExecPush ValRegDX
                     JMP Exit
                 PushOpRegBP:
+                    CheckForbidCharMacro RegBP
                     ExecPush ValRegBP
                     JMP Exit
                 PushOpRegSP:
+                    CheckForbidCharMacro RegSP
                     ExecPush ValRegSP
                     JMP Exit
                 PushOpRegSI:
+                    CheckForbidCharMacro RegSI
                     ExecPush ValRegSI
                     JMP Exit
                 PushOpRegDI:
+                    CheckForbidCharMacro RegDI
                     ExecPush ValRegDI
                     JMP Exit
 
@@ -2929,51 +3062,67 @@ ENDM
                 JMP InValidCommand
                 
                 PushOpMem0:
+                    CheckForbidCharMacro Mem0
                     ExecPushMem ValMem
                     JMP Exit
                 PushOpMem1:
+                    CheckForbidCharMacro Mem1
                     ExecPushMem ValMem+1
                     JMP Exit
                 PushOpMem2:
+                    CheckForbidCharMacro Mem2
                     ExecPushMem ValMem+2
                     JMP Exit
                 PushOpMem3:
+                    CheckForbidCharMacro Mem3
                     ExecPushMem ValMem+3
                     JMP Exit
                 PushOpMem4:
+                    CheckForbidCharMacro Mem4
                     ExecPushMem ValMem+4
                     JMP Exit
                 PushOpMem5:
+                    CheckForbidCharMacro Mem5
                     ExecPushMem ValMem+5
                     JMP Exit
                 PushOpMem6:
+                    CheckForbidCharMacro Mem6
                     ExecPushMem ValMem+6
                     JMP Exit
                 PushOpMem7:
+                    CheckForbidCharMacro Mem7
                     ExecPushMem ValMem+7
                     JMP Exit
                 PushOpMem8:
+                    CheckForbidCharMacro Mem8
                     ExecPushMem ValMem+8
                     JMP Exit
                 PushOpMem9:
+                    CheckForbidCharMacro Mem9
                     ExecPushMem ValMem+9
                     JMP Exit
                 PushOpMem10:
+                    CheckForbidCharMacro Mem10
                     ExecPushMem ValMem+10
                     JMP Exit
                 PushOpMem11:
+                    CheckForbidCharMacro Mem11
                     ExecPushMem ValMem+11
                     JMP Exit
                 PushOpMem12:
+                    CheckForbidCharMacro Mem12
                     ExecPushMem ValMem+12
                     JMP Exit
                 PushOpMem13:
+                    CheckForbidCharMacro Mem13
                     ExecPushMem ValMem+13
                     JMP Exit
                 PushOpMem14:
+                    CheckForbidCharMacro Mem14
                     ExecPushMem ValMem+14
                     JMP Exit
                 PushOpMem15:
+                    CheckForbidCharMacro Mem15
                     ExecPushMem ValMem+15
                     JMP Exit
 
@@ -2992,6 +3141,8 @@ ENDM
                 JMP InValidCommand
 
                 PushOpAddRegBX:
+                    CheckForbidCharMacro AddRegBX
+
                     mov dx, ValRegBX
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -3000,6 +3151,8 @@ ENDM
                     ExecPushMem ValMem[SI]
                     JMP Exit
                 PushOpAddRegBP:
+                    CheckForbidCharMacro AddRegBp
+
                     mov dx, ValRegBP
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -3009,6 +3162,8 @@ ENDM
                     JMP Exit
 
                 PushOpAddRegSI:
+                    CheckForbidCharMacro AddRegSI
+
                     mov dx, ValRegSI
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -3018,6 +3173,8 @@ ENDM
                     JMP Exit
                 
                 PushOpAddRegDI:
+                    CheckForbidCharMacro AddRegDI
+
                     mov dx, ValRegDI
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
@@ -3031,6 +3188,7 @@ ENDM
             PushOpVal:
                 CMP Op1Valid, 0
                 jz InValidCommand
+                CheckForbidCharMacro num
                 ExecPush Op1Val
                 JMP Exit
             
@@ -9043,6 +9201,18 @@ ENDM
         mov bl, 1
         ret
     CheckAddress ENDP
+    CheckForbiddenChar PROC   ;offset of string checked is in di, bl = 1 if found
+        mov al, ForbidChar
+        MOV CX, CommStringSize
+        REPNE SCASB
+        CMP CX,0
+        JZ NotFound
+        mov bl, 1
+        RET
+        NotFound:
+            mov bl,0 
+        RET
+    ENDP  
     Op1TypeMenu PROC
 
         mov ah, 9
