@@ -164,7 +164,18 @@ ENDM
     mesMem db 10, 'Values in memory as Ascii: ', 10, '$'
     mesStack db 10, 'Values in stack as Ascii: ', 10, '$'
     mesStackPointer db 10,  'Value of stack pointer: ', 10 ,  '$'
+    mesRegAX db 10, 'Value of AX: ', '$'
+    mesRegBX db 10, 'Value of BX: ', '$'
+    mesRegCX db 10, 'Value of CX: ', '$'
+    mesRegDX db 10, 'Value of DX: ', '$'
+    mesRegSI db 10, 'Value of SI: ', '$'
+    mesRegDI db 10, 'Value of DI: ', '$'
+    mesRegBP db 10, 'Value of BP: ', '$'
+    mesRegSP db 10, 'Value of SP: ', '$'
+
     error db 13,10,"Error Input",'$'
+
+
 
 
 
@@ -1731,6 +1742,64 @@ ENDM
             CALL DisplayString
             mov dx, Op1Val
             Call DisplayChar
+
+            LEA DX, mesRegAX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegAX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegAX+1
+            CALL DisplayChar
+
+            LEA DX, mesRegBX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegBX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegBX+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegCX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegCX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegCX+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegDX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegDX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegDX+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegSI
+            CALL DisplayString
+            mov dl,Byte ptr ValRegSI
+            CALL DisplayChar
+            mov dl, byte ptr ValRegSI+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegDI
+            CALL DisplayString
+            mov dl,Byte ptr ValRegDI
+            CALL DisplayChar
+            mov dl, byte ptr ValRegDI+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegBP
+            CALL DisplayString
+            mov dl,Byte ptr ValRegBP
+            CALL DisplayChar
+            mov dl, byte ptr ValRegBP+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegSP
+            CALL DisplayString
+            mov dl,Byte ptr ValRegSP
+            CALL DisplayChar
+            mov dl, byte ptr ValRegSP+1
+            CALL DisplayChar  
+
+
 
             
             
