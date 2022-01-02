@@ -144,7 +144,7 @@ ENDM
     Mem14 db '[E]  ','$'
     Mem15 db '[F]  ','$'
 
-    NOPUP db 'None ','$'
+    NOPUP db 'NoPo ','$'
     PUP1 db 'PUp1 ','$'
     PUP2 db 'PUp2 ','$'
     PUP3 db 'PUp3 ','$'
@@ -1279,6 +1279,8 @@ ENDM
 
             CALL CheckForbidCharProc
 
+            call  PowerUpeMenu ; to choose power up
+
             CMP selectedOp1Type, 0
             JZ AddOp1Reg
             CMP selectedOp1Type, 1
@@ -1820,6 +1822,8 @@ ENDM
             CALL Op2Menu
 
             CALL CheckForbidCharProc
+
+            call  PowerUpeMenu ; to choose power up
 
             CMP selectedOp1Type, 0
             JZ AdcOp1Reg
@@ -10191,6 +10195,63 @@ ENDM
 
         RET
     GetSrcOp_8Bit ENDP
+
+    DisPlayNumber PROC ;display number from Registers
+    
+mov ax,234h     ;pop ax
+mov bx,ax
+
+mov cx,a
+div cx
+
+mov ah,2     ; display first digit
+mov dl,al
+add dl,30h
+int 21h        
+
+mov ah,0
+mov cx,a
+mul cx
+
+sub bx,ax     
+
+mov cx,b   
+mov ax,bx
+div cx      
+
+mov cl,ah   
+
+mov ah,2     ; display second digit
+mov dl,al
+add dl,30h
+int 21h   
+
+mov dl,c
+mov al,bl
+mov ah,0
+
+div dl 
+
+mov ah,2     ; display third digit
+mov dl,al
+add dl,30h
+int 21h 
+
+mov cl,c 
+mov al,bl
+mov ah,0
+div cl
+mov al,ah
+mov ah,2     ; display fourth digit
+mov dl,al
+add dl,30h
+int 21h 
+                   
+RET
+
+DisPlayNumber ENDP 
+END DisPlayNumber
+
     GetSrcOp PROC    ; Returned Value is saved in AX
         CMP selectedOp2Type, 0
         JZ SrcOp2Reg
