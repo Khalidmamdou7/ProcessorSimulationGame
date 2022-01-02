@@ -220,6 +220,7 @@ ENDM
 
     
     ; Game Variables
+    Player1Points dw 0
     ForbidChar db 'N'
     ForbidCommand db 0    ; 1 if if forbidden
 
@@ -233,13 +234,11 @@ ENDM
     ourValRegSI dw 'SI'
     ourValRegDI dw 'DI' 
 
-    ;Chance to use forbiden power up
+    ; Power Up Variables
+    UsedBeforeOrNot db 1    ;Chance to use forbiden power up
+    PwrUpDataLineIndex db 0
+    PwrUpStuckVal db 0
 
-    UsedBeforeOrNot db 1
-
-    ;Player 1 points
-
-    Player1Points dw 0
 
     ; Keys Scan Codes
     UpArrowScanCode EQU 72
@@ -9023,7 +9022,29 @@ ENDM
             
         ret
     PowerUpeMenu ENDP
+    LineStuckPwrUp PROC     ; Value to be stucked is saved in AX/AL
+        PUSH BX
+        
+        CMP PwrUpStuckVal, 0
+        JZ PwrUpZero
+        CMP PwrUpStuckVal, 1
+        JZ PwrupOne
+        JMP Return_LineStuckPwrUp
 
+        PwrUpZero:
+            MOV BX, 0FFFEH
+            ROL BX, PwrUpDataLineIndex
+            AND AX, BX
+            JMP Return_LineStuckPwrUp
+        PwrupOne:
+            MOV BX, 1
+            ROL BX, PwrUpDataLineIndex
+            OR AX, BX
+
+        Return_LineStuckPwrUp:
+            POP BX
+            RET
+    ENDP
     Op2TypeMenu PROC
 
         
