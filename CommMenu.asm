@@ -7,6 +7,14 @@ ExecPush MACRO Op
     mov [di][bx], ax
     ADD ValStackPointer,2
 ENDM
+ourExecPush MACRO Op
+    mov bh, 0
+    mov bl, ourValStackPointer
+    mov ax, Op
+    lea di, ourValStack
+    mov [di][bx], ax
+    ADD ourValStackPointer,2
+ENDM
 ExecPushMem MACRO Op
     mov bh, 0
     mov bl, ValStackPointer
@@ -23,6 +31,14 @@ ExecPop MACRO Op
     mov Op, ax
     SUB ValStackPointer,2
 ENDM
+ourExecPop MACRO Op
+    mov bh, 0
+    mov bl, ourValStackPointer
+    lea di, ourValStack
+    mov ax, [di][bx]
+    mov Op, ax
+    SUB ourValStackPointer,2
+ENDM
 ExecPopMem MACRO Op
     mov bh, 0
     mov bl, ValStackPointer
@@ -30,6 +46,14 @@ ExecPopMem MACRO Op
     mov ax, [di][bx]
     mov word ptr Op, ax
     SUB ValStackPointer,2
+ENDM
+ourExecPopMem MACRO Op
+    mov bh, 0
+    mov bl, ourValStackPointer
+    lea di, ourValStack
+    mov ax, [di][bx]
+    mov word ptr Op, ax
+    SUB ourValStackPointer,2
 ENDM
 ExecINC MACRO Op
     INC Op
@@ -157,7 +181,23 @@ ENDM
     ValStack db 16 dup('S'), '$'
     ValStackPointer db 0
     ValCF db 1
+
+    ;OUR Regisesters
+    ourValRegAX dw 'AX'
+    ourValRegBX dw 'BX'
+    ourValRegCX dw 'CX'
+    ourValRegDX dw 'DX'
+    ourValRegBP dw 'BP'
+    ourValRegSP dw 'SP'
+    ourValRegSI dw 'SI'
+    ourValRegDI dw 'DI' 
+    ourValCF db 0
+    ourValMem db 16 dup('M'), '$'
+
+    ourValStack db 16 dup('S'), '$'
+    ourValStackPointer db 0
     
+
     ; Operand Value Needed Variables
     ClearSpace db '     ', '$'
     num db 30,?,30 DUP(?)       
@@ -221,18 +261,9 @@ ENDM
     
     ; Game Variables
     ForbidChar db 'N'
-    ForbidCommand db 0    ; 1 if if forbidden
+    ForbidCommand db 0    ; 1 if forbidden
 
-    ;OUR Regisesters
-    ourValRegAX dw 'AX'
-    ourValRegBX dw 'BX'
-    ourValRegCX dw 'CX'
-    ourValRegDX dw 'DX'
-    ourValRegBP dw 'BP'
-    ourValRegSP dw 'SP'
-    ourValRegSI dw 'SI'
-    ourValRegDI dw 'DI' 
-
+    
     ;Chance to use forbiden power up
 
     UsedBeforeOrNot db 1
@@ -320,25 +351,44 @@ ENDM
             CALL CheckForbidCharProc         
             call  PowerUpeMenu ; to choose power up
             cmp selectedPUPType,1 ;command on your own processor  
-            jne notthispower1   ;-5 points
+            jne notthispower1_nop   ;-5 points
             NOP      
             sub Player1Points,5 
-            notthispower1:
+            jmp Exit
+            notthispower1_nop:
 
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-            jne notthispower2  ;-3 points
+            jne notthispower2_nop  ;-3 points
             NOP        
             sub Player1Points,3
-            notthispower2:
+            jmp Exit
+            notthispower2_nop:
 
-            
+            NOP
 
             JMP Exit
         
         CLC_Comm:
             CALL CheckForbidCharProc
             call  PowerUpeMenu ; to choose power up
+
+            cmp selectedPUPType, 1 ;command on your own processor  
+            jne notthispower1_clc   ;-5 points
+            Mov ourValCF,0     
+            sub Player1Points,5 
+            jmp Exit
+            notthispower1_clc:
+
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_clc  ;-3 points
+            Mov ourValCF,0
+            Mov ValCF,0        
+            sub Player1Points,3
+            jmp Exit
+            notthispower2_clc:
+
             MOV ValCF, 0
+
             JMP Exit
         AND_Comm:
 
@@ -399,79 +449,239 @@ ENDM
                 JMP InValidCommand
 
                 AndOp1RegAX:
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andax
+                    And ourValRegAX, AX ; command
+                    jmp Exit
+                    notthispower1_andax:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andax 
+                    And ourValRegAX,AX ;command
+                    notthispower2_andax:  
                     CALL GetSrcOp
-                    And ValRegAX, AX
+                    And ValRegAX, AX 
                     JMP Exit
                 AndOp1RegAL:
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andal
+                    And BYTE PTR ourValRegAX, AL ; command
+                    jmp Exit
+                    notthispower1_andal:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andal 
+                    And BYTE PTR ourValRegAX, AL ;command
+                    notthispower2_andal:
                     CALL GetSrcOp_8Bit
-                    And BYTE PTR ValRegAX, AL
+                    And BYTE PTR ValRegAX, AL 
                     JMP Exit
                 AndOp1RegAH:
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andah
+                    And BYTE PTR ourValRegAX+1, AL ; command
+                    jmp Exit
+                    notthispower1_andah:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andah 
+                    And BYTE PTR ourValRegAX+1, AL ;command
+                    notthispower2_andah:
                     CALL GetSrcOp_8Bit
-                    And BYTE PTR ValRegAX+1, AL
+                    And BYTE PTR ValRegAX+1, AL;
                     JMP Exit
                 AndOp1RegBX:
                     ; Delete this lineBX
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andbx
+                    And ourValRegBX, AX ; command
+                    jmp Exit
+                    notthispower1_andbx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andbx 
+                    And ourValRegBX, AX ;command
+                    notthispower2_andbx:
                     CALL GetSrcOp
-                    And ValRegBX, AX
+                    And ValRegBX, AX;
                     JMP Exit
                 AndOp1RegBL:
                     ; Delete this lineBL
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andbl
+                    And BYTE PTR ourValRegBX, AL ; command
+                    jmp Exit
+                    notthispower1_andbl:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andbl
+                    And BYTE PTR ourValRegBX, AL ;command
+                    notthispower2_andbl:
                     CALL GetSrcOp_8Bit
-                    And BYTE PTR ValRegBX, AL
+                    And BYTE PTR ValRegBX, AL;
                     JMP Exit
                 AndOp1RegBH:
                     ; Delete this lineBH
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andbh
+                    And BYTE PTR ourValRegBX+1, AL ; command
+                    jmp Exit
+                    notthispower1_andbh:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andbh
+                    And BYTE PTR ourValRegBX+1, AL ;command
+                    notthispower2_andbh:
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegBX+1, AL
                     JMP Exit
                 AndOp1RegCX:
                     ; Delete this lineCX
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andcx
+                    And ourValRegCX, AX ; command
+                    jmp Exit
+                    notthispower1_andcx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andcx
+                    And ourValRegCX, AX ;command
+                    notthispower2_andcx:
                     CALL GetSrcOp
                     And ValRegCX, AX
                     JMP Exit
                 AndOp1RegCL:
                     ; Delete this lineCL
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andcl
+                    And BYTE PTR ourValRegCX, AL ; command
+                    jmp Exit
+                    notthispower1_andcl:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andcl
+                    And BYTE PTR ourValRegCX, AL ;command
+                    notthispower2_andcl:
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegCX, AL
                     JMP Exit
                 AndOp1RegCH:
                     ; Delete this lineCH
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andch
+                    And BYTE PTR ourValRegCX+1, AL ;command
+                    jmp Exit
+                    notthispower1_andch:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andch
+                    And BYTE PTR ourValRegCX+1, AL ;command
+                    notthispower2_andch:
                     CALL GetSrcOp_8Bit
-                    And BYTE PTR ValRegCX+1, AL
+                    And BYTE PTR ValRegCX+1, AL ;command
                     JMP Exit
                 AndOp1RegDX:
                     ; Delete this lineDX
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_anddx
+                    And ourValRegDX, AX ;command
+                    jmp Exit
+                    notthispower1_anddx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_anddx
+                    And ourValRegDX, AX ;command
+                    notthispower2_anddx:
                     CALL GetSrcOp
                     And ValRegDX, AX
                     JMP Exit
                 AndOp1RegDL:
                     ; Delete this lineDL
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_anddl
+                    And BYTE PTR ourValRegDX, AL;command
+                    jmp Exit
+                    notthispower1_anddl:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_anddl
+                    And BYTE PTR ourValRegDX, AL;command
+                    notthispower2_anddl:
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegDX, AL
                     JMP Exit
                 AndOp1RegDH:
                     ; Delete this lineDH
+                    CALL ourGetSrcOp_8Bit
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_anddh
+                    And BYTE PTR ourValRegDX+1, AL;command
+                    jmp Exit
+                    notthispower1_anddh:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_anddh
+                    And BYTE PTR ourValRegDX+1, AL;command
+                    notthispower2_anddh:
                     CALL GetSrcOp_8Bit
                     And BYTE PTR ValRegDX+1, AL
                     JMP Exit
                 AndOp1RegBP:
                     ; Delete this lineBP
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andbp
+                    And ourValRegBP, AX;command
+                    jmp Exit
+                    notthispower1_andbp:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andbp
+                    And ourValRegBP, AX;command
+                    notthispower2_andbp:
                     CALL GetSrcOp
                     And ValRegBP, AX
                     JMP Exit
-                AndOp1RegSP:
+                AndOp1RegSP: 
                     ; Delete this lineSP
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andsp
+                    And ourValRegSP, AX;command
+                    jmp Exit
+                    notthispower1_andsp:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andsp
+                    And ourValRegSP, AX;command
+                    notthispower2_andsp:
                     CALL GetSrcOp
                     And ValRegSP, AX
                     JMP Exit
                 AndOp1RegSI:
                     ; Delete this lineSI
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_andsi
+                    And ourValRegSI, AX;command
+                    jmp Exit
+                    notthispower1_andsi:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_andsi
+                    And ourValRegSI, AX;command
+                    notthispower2_andsi:
                     CALL GetSrcOp
                     And ValRegSI, AX
                     JMP Exit
                 AndOp1RegDI:
                     ; Delete this lineDI
+                    CALL ourGetSrcOp
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_anddi
+                    And ourValRegDI, AX;command
+                    jmp Exit
+                    notthispower1_anddi:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_anddi
+                    And ourValRegDI, AX;command
+                    notthispower2_anddi:
                     CALL GetSrcOp
                     And ValRegDI, AX
                     JMP Exit
@@ -494,7 +704,7 @@ ENDM
                 JZ AndOp1AddRegDI
                 JMP InValidCommand
 
-                AndOp1AddRegBX:
+                AndOp1AddRegBX: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                     ; Delete this lineRegBX
                     And dx, ValRegBX
                     CALL CheckAddress
@@ -2480,142 +2690,129 @@ ENDM
                 
                 PushOpRegAX:
                     ; Delete this lineAX
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushax
+                    ourExecPush ourValRegAX ; command
+                    jmp Exit
+                    notthispower1_pushax:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushax 
+                    ourExecPush ourValRegAX ;command
+                    notthispower2_pushax:  
                     ExecPush ValRegAX
                     JMP Exit
                 PushOpRegBX:
                     ; Delete this lineBX
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushbx
+                    ourExecPush ourValRegBX ; command
+                    jmp Exit
+                    notthispower1_pushbx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushbx 
+                    ourExecPush ourValRegBX ;command
+                    notthispower2_pushbx: 
                     ExecPush ValRegBX
                     JMP Exit
                 PushOpRegCX:
-                    ; Delete this lineCX
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushcx
+                    ourExecPush ourValRegCX ; command
+                    jmp Exit
+                    notthispower1_pushcx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushcx 
+                    ourExecPush ourValRegCX ;command
+                    notthispower2_pushcx: 
                     ExecPush ValRegCX
                     JMP Exit
                 PushOpRegDX:
-                    ; Delete this lineDX
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushdx
+                    ourExecPush ourValRegDX ; command
+                    jmp Exit
+                    notthispower1_pushdx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushdx 
+                    ourExecPush ourValRegDX ;command
+                    notthispower2_pushdx: 
                     ExecPush ValRegDX
                     JMP Exit
                 PushOpRegBP:
-                    ; Delete this lineBP
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushbp
+                    ourExecPush ourValRegBP ; command
+                    jmp Exit
+                    notthispower1_pushbp:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushbp 
+                    ourExecPush ourValRegBP ;command
+                    notthispower2_pushbp: 
                     ExecPush ValRegBP
                     JMP Exit
                 PushOpRegSP:
-                    ; Delete this lineSP
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushsp
+                    ourExecPush ourValRegSP ; command
+                    jmp Exit
+                    notthispower1_pushsp:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushsp 
+                    ourExecPush ourValRegSP ;command
+                    notthispower2_pushsp: 
                     ExecPush ValRegSP
                     JMP Exit
                 PushOpRegSI:
-                    ; Delete this lineSI
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushsi
+                    ourExecPush ourValRegSI ; command
+                    jmp Exit
+                    notthispower1_pushsi:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushsi 
+                    ourExecPush ourValRegSI ;command
+                    notthispower2_pushsi: 
                     ExecPush ValRegSI
                     JMP Exit
                 PushOpRegDI:
-                    ; Delete this lineDI
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_pushdi
+                    ourExecPush ourValRegDI ; command
+                    jmp Exit
+                    notthispower1_pushdi:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_pushdi 
+                    ourExecPush ourValRegDI ;command
+                    notthispower2_pushdi: 
                     ExecPush ValRegDI
                     JMP Exit
 
             ; Mem as operand
-            PushOpMem:
+            PushOpMem: 
 
-                CMP selectedOp1Mem, 0
-                JZ PushOpMem0
-                CMP selectedOp1Mem, 1
-                JZ PushOpMem1
-                CMP selectedOp1Mem, 2
-                JZ PushOpMem2
-                CMP selectedOp1Mem, 3
-                JZ PushOpMem3
-                CMP selectedOp1Mem, 4
-                JZ PushOpMem4
-                CMP selectedOp1Mem, 5
-                JZ PushOpMem5
-                CMP selectedOp1Mem, 6
-                JZ PushOpMem6
-                CMP selectedOp1Mem, 7
-                JZ PushOpMem7
-                CMP selectedOp1Mem, 8
-                JZ PushOpMem8
-                CMP selectedOp1Mem, 9
-                JZ PushOpMem9
-                CMP selectedOp1Mem, 10
-                JZ PushOpMem10
-                CMP selectedOp1Mem, 11
-                JZ PushOpMem11
-                CMP selectedOp1Mem, 12
-                JZ PushOpMem12
-                CMP selectedOp1Mem, 13
-                JZ PushOpMem13
-                CMP selectedOp1Mem, 14
-                JZ PushOpMem14
-                CMP selectedOp1Mem, 15
-                JZ PushOpMem15
-                JMP InValidCommand
-                
-                PushOpMem0:
-                    ; Delete this line0
-                    ExecPushMem ValMem
-                    JMP Exit
-                PushOpMem1:
-                    ; Delete this line1
-                    ExecPushMem ValMem+1
-                    JMP Exit
-                PushOpMem2:
-                    ; Delete this line2
-                    ExecPushMem ValMem+2
-                    JMP Exit
-                PushOpMem3:
-                    ; Delete this line3
-                    ExecPushMem ValMem+3
-                    JMP Exit
-                PushOpMem4:
-                    ; Delete this line4
-                    ExecPushMem ValMem+4
-                    JMP Exit
-                PushOpMem5:
-                    ; Delete this line5
-                    ExecPushMem ValMem+5
-                    JMP Exit
-                PushOpMem6:
-                    ; Delete this line6
-                    ExecPushMem ValMem+6
-                    JMP Exit
-                PushOpMem7:
-                    ; Delete this line7
-                    ExecPushMem ValMem+7
-                    JMP Exit
-                PushOpMem8:
-                    ; Delete this line8
-                    ExecPushMem ValMem+8
-                    JMP Exit
-                PushOpMem9:
-                    ; Delete this line9
-                    ExecPushMem ValMem+9
-                    JMP Exit
-                PushOpMem10:
-                    ; Delete this line10
-                    ExecPushMem ValMem+10
-                    JMP Exit
-                PushOpMem11:
-                    ; Delete this line11
-                    ExecPushMem ValMem+11
-                    JMP Exit
-                PushOpMem12:
-                    ; Delete this line12
-                    ExecPushMem ValMem+12
-                    JMP Exit
-                PushOpMem13:
-                    ; Delete this line13
-                    ExecPushMem ValMem+13
-                    JMP Exit
-                PushOpMem14:
-                    ; Delete this line14
-                    ExecPushMem ValMem+14
-                    JMP Exit
-                PushOpMem15:
-                    ; Delete this line15
-                    ExecPushMem ValMem+15
-                    JMP Exit
+                mov si,0
+                SearchForMempush:
+                mov cx,si 
+                cmp selectedOp2Mem,cl
+                JNE Next
+                cmp selectedPUPType,1 ; our command
+                jne notthispower1_pushmem
+                ourExecPushMem ourValMem[si] ; command
+                jmp Exit
+                notthispower1_pushmem:  
+                cmp selectedPUPType,2 ;his/her and our command 
+                jne notthispower2_pushmem 
+                ourExecPushMem ourValMem[si] ;command
+                notthispower2_pushmem: 
+                ExecPushMem ValMem[si]
+                JMP Exit 
+                Next:
+                inc si 
+                jmp SearchForMempush
 
             
             ; Address reg as operands
-            PushOpAddReg:
+            PushOpAddReg:  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
                 CMP selectedOp1AddReg, 3
                 JZ PushOpAddRegBX
@@ -2628,9 +2825,8 @@ ENDM
                 JMP InValidCommand
 
                 PushOpAddRegBX:
-                    ; Delete this lineRegBX
-
-                    mov dx, ValRegBX
+                    
+                    mov dx, ValRegBX 
                     CALL CheckAddress
                     cmp bl, 1               ; Value is greater than 16
                     JZ InValidCommand
@@ -2670,7 +2866,15 @@ ENDM
             PushOpVal:
                 CMP Op1Valid, 0
                 jz InValidCommand
- 
+                cmp selectedPUPType,1 ; our command
+                jne notthispower1_pushval
+                ourExecPush Op1Val ; command
+                jmp Exit
+                notthispower1_pushval:  
+                cmp selectedPUPType,2 ;his/her and our command 
+                jne notthispower2_pushval 
+                ourExecPush Op1Val ;command
+                notthispower2_pushval:
                 ExecPush Op1Val
                 JMP Exit
             
@@ -2717,119 +2921,128 @@ ENDM
 
                 
                 PopOpRegAX:
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popax
+                    ourExecPop ourValRegAX ; command
+                    jmp Exit
+                    notthispower1_popax:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popax 
+                    ourExecPop ourValRegAX ;command
+                    notthispower2_popax:  
                     ExecPop ValRegAX
                     JMP Exit
                 PopOpRegBX:
-                    ExecPop ValRegBX
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popbx
+                    ourExecPop ourValRegBX ; command
+                    jmp Exit
+                    notthispower1_popbx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popbx 
+                    ourExecPop ourValRegBX ;command
+                    notthispower2_popbx:  
+                    ExecPop ValRegBX 
                     JMP Exit
                 PopOpRegCX:
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popcx
+                    ourExecPop ourValRegCX ; command
+                    jmp Exit
+                    notthispower1_popcx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popcx 
+                    ourExecPop ourValRegCX ;command
+                    notthispower2_popcx:
                     ExecPop ValRegCX
                     JMP Exit
                 PopOpRegDX:
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popdx
+                    ourExecPop ourValRegDX ; command
+                    jmp Exit
+                    notthispower1_popdx:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popdx 
+                    ourExecPop ourValRegDX ;command
+                    notthispower2_popdx:
                     ExecPop ValRegDX
                     JMP Exit
                 PopOpRegBP:
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popbp
+                    ourExecPop ourValRegBX ; command
+                    jmp Exit
+                    notthispower1_popbp:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popbp 
+                    ourExecPop ourValRegBX ;command
+                    notthispower2_popbp:
                     ExecPop ValRegBP
                     JMP Exit
                 PopOpRegSP:
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popsp
+                    ourExecPop ourValRegSP ; command
+                    jmp Exit
+                    notthispower1_popsp:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popsp
+                    ourExecPop ourValRegSP ;command
+                    notthispower2_popsp:
                     ExecPop ValRegSP
                     JMP Exit
                 PopOpRegSI:
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popsi
+                    ourExecPop ourValRegSI ; command
+                    jmp Exit
+                    notthispower1_popsi:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popsi 
+                    ourExecPop ourValRegSI ;command
+                    notthispower2_popsi:
                     ExecPop ValRegSI
                     JMP Exit
                 PopOpRegDI:
+                    cmp selectedPUPType,1 ; our command
+                    jne notthispower1_popdi
+                    ourExecPop ourValRegDI ; command
+                    jmp Exit
+                    notthispower1_popdi:  
+                    cmp selectedPUPType,2 ;his/her and our command 
+                    jne notthispower2_popdi 
+                    ourExecPop ourValRegDI ;command
+                    notthispower2_popdi:
                     ExecPop ValRegDI
                     JMP Exit
 
             ; TODO - Mem as operand
             PopOpMem:
 
-                CMP selectedOp1Mem, 0
-                JZ PopOpMem0
-                CMP selectedOp1Mem, 1
-                JZ PopOpMem1
-                CMP selectedOp1Mem, 2
-                JZ PopOpMem2
-                CMP selectedOp1Mem, 3
-                JZ PopOpMem3
-                CMP selectedOp1Mem, 4
-                JZ PopOpMem4
-                CMP selectedOp1Mem, 5
-                JZ PopOpMem5
-                CMP selectedOp1Mem, 6
-                JZ PopOpMem6
-                CMP selectedOp1Mem, 7
-                JZ PopOpMem7
-                CMP selectedOp1Mem, 8
-                JZ PopOpMem8
-                CMP selectedOp1Mem, 9
-                JZ PopOpMem9
-                CMP selectedOp1Mem, 10
-                JZ PopOpMem10
-                CMP selectedOp1Mem, 11
-                JZ PopOpMem11
-                CMP selectedOp1Mem, 12
-                JZ PopOpMem12
-                CMP selectedOp1Mem, 13
-                JZ PopOpMem13
-                CMP selectedOp1Mem, 14
-                JZ PopOpMem14
-                CMP selectedOp1Mem, 15
-                JZ PopOpMem15
-                JMP InValidCommand
-                
-                PopOpMem0:
-                    ExecPopMem ValMem
-                    JMP Exit
-                PopOpMem1:
-                    ExecPopMem ValMem+1
-                    JMP Exit
-                PopOpMem2:
-                    ExecPopMem ValMem+2
-                    JMP Exit
-                PopOpMem3:
-                    ExecPopMem ValMem+3
-                    JMP Exit
-                PopOpMem4:
-                    ExecPopMem ValMem+4
-                    JMP Exit
-                PopOpMem5:
-                    ExecPopMem ValMem+5
-                    JMP Exit
-                PopOpMem6:
-                    ExecPopMem ValMem+6
-                    JMP Exit
-                PopOpMem7:
-                    ExecPopMem ValMem+7
-                    JMP Exit
-                PopOpMem8:
-                    ExecPopMem ValMem+8
-                    JMP Exit
-                PopOpMem9:
-                    ExecPopMem ValMem+9
-                    JMP Exit
-                PopOpMem10:
-                    ExecPopMem ValMem+10
-                    JMP Exit
-                PopOpMem11:
-                    ExecPopMem ValMem+11
-                    JMP Exit
-                PopOpMem12:
-                    ExecPopMem ValMem+12
-                    JMP Exit
-                PopOpMem13:
-                    ExecPopMem ValMem+13
-                    JMP Exit
-                PopOpMem14:
-                    ExecPopMem ValMem+14
-                    JMP Exit
-                PopOpMem15:
-                    ExecPopMem ValMem+15
-                    JMP Exit
+                mov si,0
+                SearchForMempop:
+                mov cx,si 
+                cmp selectedOp2Mem,cl
+                JNE Next
+                cmp selectedPUPType,1 ; our command
+                jne notthispower1_popmem
+                ourExecPopMem ourValMem[si] ; command
+                jmp Exit
+                notthispower1_popmem:  
+                cmp selectedPUPType,2 ;his/her and our command 
+                jne notthispower2_popmem 
+                ourExecPopMem ourValMem[si] ;command
+                notthispower2_popmem: 
+                ExecPopMem ValMem[si]
+                JMP Exit 
+                Next:
+                inc si 
+                jmp SearchForMempop
 
             
             ; TODO - address reg as operands
-            PopOpAddReg:
+            PopOpAddReg: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
                 CMP selectedOp1AddReg, 3
                 JZ PopOpAddRegBX
@@ -11968,6 +12181,211 @@ ENDM
 
         RET
     ENDP
+    ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
+
+        MOV AL, selectedOp1Size
+        CMP AL, selectedOp2Size
+        jnz InValidCommand
+
+        CMP selectedOp2Type, 0
+        JZ SrcOp2Reg_8Bit2
+        CMP selectedOp2Type, 1
+        JZ SrcOp2AddReg_8Bit2
+        CMP selectedOp2Type, 2
+        JZ SrcOp2Mem_8Bit2
+        CMP selectedOp2Type, 3
+        JZ SrcOp2Val_8Bit2
+        JMP InValidCommand
+
+        SrcOp2Reg_8Bit2:
+            CMP selectedOp2Reg, 1
+            JZ SrcOp2RegAL_8Bit2
+            CMP selectedOp2Reg, 2
+            JZ SrcOp2RegAH_8Bit2
+
+            CMP selectedOp2Reg, 4
+            JZ SrcOp2RegBL_8Bit2
+            CMP selectedOp2Reg, 5
+            JZ SrcOp2RegBH_8Bit2
+
+            CMP selectedOp2Reg, 7
+            JZ SrcOp2RegCL_8Bit2
+            CMP selectedOp2Reg, 8
+            JZ SrcOp2RegCH_8Bit2
+
+            CMP selectedOp2Reg, 10
+            JZ SrcOp2RegDL_8Bit2
+            CMP selectedOp2Reg, 11
+            JZ SrcOp2RegDH_8Bit2
+
+            JMP InValidCommand
+
+            SrcOp2RegAL_8Bit2:
+                mov al, BYTE PTR ourValRegAX
+                RET
+            SrcOp2RegAH_8Bit2:
+                mov al, BYTE PTR ourValRegAX+1
+                RET
+            SrcOp2RegBL_8Bit2:
+                mov al, BYTE PTR ourValRegBX
+                RET
+            SrcOp2RegBH_8Bit2:
+                mov al, BYTE PTR ourValRegBX+1
+                RET
+            SrcOp2RegCL_8Bit2:
+                mov al, BYTE PTR ourValRegCX
+                RET
+            SrcOp2RegCH_8Bit2:
+                mov al, BYTE PTR ourValRegCX+1
+                RET
+            SrcOp2RegDL_8Bit2:
+                mov al, BYTE PTR ourValRegDX
+                RET
+            SrcOp2RegDH_8Bit2:
+                mov al, BYTE PTR ourValRegDX+1
+                RET
+            
+
+
+        SrcOp2AddReg_8Bit2:
+
+            CMP selectedOp2AddReg, 3
+            JZ SrcOp2AddRegBX_8Bit2
+            CMP selectedOp2AddReg, 15
+            JZ SrcOp2AddRegBP_8Bit2
+            CMP selectedOp2AddReg, 17
+            JZ SrcOp2AddRegSI_8Bit2
+            CMP selectedOp2AddReg, 18
+            JZ SrcOp2AddRegDI_8Bit2
+
+            JMP InValidCommand
+
+            SrcOp2AddRegBX_8Bit2:
+                MOV DX, ourValRegBX
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegBX
+                MOV AL, [SI]
+                RET
+            SrcOp2AddRegBP_8Bit2:
+                MOV DX, ourValRegBP
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegBP
+                MOV AL, [SI]
+                RET
+            SrcOp2AddRegSI_8Bit2:
+                MOV DX, ourValRegSI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegSI
+                MOV AL, [SI]
+                RET
+            SrcOp2AddRegDI_8Bit2:
+                MOV DX, ourValRegDI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegDI
+                MOV AL, [SI]
+                RET
+
+        SrcOp2Mem_8Bit:
+
+            CMP selectedOp2Mem, 0
+            JZ SrcOp2Mem0_8Bit2
+            CMP selectedOp2Mem, 1
+            JZ SrcOp2Mem1_8Bit2
+            CMP selectedOp2Mem, 2
+            JZ SrcOp2Mem2_8Bit2
+            CMP selectedOp2Mem, 3
+            JZ SrcOp2Mem3_8Bit2
+            CMP selectedOp2Mem, 4
+            JZ SrcOp2Mem4_8Bit2
+            CMP selectedOp2Mem, 5
+            JZ SrcOp2Mem5_8Bit2
+            CMP selectedOp2Mem, 6
+            JZ SrcOp2Mem6_8Bit2
+            CMP selectedOp2Mem, 7
+            JZ SrcOp2Mem7_8Bit2
+            CMP selectedOp2Mem, 8
+            JZ SrcOp2Mem8_8Bit2
+            CMP selectedOp2Mem, 9
+            JZ SrcOp2Mem9_8Bit2
+            CMP selectedOp2Mem, 10
+            JZ SrcOp2Mem10_8Bit2
+            CMP selectedOp2Mem, 11
+            JZ SrcOp2Mem11_8Bit2
+            CMP selectedOp2Mem, 12
+            JZ SrcOp2Mem12_8Bit2
+            CMP selectedOp2Mem, 13
+            JZ SrcOp2Mem13_8Bit2
+            CMP selectedOp2Mem, 14
+            JZ SrcOp2Mem14_8Bit2
+            CMP selectedOp2Mem, 15
+            JZ SrcOp2Mem15_8Bit2
+            JMP InValidCommand
+            
+            SrcOp2Mem0_8Bit2:
+                MOV AL, ourValMem
+                RET
+            SrcOp2Mem1_8Bit2:
+                MOV AL, ourValMem+1
+                RET
+            SrcOp2Mem2_8Bit2:
+                MOV AL, ourValMem+2
+                RET
+            SrcOp2Mem3_8Bit2:
+                MOV AL, ourValMem+3
+                RET
+            SrcOp2Mem4_8Bit2:
+                MOV AL, ourValMem+4
+                RET
+            SrcOp2Mem5_8Bit2:
+                MOV AL, ourValMem+5
+                RET
+            SrcOp2Mem6_8Bit2:
+                MOV AL, ourValMem+6
+                RET
+            SrcOp2Mem7_8Bit2:
+                MOV AL, ourValMem+7
+                RET
+            SrcOp2Mem8_8Bit2:
+                MOV AL, ourValMem+8
+                RET
+            SrcOp2Mem9_8Bit2:
+                MOV AL, ourValMem+9
+                RET
+            SrcOp2Mem10_8Bit2:
+                MOV AL, ourValMem+10
+                RET
+            SrcOp2Mem11_8Bit2:
+                MOV AL, ourValMem+11
+                RET
+            SrcOp2Mem12_8Bit2:
+                MOV AL, ourValMem+12
+                RET
+            SrcOp2Mem13_8Bit2:
+                MOV AL, ourValMem+13
+                RET
+            SrcOp2Mem14_8Bit2:
+                MOV AL, ourValMem+14
+                RET
+            SrcOp2Mem15_8Bit2:
+                MOV AL, ourValMem+15
+                RET
+        SrcOp2Val_8Bit2:
+            CMP Op2Valid, 0
+            jz InValidCommand
+            MOV AL, BYTE PTR Op2Val
+            RET
+
+
+        RET
+    ourGetSrcOp_8Bit ENDP
     GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
 
         MOV AL, selectedOp1Size
@@ -12428,6 +12846,208 @@ ENDM
 
         RET
     GetSrcOp ENDP
+    ourGetSrcOp PROC    ; Returned Value is saved in AX
+        CMP selectedOp2Type, 0
+        JZ SrcOp2Rega
+        CMP selectedOp2Type, 1
+        JZ SrcOp2AddRega
+        CMP selectedOp2Type, 2
+        JZ SrcOp2Mema
+        CMP selectedOp2Type, 3
+        JZ SrcOp2Vala
+        JMP InValidCommand
+
+        SrcOp2Rega:
+
+            CMP selectedOp2Reg, 0
+            JZ SrcOp2RegAXa
+
+            CMP selectedOp2Reg, 3
+            JZ SrcOp2RegBXa
+
+            CMP selectedOp2Reg, 6
+            JZ SrcOp2RegCXa
+
+            CMP selectedOp2Reg, 9
+            JZ SrcOp2pRegDXa
+
+            CMP selectedOp2Reg, 15
+            JZ SrcOp2RegBPa
+            CMP selectedOp2Reg, 16
+            JZ SrcOp2RegSPa
+            CMP selectedOp2Reg, 17
+            JZ SrcOp2RegSIa
+            CMP selectedOp2Reg, 18
+            JZ SrcOp2RegDIa
+
+            JMP InValidCommand
+
+            SrcOp2RegAXa:
+                MOV AX, ourValRegAX
+                RET
+            SrcOp2RegBXa:
+                MOV AX, ourValRegBX
+                RET
+            SrcOp2RegCXa:
+                MOV AX, ourValRegCX
+                RET
+            SrcOp2pRegDXa:
+                MOV AX, ourValRegDX
+                RET
+            SrcOp2RegBPa:
+                MOV AX, ourValRegBP
+                RET
+            SrcOp2RegSPa:
+                MOV AX, ourValRegSP
+                RET
+            SrcOp2RegSIa:
+                MOV AX, ourValRegSI
+                RET
+            SrcOp2RegDIa:
+                MOV AX, ourValRegDI
+                RET
+            
+
+
+        SrcOp2AddRega:
+
+            CMP selectedOp2AddReg, 3
+            JZ SrcOp2AddRegBXa
+            CMP selectedOp2AddReg, 15
+            JZ SrcOp2AddRegBPa
+            CMP selectedOp2AddReg, 17
+            JZ SrcOp2AddRegSIa
+            CMP selectedOp2AddReg, 18
+            JZ SrcOp2AddRegDIa
+
+            JMP InValidCommand
+
+            SrcOp2AddRegBXa:
+                MOV DX, ourValRegBX
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegBX
+                MOV AX, [SI]
+                RET
+            SrcOp2AddRegBPa:
+                MOV DX, ourValRegBP
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegBP
+                MOV AX, [SI]
+                RET
+            SrcOp2AddRegSIa:
+                MOV DX, ourValRegSI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegSI
+                MOV AX, [SI]
+                RET
+            SrcOp2AddRegDIa:
+                MOV DX, ourValRegDI
+                CALL CheckAddress
+                CMP BL, 1
+                JZ InValidCommand
+                MOV SI, ourValRegDI
+                MOV AX, [SI]
+                RET
+
+        SrcOp2Mema:
+
+            CMP selectedOp2Mem, 0
+            JZ SrcOp2Mem0a
+            CMP selectedOp2Mem, 1
+            JZ SrcOp2Mem1a
+            CMP selectedOp2Mem, 2
+            JZ SrcOp2Mem2a
+            CMP selectedOp2Mem, 3
+            JZ SrcOp2Mem3a
+            CMP selectedOp2Mem, 4
+            JZ SrcOp2Mem4a
+            CMP selectedOp2Mem, 5
+            JZ SrcOp2Mem5a
+            CMP selectedOp2Mem, 6
+            JZ SrcOp2Mem6a
+            CMP selectedOp2Mem, 7
+            JZ SrcOp2Mem7a
+            CMP selectedOp2Mem, 8
+            JZ SrcOp2Mem8a
+            CMP selectedOp2Mem, 9
+            JZ SrcOp2Mem9a
+            CMP selectedOp2Mem, 10
+            JZ SrcOp2Mem10a
+            CMP selectedOp2Mem, 11
+            JZ SrcOp2Mem11a
+            CMP selectedOp2Mem, 12
+            JZ SrcOp2Mem12a
+            CMP selectedOp2Mem, 13
+            JZ SrcOp2Mem13a
+            CMP selectedOp2Mem, 14
+            JZ SrcOp2Mem14a
+            CMP selectedOp2Mem, 15
+            JZ SrcOp2Mem15a
+            JMP InValidCommand
+            
+            SrcOp2Mem0a:
+                MOV AX, WORD PTR ourValMem
+                RET
+            SrcOp2Mem1a:
+                MOV AX, WORD PTR ourValMem+1
+                RET
+            SrcOp2Mem2a:
+                MOV AX, WORD PTR ourValMem+2
+                RET
+            SrcOp2Mem3a:
+                MOV AX, WORD PTR ourValMem+3
+                RET
+            SrcOp2Mem4a:
+                MOV AX, WORD PTR ourValMem+4
+                RET
+            SrcOp2Mem5a:
+                MOV AX, WORD PTR ourValMem+5
+                RET
+            SrcOp2Mem6a:
+                MOV AX, WORD PTR ourValMem+6
+                RET
+            SrcOp2Mem7a:
+                MOV AX, WORD PTR ourValMem+7
+                RET
+            SrcOp2Mem8a:
+                MOV AX, WORD PTR ourValMem+8
+                RET
+            SrcOp2Mem9a:
+                MOV AX, WORD PTR ourValMem+9
+                RET
+            SrcOp2Mem10a:
+                MOV AX, WORD PTR ourValMem+10
+                RET
+            SrcOp2Mem11a:
+                MOV AX, WORD PTR ourValMem+11
+                RET
+            SrcOp2Mem12a:
+                MOV AX, WORD PTR ourValMem+12
+                RET
+            SrcOp2Mem13a:
+                MOV AX, WORD PTR ourValMem+13
+                RET
+            SrcOp2Mem14a:
+                MOV AX, WORD PTR ourValMem+14
+                RET
+            SrcOp2Mem15a:
+                MOV AX, WORD PTR ourValMem+15
+                RET
+        SrcOp2Vala:
+            CMP Op2Valid, 0
+            jz InValidCommand
+            MOV AX, Op2Val
+            RET
+
+
+        RET
+    ourGetSrcOp ENDP
     SetCF PROC
         PUSH BX
             MOV BL, 0
