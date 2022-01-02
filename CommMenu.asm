@@ -10460,122 +10460,114 @@ ENDM
             mov ForbidChar,al 
 
             sub Player1Points,8
-        notthispower3:
-
-            cmp selectedPUPType,5   ;Making one of the data lines stuck at zero or at one for a single instruction
-            jne notthispower5
-            mov ValRegAX,0
-            mov ValRegBX,0
-            mov ValRegCX,0
-            mov ValRegDX,0 
-        
-            mov ValRegBP,0
-            mov ValRegSP,0
-            mov ValRegSI,0
-            mov ValRegDI,0
-        
-            mov ourValRegAX,0
-            mov ourValRegBX,0
-            mov ourValRegCX,0
-            mov ourValRegDX,0
-        
-            mov ourValRegBP,0
-            mov ourValRegSP,0
-            mov ourValRegSI,0
-            mov ourValRegDI,0
-
-            sub Player1Points,30
-        notthispower5:    
-        
-            ; Test Messages
-            lea dx, mesMem
-            CAll DisplayString
-            lea dx, ValMem
-            CALL DisplayString
-
-            lea dx, mesStack
-            CAll DisplayString
-            lea dx, ValStack
-            Call DisplayString
-
-            lea dx, mesStackPointer
-            CALL DisplayString
-            mov dl, ValStackPointer
-            add dl, '0'
-            Call DisplayChar
-
-            lea dx, mesVal
-            CALL DisplayString
-            mov dx, Op1Val
-            Call DisplayChar
-
-            LEA DX, mesRegAX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegAX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegAX+1
-            CALL DisplayChar
-
-            LEA DX, mesRegBX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegBX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegBX+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegCX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegCX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegCX+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegDX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegDX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegDX+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegSI
-            CALL DisplayString
-            mov dl,Byte ptr ValRegSI
-            CALL DisplayChar
-            mov dl, byte ptr ValRegSI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegDI
-            CALL DisplayString
-            mov dl,Byte ptr ValRegDI
-            CALL DisplayChar
-            mov dl, byte ptr ValRegDI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegBP
-            CALL DisplayString
-            mov dl,Byte ptr ValRegBP
-            CALL DisplayChar
-            mov dl, byte ptr ValRegBP+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegSP
-            CALL DisplayString
-            mov dl,Byte ptr ValRegSP
-            CALL DisplayChar
-            mov dl, byte ptr ValRegSP+1
-            CALL DisplayChar
+            notthispower3:
+                cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
+                jne notthispower5
+                mov ValRegAX,0
+                mov ValRegBX,0
+                mov ValRegCX,0
+                mov ValRegDX,0 
             
-            LEA DX, mesRegCF
-            CALL DisplayString
-            mov dl, ValCF
-            add dl, '0'
-            CALL DisplayChar  
-
-
-
+                mov ValRegBP,0
+                mov ValRegSP,0
+                mov ValRegSI,0
+                mov ValRegDI,0
             
+                mov ourValRegAX,0
+                mov ourValRegBX,0
+                mov ourValRegCX,0
+                mov ourValRegDX,0
             
+                mov ourValRegBP,0
+                mov ourValRegSP,0
+                mov ourValRegSI,0
+                mov ourValRegDI,0
 
+                sub Player1Points,30
+            notthispower5:
+                ; Test Messages
+                lea dx, mesMem
+                CAll DisplayString
+                lea dx, ValMem
+                CALL DisplayString
+
+                lea dx, mesStack
+                CAll DisplayString
+                lea dx, ValStack
+                Call DisplayString
+
+                lea dx, mesStackPointer
+                CALL DisplayString
+                mov dl, ValStackPointer
+                add dl, '0'
+                Call DisplayChar
+
+                lea dx, mesVal
+                CALL DisplayString
+                mov dx, Op1Val
+                Call DisplayChar
+
+                LEA DX, mesRegAX
+                CALL DisplayString
+                mov dl,Byte ptr ValRegAX
+                CALL DisplayChar
+                mov dl, byte ptr ValRegAX+1
+                CALL DisplayChar
+
+                LEA DX, mesRegBX
+                CALL DisplayString
+                mov dl,Byte ptr ValRegBX
+                CALL DisplayChar
+                mov dl, byte ptr ValRegBX+1
+                CALL DisplayChar 
+
+                LEA DX, mesRegCX
+                CALL DisplayString
+                mov dl,Byte ptr ValRegCX
+                CALL DisplayChar
+                mov dl, byte ptr ValRegCX+1
+                CALL DisplayChar 
+
+                LEA DX, mesRegDX
+                CALL DisplayString
+                mov dl,Byte ptr ValRegDX
+                CALL DisplayChar
+                mov dl, byte ptr ValRegDX+1
+                CALL DisplayChar 
+
+                LEA DX, mesRegSI
+                CALL DisplayString
+                mov dl,Byte ptr ValRegSI
+                CALL DisplayChar
+                mov dl, byte ptr ValRegSI+1
+                CALL DisplayChar 
+
+                LEA DX, mesRegDI
+                CALL DisplayString
+                mov dl,Byte ptr ValRegDI
+                CALL DisplayChar
+                mov dl, byte ptr ValRegDI+1
+                CALL DisplayChar 
+
+                LEA DX, mesRegBP
+                CALL DisplayString
+                mov dl,Byte ptr ValRegBP
+                CALL DisplayChar
+                mov dl, byte ptr ValRegBP+1
+                CALL DisplayChar 
+
+                LEA DX, mesRegSP
+                CALL DisplayString
+                mov dl,Byte ptr ValRegSP
+                CALL DisplayChar
+                mov dl, byte ptr ValRegSP+1
+                CALL DisplayChar
+                
+                LEA DX, mesRegCF
+                CALL DisplayString
+                mov dl, ValCF
+                add dl, '0'
+                CALL DisplayChar  
             ;JMP Start
             ; Return to dos
             mov ah,4ch
@@ -10895,9 +10887,7 @@ ENDM
             
         ret
     Op1TypeMenu ENDP
-
     PowerUpeMenu PROC
-
        ; Reset Cursor
             mov ah,2
             mov dx, PUPCursorLoc
@@ -10969,7 +10959,6 @@ ENDM
             
         ret
     PowerUpeMenu ENDP
-
     Op2TypeMenu PROC
 
         
@@ -12184,63 +12173,59 @@ ENDM
 
         RET
     GetSrcOp_8Bit ENDP
+    DisPlayNumber PROC ;display number from Registers   
+        mov ax,234h     ;pop ax
+        mov bx,ax
 
-    DisPlayNumber PROC ;display number from Registers
-    
-mov ax,234h     ;pop ax
-mov bx,ax
+        mov cx,a
+        div cx
 
-mov cx,a
-div cx
+        mov ah,2     ; display first digit
+        mov dl,al
+        add dl,30h
+        int 21h        
 
-mov ah,2     ; display first digit
-mov dl,al
-add dl,30h
-int 21h        
+        mov ah,0
+        mov cx,a
+        mul cx
 
-mov ah,0
-mov cx,a
-mul cx
+        sub bx,ax     
 
-sub bx,ax     
+        mov cx,b   
+        mov ax,bx
+        div cx      
 
-mov cx,b   
-mov ax,bx
-div cx      
+        mov cl,ah   
 
-mov cl,ah   
+        mov ah,2     ; display second digit
+        mov dl,al
+        add dl,30h
+        int 21h   
 
-mov ah,2     ; display second digit
-mov dl,al
-add dl,30h
-int 21h   
+        mov dl,c
+        mov al,bl
+        mov ah,0
 
-mov dl,c
-mov al,bl
-mov ah,0
+        div dl 
 
-div dl 
+        mov ah,2     ; display third digit
+        mov dl,al
+        add dl,30h
+        int 21h 
 
-mov ah,2     ; display third digit
-mov dl,al
-add dl,30h
-int 21h 
+        mov cl,c 
+        mov al,bl
+        mov ah,0
+        div cl
+        mov al,ah
+        mov ah,2     ; display fourth digit
+        mov dl,al
+        add dl,30h
+        int 21h 
+                        
+        RET
 
-mov cl,c 
-mov al,bl
-mov ah,0
-div cl
-mov al,ah
-mov ah,2     ; display fourth digit
-mov dl,al
-add dl,30h
-int 21h 
-                   
-RET
-
-DisPlayNumber ENDP 
-END DisPlayNumber
-
+        DisPlayNumber ENDP
     GetSrcOp PROC    ; Returned Value is saved in AX
         CMP selectedOp2Type, 0
         JZ SrcOp2Reg
@@ -12460,4 +12445,4 @@ END DisPlayNumber
 
         RET
     ENDP
-    END CommMenu
+END CommMenu
