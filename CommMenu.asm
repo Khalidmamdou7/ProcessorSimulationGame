@@ -7470,6 +7470,10 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
+
+            call  PowerUpeMenu ; to choose power up
+            CALL CheckForbidCharProc
+
             cmp selectedOp1Type,0
             je RCL_Reg
             cmp selectedOp1Type,1
@@ -8454,6 +8458,10 @@ ENDM
             mov dl, ','
             CALL DisplayChar
             CALL Op2Menu
+
+            call  PowerUpeMenu ; to choose power up
+            CALL CheckForbidCharProc
+            
             cmp selectedOp1Type,0
             je SHL_Reg
             cmp selectedOp1Type,1
