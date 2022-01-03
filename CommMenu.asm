@@ -13827,6 +13827,8 @@ PowerUpeMenu ENDP
 LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
     PUSH BX
     PUSH CX
+    PUSH DX
+    PUSH AX
     CMP PwrUpStuckEnabled, 1
     jnz NoTStuck
         CMP PwrUpStuckVal, 0
@@ -13877,6 +13879,8 @@ LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
         notvalid10:
         mov PwrUpStuckEnabled,0
     Return_LineStuckPwrUp:
+    POP AX
+    POP DX
     POP CX
     POP BX
     RET
