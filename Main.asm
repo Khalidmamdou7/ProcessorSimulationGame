@@ -578,7 +578,9 @@ ENDM
 		X_Arr db 2,2,3,3,5,5,6,6
 		; Y_Arr db 6 dup(?)
         InstructionMsg db 10,'Use Up/Down Arrows to navigate between commands.', '$'
-
+        ExecutionFailed db 10, 'Invalid Command. Press Enter to continue.', '$'
+        ExecutedSuccesfully db 10, 'Command Executed Sucessfully. Press Enter to continue.', '$'
+        PlayerTwoWaitRound db 10, 'Waiting for player two... Press Enter to skip', '$'
     ; ---------------------------------------------- Cursor Locations ------------------------------------------- ;
         MenmonicCursorLoc EQU 1500H
         Op1CursorLoc EQU 1506H
@@ -1421,7 +1423,7 @@ LEVEL_1:	 MOV DH, 0
 			 MOV DX,170             
 			 MOV AL,7                           ; AL = COLOR OF THE GROUND 
              TestSkip:
-			 CALL GUI
+			 CALL PlayMode
 SHADI:       JMP SHADI
 GAME ENDP
 ;-----------------------------------------------------------------------DRAW FUNCTION--------------------------------------------------------
@@ -1991,48 +1993,71 @@ MoveShooterRight PROC FAR
     RETURN_MoveShooterRight:
         RET
 ENDP
-GUI PROC FAR
+PlayerTwoRound PROC FAR
+    lea dx, PlayerTwoWaitRound
+    CALL ShowMsg
 
-	mov cx,22
+    CheckKey_P2Round:
+        CALL WaitKeyPress
+    
+    cmp ah, EnterScanCode
+    jz CONT_P2Round
+    cmp ah, RightScanCode
+    jz MoveRight_P2Round
+    cmp ah, LeftScanCode
+    jz MoveLeft_P2Round
+    cmp ah, 57
+    jz DrawBullet_P2Round
+    cmp ah, EscScanCode
+    jz Exit_P2Round
+
+    jmp CheckKey_P2Round
+
+    DrawBullet_P2Round:
+        Call DrawBullet
+        JMP CheckKey_P2Round
+    MoveLeft_P2Round:
+        CALL MoveShooterLeft
+        JMP CheckKey_P2Round
+    MoveRight_P2Round:
+        CALL MoveShooterRight
+        JMP CheckKey_P2Round
+    Exit_P2Round:
+        Call Terminate
+    CONT_P2Round:
+        RET
+    
+    RET
+ENDP
+
+PlayMode PROC FAR
+
+    mov cx,22
 	mov ax, 13h 
 	int 10h   ;converting to graphics mode
 
-	CALL DrawGuiLayout
-    CALL DisplayGUIValues
-
-	; Create the mini game (inside the big game!!!)/////////////////////////////////////////////////////////////////
-    Set 21 0
-    lea dx, InstructionMsg
-    CALL DisplayString
-
-	CALL DrawShooter
-
-    
-		
-	check_scan:
-		CALL DrawFlyingObj
+    GameLoop:
+        CALL DrawGuiLayout
+        CALL DisplayGUIValues
+        CALL DrawFlyingObj
+        CALL DrawShooter
+        Set 21 0
+        lea dx, InstructionMsg
+        CALL DisplayString
+        CALL PowerUpeMenu
+        CALL ExecutePwrUp
         CALL CommMenu
-		
-		mov ah,1
-		int 16h ; read the key pressed from the buffer
-		jz check_scan
+        CALL PlayerTwoRound
 
-		mov inputKey,ah
-		cmp inputKey,77  ; right arrow
-		je Is_greater
-		cmp inputKey,75  ; left arrow 
-		je Is_smaller
-		cmp inputKey,57  ; space arrow 
-		je Draw_bullet
-        cmp inputKey, EscScanCode
-        je Exit
+    JMP GameLoop
 
-		JMP check_scan
-	
-    
+
+
+
+
     RET
+ENDP
 
-GUI ENDP
 ; ------------------------------------------- GUI Procedures ------------------------------------------- ;
 DrawFlyingObj PROC FAR
 
@@ -11630,57 +11655,79 @@ CommMenu proc far
         JMP Exit
     
     InValidCommand:
-        mov dx, offset error
-        CALL DisplayString
-        ; TODO - BEEP SOUND WHEN INVALID COMMAND ENTERED
+        lea dx, ExecutionFailed
+        CALL ShowMsg
+
+        CheckKey_Invalid:
+            CALL WaitKeyPress
+        
+        cmp ah, EnterScanCode
+        jz CONT_INVALID
+        cmp ah, RightScanCode
+        jz MoveRight_Invalid
+        cmp ah, LeftScanCode
+        jz MoveLeft_Invalid
+        cmp ah, 57
+        jz DrawBullet_Invalid
+        cmp ah, EscScanCode
+        jz Exit_Invalid
+
+        jmp CheckKey_Invalid
+
+        DrawBullet_Invalid:
+            Call DrawBullet
+            JMP CheckKey_Invalid
+        MoveLeft_Invalid:
+            CALL MoveShooterLeft
+            JMP CheckKey_Invalid
+        MoveRight_Invalid:
+            CALL MoveShooterRight
+            JMP CheckKey_Invalid
+        Exit_Invalid:
+            Call Terminate
+        CONT_INVALID:
+            RET
+        
+
+        
 
     Exit:
 
-            ForPwrUp:
-                cmp selectedPUPType,3 ;Changing the forbidden character only once 
-                jne notthispower3  ;-8 points 
-                
-                cmp UsedBeforeOrNot,1
-                jne notthispower3
-                dec UsedBeforeOrNot
+            
 
-                ; Reset Cursor
-                mov ah,2
-                mov dx, ForbidPUPCursor
-                int 10h
+        ; ----
+        lea dx, ExecutedSuccesfully
+        CALL ShowMsg
 
-                mov ah,1 ; set forbidchar
-                int 21h
-                mov Player1_ForbidChar,al 
+        CheckKey_Exit:
+            CALL WaitKeyPress
+        
+        cmp ah, EnterScanCode
+        jz CONT__Exit
+        cmp ah, RightScanCode
+        jz MoveRight__Exit
+        cmp ah, LeftScanCode
+        jz MoveLeft__Exit
+        cmp ah, 57
+        jz DrawBullet__Exit
+        cmp ah, EscScanCode
+        jz Exit__Exit
 
-                sub Player1_Points,8
-                    notthispower3:
-                    cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
-                    jne notthispower5
-                    mov ValRegAX,0
-                    mov ValRegBX,0
-                    mov ValRegCX,0
-                    mov ValRegDX,0 
-                
-                    mov ValRegBP,0
-                    mov ValRegSP,0
-                    mov ValRegSI,0
-                    mov ValRegDI,0
-                
-                    mov ourValRegAX,0
-                    mov ourValRegBX,0
-                    mov ourValRegCX,0
-                    mov ourValRegDX,0
-                
-                    mov ourValRegBP,0
-                    mov ourValRegSP,0
-                    mov ourValRegSI,0
-                    mov ourValRegDI,0
+        jmp CheckKey_Exit
 
-                    sub Player1_Points,30
-                    notthispower5:
-
-        ; ----    
+        DrawBullet__Exit:
+            Call DrawBullet
+            JMP CheckKey_Exit
+        MoveLeft__Exit:
+            CALL MoveShooterLeft
+            JMP CheckKey_Exit
+        MoveRight__Exit:
+            CALL MoveShooterRight
+            JMP CheckKey_Exit
+        Exit__Exit:
+            Call Terminate
+        CONT__Exit:
+            RET
         
         RET
 
@@ -11715,6 +11762,14 @@ GetCarryFlag PROC far
     pop dx
     ret
 GetCarryFlag ENDP
+ShowMsg PROC FAR
+    push dx
+        Set 21 0
+    pop dx
+    CALL DisplayString
+    
+    RET
+ENDP
 DisplayString PROC ; string offset saved in DX
     mov ah, 9
     int 21h
@@ -11832,12 +11887,11 @@ WaitKeyPress PROC ; AH:scancode,AL:ASCII
     ; Wait for a key pressed
     CHECK:
         push dx
-            CALL DrawShooter
-            CALL DrawFlyingObj
             CALL DrawGuiLayout
-            Set 21 0
-            lea dx, InstructionMsg
-            CALL DisplayString
+            CALL DisplayGUIValues
+            CALL DrawFlyingObj
+            CALL DrawShooter
+            
         pop dx
 
         mov ah,1
@@ -12125,6 +12179,53 @@ PowerUpeMenu PROC
         
     ret
 PowerUpeMenu ENDP
+ExecutePwrUp PROC FAR
+    ForPwrUp:
+                cmp selectedPUPType,3 ;Changing the forbidden character only once 
+                jne notthispower3  ;-8 points 
+                
+                cmp UsedBeforeOrNot,1
+                jne notthispower3
+                dec UsedBeforeOrNot
+
+                ; Reset Cursor
+                mov ah,2
+                mov dx, ForbidPUPCursor
+                int 10h
+
+                mov ah,1 ; set forbidchar
+                int 21h
+                mov Player1_ForbidChar,al 
+
+                sub Player1_Points,8
+                    notthispower3:
+                    cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
+                    jne notthispower5
+                    mov ValRegAX,0
+                    mov ValRegBX,0
+                    mov ValRegCX,0
+                    mov ValRegDX,0 
+                
+                    mov ValRegBP,0
+                    mov ValRegSP,0
+                    mov ValRegSI,0
+                    mov ValRegDI,0
+                
+                    mov ourValRegAX,0
+                    mov ourValRegBX,0
+                    mov ourValRegCX,0
+                    mov ourValRegDX,0
+                
+                    mov ourValRegBP,0
+                    mov ourValRegSP,0
+                    mov ourValRegSI,0
+                    mov ourValRegDI,0
+
+                    sub Player1_Points,30
+                    notthispower5:
+
+    RET
+ENDP
 LineStuckPwrUp PROC     ; Value to be stucked is saved in AX/AL
     PUSH BX
     
@@ -13727,6 +13828,7 @@ DisPlayNumber PROC ;display number from Registers
     mov ah,2     ; display first digit
     mov dl,al
     add dl,30h
+
     int 21h        
 
     mov ah,0
