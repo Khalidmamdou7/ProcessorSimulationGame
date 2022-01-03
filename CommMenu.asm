@@ -10755,49 +10755,69 @@ CommMenu proc far
 
     Exit:
 
-        cmp selectedPUPType,3 ;Changing the forbidden character only once 
-        jne notthispower3  ;-8 points 
-        
-        cmp UsedBeforeOrNot,1
-        jne notthispower3
-        dec UsedBeforeOrNot
+            ForPwrUp:
+                cmp selectedPUPType,3 ;Changing the forbidden character only once 
+                jne notthispower3  ;-8 points 
+                
+                cmp UsedBeforeOrNot,1
+                jne notthispower3
+                dec UsedBeforeOrNot
 
-        ; Reset Cursor
-            mov ah,2
-            mov dx, ForbidPUPCursor
-            int 10h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, ForbidPUPCursor
+                int 10h
 
-        mov ah,1 ; set forbidchar
-        int 21h
-        mov ForbidChar,al 
+                mov ah,1 ; set forbidchar
+                int 21h
+                mov ForbidChar,al 
 
-        sub Player1Points,8
-        notthispower3:
-            cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
-            jne notthispower5
-            mov ValRegAX,0
-            mov ValRegBX,0
-            mov ValRegCX,0
-            mov ValRegDX,0 
-        
-            mov ValRegBP,0
-            mov ValRegSP,0
-            mov ValRegSI,0
-            mov ValRegDI,0
-        
-            mov ourValRegAX,0
-            mov ourValRegBX,0
-            mov ourValRegCX,0
-            mov ourValRegDX,0
-        
-            mov ourValRegBP,0
-            mov ourValRegSP,0
-            mov ourValRegSI,0
-            mov ourValRegDI,0
+                sub Player1Points,8
+                    notthispower3:
+                    cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
+                    jne notthispower5
+                    mov ValRegAX,0
+                    mov ValRegBX,0
+                    mov ValRegCX,0
+                    mov ValRegDX,0 
+                
+                    mov ValRegBP,0
+                    mov ValRegSP,0
+                    mov ValRegSI,0
+                    mov ValRegDI,0
+                
+                    mov ourValRegAX,0
+                    mov ourValRegBX,0
+                    mov ourValRegCX,0
+                    mov ourValRegDX,0
+                
+                    mov ourValRegBP,0
+                    mov ourValRegSP,0
+                    mov ourValRegSI,0
+                    mov ourValRegDI,0
 
-            sub Player1Points,30
-        notthispower5:
+                    sub Player1Points,30
+                    notthispower5:
+
             ; Test Messages
+            LEA DX, mesCom
+            CALL DisplayString
+            mov dl, selectedComm
+            add dl, '0'
+            CALL DisplayChar 
+
+            LEA DX, mesOp1Type
+            CALL DisplayString
+            mov dl, selectedOp1Type
+            add dl, '0'
+            CALL DisplayChar
+
+            LEA DX, mesReg
+            CALL DisplayString
+            mov dl, selectedOp1Reg
+            add dl, '0'
+            CALL DisplayChar 
+
             lea dx, mesMem
             CAll DisplayString
             lea dx, ValMem
