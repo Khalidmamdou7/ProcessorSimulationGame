@@ -36,6 +36,14 @@ draw_obj MACRO colr
     mov cx,1
     int 10H
 ENDM draw_obj
+draw_point MACRO chr,clr
+    mov ah,0ah
+    mov al,chr
+    mov bh,0h
+    mov bl,clr
+    mov cx,1
+    int 10H
+ENDM
 ;; ---------------------------------------------- Commands MACROS ---------------------------------------------;;
 ExecPush MACRO Op
     mov bh, 0
@@ -285,6 +293,227 @@ ENDM
 .STACK 64
 ;================================================================================================================
 .DATA
+        
+    ;---------------------------------------RIGHT PROCESSOR----------------------------------------------:
+
+        ; positions of X axis of the AX register in right processor
+        p2_AX_X1 EQU 107
+        p2_AX_X2 EQU 108
+        p2_AX_X3 EQU 109
+        p2_AX_X4 EQU 110
+        
+        p2_AX_Y EQU 4 ; the Y axis of the AX register of the left processor 
+
+
+        ; positions of X axis of the BX register in right processor
+        p2_BX_X1 EQU 107
+        p2_BX_X2 EQU 108
+        p2_BX_X3 EQU 109
+        p2_BX_X4 EQU 110
+        
+        p2_BX_Y EQU 6 ; the Y axis of the AX register of the left processor 
+
+
+        ; positions of X axis of the DX register in right processor
+        p2_CX_X1 EQU 107
+        p2_CX_X2 EQU 108
+        p2_CX_X3 EQU 109
+        p2_CX_X4 EQU 110
+        
+        p2_CX_Y EQU 8 ; the Y axis of the AX register of the left processor 
+
+
+        ; positions of X axis of the DX register in right processor
+        p2_DX_X1 EQU 107
+        p2_DX_X2 EQU 108
+        p2_DX_X3 EQU 109
+        p2_DX_X4 EQU 110
+        
+        p2_DX_Y EQU 10 ; the Y axis of the AX register of the left processor 
+
+
+        ; positions of X axis of SP register in right processor 
+        p2_SP_X1 equ 113
+        p2_SP_X2 equ 114
+        p2_SP_X3 equ 115
+        p2_SP_X4 equ 116
+
+        p2_SP_Y equ 4 ; the Y position of SP register in the left processor 
+
+
+        ; positions of X axis of BP register in right processor 
+        p2_BP_X1 equ 113
+        p2_BP_X2 equ 114
+        p2_BP_X3 equ 115
+        p2_BP_X4 equ 116
+
+        p2_BP_Y equ 6 ; the Y position of BP register in the left processor 
+
+        ; positions of X axis of SI register in right processor 
+        p2_SI_X1 equ 113
+        p2_SI_X2 equ 114
+        p2_SI_X3 equ 115
+        p2_SI_X4 equ 116
+
+        p2_SI_Y equ 8 ; the Y position of SI register in the left processor 
+
+
+        ; positions of X axis of DI register in right processor 
+        p2_DI_X1 equ 113
+        p2_DI_X2 equ 114
+        p2_DI_X3 equ 115
+        p2_DI_X4 equ 116
+
+        p2_DI_Y equ 10 ; the Y position of SI register in the left processor 
+
+
+    ;-----------------------------------------------------LEFT MEMORY-----------------------------------------------------
+        ; X positions of values of left memory
+        left_mem_X0 equ 97
+        left_mem_X1 equ 98
+        left_mem_X2 equ 97
+        left_mem_X3 equ 98
+        left_mem_X4 equ 97
+        left_mem_X5 equ 98
+        left_mem_X6 equ 97
+        left_mem_X7 equ 98
+        left_mem_X8 equ 97
+        left_mem_X9 equ 98
+        left_mem_X10 equ 97
+        left_mem_X11 equ 98
+        left_mem_X12 equ 97
+        left_mem_X13 equ 98
+        left_mem_X14 equ 97
+        left_mem_X15 equ 98
+
+        left_mem_X16 equ 97
+        left_mem_X17 equ 98
+        left_mem_X18 equ 97
+        left_mem_X19 equ 98
+        left_mem_X20 equ 97
+        left_mem_X21 equ 98
+        left_mem_X22 equ 97
+        left_mem_X23 equ 98
+        left_mem_X24 equ 97
+        left_mem_X25 equ 98
+        left_mem_X26 equ 97
+        left_mem_X27 equ 98
+        left_mem_X28 equ 97
+        left_mem_X29 equ 98
+        left_mem_X30 equ 97
+        left_mem_X31 equ 98
+
+        ; Y positions of values in left memory
+        left_mem_Y0 equ 2
+        left_mem_Y1 equ 2
+        left_mem_Y2 equ 3
+        left_mem_Y3 equ 3
+        left_mem_Y4 equ 4
+        left_mem_Y5 equ 4
+        left_mem_Y6 equ 5
+        left_mem_Y7 equ 5
+        left_mem_Y8 equ 6
+        left_mem_Y9 equ 6
+        left_mem_Y10 equ 7
+        left_mem_Y11 equ 7
+        left_mem_Y12 equ 8
+        left_mem_Y13 equ 8
+        left_mem_Y14 equ 9
+        left_mem_Y15 equ 9
+
+        left_mem_Y16 equ 11
+        left_mem_Y17 equ 11
+        left_mem_Y18 equ 12
+        left_mem_Y19 equ 12
+        left_mem_Y20 equ 13
+        left_mem_Y21 equ 13
+        left_mem_Y22 equ 14
+        left_mem_Y23 equ 14
+        left_mem_Y24 equ 15
+        left_mem_Y25 equ 15
+        left_mem_Y26 equ 16
+        left_mem_Y27 equ 16
+        left_mem_Y28 equ 17
+        left_mem_Y29 equ 17
+        left_mem_Y30 equ 18
+        left_mem_Y31 equ 18
+
+
+    ;-----------------------------------------------------RIGHT MEMORY-----------------------------------------------------
+
+        ; X positions of values of left memory
+        right_mem_X0 equ 101
+        right_mem_X1 equ 102
+        right_mem_X2 equ 101
+        right_mem_X3 equ 102
+        right_mem_X4 equ 101
+        right_mem_X5 equ 102
+        right_mem_X6 equ 101
+        right_mem_X7 equ 102
+        right_mem_X8 equ 101
+        right_mem_X9 equ 102
+        right_mem_X10 equ 101
+        right_mem_X11 equ 102
+        right_mem_X12 equ 101
+        right_mem_X13 equ 102
+        right_mem_X14 equ 101
+        right_mem_X15 equ 102
+
+        right_mem_X16 equ 101
+        right_mem_X17 equ 102
+        right_mem_X18 equ 101
+        right_mem_X19 equ 102
+        right_mem_X20 equ 101
+        right_mem_X21 equ 102
+        right_mem_X22 equ 101
+        right_mem_X23 equ 102
+        right_mem_X24 equ 101
+        right_mem_X25 equ 102
+        right_mem_X26 equ 101
+        right_mem_X27 equ 102
+        right_mem_X28 equ 101
+        right_mem_X29 equ 102
+        right_mem_X30 equ 101
+        right_mem_X31 equ 102
+
+        ; Y positions of values in left memory
+        right_mem_Y0 equ 2
+        right_mem_Y1 equ 2
+        right_mem_Y2 equ 3
+        right_mem_Y3 equ 3
+        right_mem_Y4 equ 4
+        right_mem_Y5 equ 4
+        right_mem_Y6 equ 5
+        right_mem_Y7 equ 5
+        right_mem_Y8 equ 6
+        right_mem_Y9 equ 6
+        right_mem_Y10 equ 7
+        right_mem_Y11 equ 7
+        right_mem_Y12 equ 8
+        right_mem_Y13 equ 8
+        right_mem_Y14 equ 9
+        right_mem_Y15 equ 9
+
+        right_mem_Y16 equ 11
+        right_mem_Y17 equ 11
+        right_mem_Y18 equ 12
+        right_mem_Y19 equ 12
+        right_mem_Y20 equ 13
+        right_mem_Y21 equ 13
+        right_mem_Y22 equ 14
+        right_mem_Y23 equ 14
+        right_mem_Y24 equ 15
+        right_mem_Y25 equ 15
+        right_mem_Y26 equ 16
+        right_mem_Y27 equ 16
+        right_mem_Y28 equ 17
+        right_mem_Y29 equ 17
+        right_mem_Y30 equ 18
+        right_mem_Y31 equ 18
+
+
+    ;----------------------object points----------------------;
+        red_pt db '1'
     ; ----------------------------------------------- Keys Scan Codes ------------------------------------------- ;
         UpArrowScanCode EQU 72
         DownArrowScanCode EQU 80
@@ -556,101 +785,99 @@ MAIN PROC FAR
     MOV AX,@DATA                     ; LOAD THE DATA VARIABLES
     MOV DS,AX     
     MOV ES,AX
+
+    JMP TestSkip
+
+
     MAIN_MENU: 
-	;---------------------------------------------------------------------------------------------------------------
+	;---------------------------------------------------------------------------------------------------------------------------------------
     MOV AH,0                         ; CHOOSING VIDEO MODE "TEXT MODE"
     MOV AL,3                         ; 80 X 25 CHARS
     INT 10H   
-    ;----------------------------------------------Taking PLAYERS' NAMES--------------------------------------------
-        Call configuration               ; This procedure is used for initializing the UART (baud rate: The baud rate is the rate
-                                        ; at which information is transferred in a communication channel, parity, data bits, stop bits,…)
-        MOV DL, 1                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
-        MOV DH, 1
-        CALL MOVECURSOR                  
-        MOV DX,OFFSET BORDER1
-        CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
-        MOV DL, 0                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
-        MOV DH, 22
-        CALL MOVECURSOR
-        MOV DX,OFFSET BORDER2
-        CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
-        MOV BP, OFFSET  NAMEP1           ; SAVE THE NAME OF THE FIRST PLAYER IN NAMEP1
-        CALL FIRSTSCREEN                 ; CALL THE FIRST SCREEN OF THE PROJECT       
-        MOV DX, NAMELENGTH             
-        MOV NAMEP1LEN, DX     
-        MOV NAMELENGTH,0
-        MOV DH , InitialPoints
-        MOV InitialPointsP1, DH
-        CALL CLEARSCREEN                 
-        MOV DL, 1
-        MOV DH, 1
-        CALL MOVECURSOR
-        MOV DX,OFFSET BORDER1
-        CALL PRINTMESSAGE
-        MOV DL, 0
-        MOV DH, 22
-        CALL MOVECURSOR
-        MOV DX,OFFSET BORDER2
-        CALL PRINTMESSAGE
-        MOV BP, OFFSET   NAMEP2         ; SAVE THE NAME OF THE SECOND PLAYER IN NAEMP2
-        CALL FIRSTSCREEN
-        MOV DX, NAMELENGTH
-        MOV NAMEP2LEN, DX
-        MOV NAMELENGTH,0
-        MOV BH , InitialPoints
-        MOV InitialPointsP2, BH
-        CALL CLEARSCREEN
-	;---------------------------------------------------------------------------------------------------------------
-	BACK_TO_MAIN_SCREEN:
-		MOV Exit_Chat , 0
-		MOV firs_half , 0400h
-		MOV sec_half , 0f00h
-		CALL MAINSCREEN                              ; CALLING THE MAIN SCREEN MENU 
-		MOV AH,1                                     ; GET KEY PRESSED WITHOUT WAITING 
-		INT 16H
-		JZ BACK_TO_MAIN_SCREEN                       ; JUMP TO MAIN SCREEN IF THERE IS NO KEY PRESSED 
-		MOV AH,0									 ; CONSUME THE ENTERED KEY FROM THE KEYBOARD BUFFER
-		INT 16H
-		CMP AX,1C0DH                                 ; CHECK IF THE ENTERED KEY IS THE ENTER KEY 
-		JE  NEXTSCREEN                               ; JUMP IF THE ENTERED KEY IS PRESSED 
-		CALL CHECKCHOICE                             ; CALL CHECKCHOICE TO NAVIGATE THE CHOICES 
-		JMP BACK_TO_MAIN_SCREEN
-	NEXTSCREEN: 
-		CMP  CHOSEN,1
-		JNE CHECK_CHAT
-	GAME_AGAIN:
-		CALL GAME  
-		MOV BH , InitialPointsP1
-		MOV BL , InitialPointsP2
-		CMP BL, BH
-		JB TAKE_PLAYER2POINTS
-		MOV Player1_Points, BH
-		MOV Player2_Points, BH
-		JMP NEXT_FORWARD
-	TAKE_PLAYER2POINTS:
-	;	MOV Player1_Points, BL
-	;	MOV Player2_Points, BL
-	NEXT_FORWARD:	                                  ; CALL GAME FUNCTION 
-		JMP BACK_TO_MAIN_SCREEN
-	CHECK_CHAT:  CMP CHOSEN,2
-				JNE EXITP_ROGRAM
-				CALL CHATMODE
-				JMP BACK_TO_MAIN_SCREEN
-	EXITP_ROGRAM:   MOV AH,0                        ; NORMAL TERMINATION OF THE GAME 
-					MOV AL,12H 
-					INT 10H
-					MOV BL,2
-					MOV AH,4CH
-					INT 21H	
+    ;----------------------------------------------Taking PLAYERS' NAMES--------------------------------------------------------------------
+	Call configuration               ; This procedure is used for initializing the UART (baud rate: The baud rate is the rate
+                                     ; at which information is transferred in a communication channel, parity, data bits, stop bits,…)
+	MOV DL, 1                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
+	MOV DH, 1
+	CALL MOVECURSOR                  
+	MOV DX,OFFSET BORDER1
+	CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
+	MOV DL, 0                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
+	MOV DH, 22
+	CALL MOVECURSOR
+	MOV DX,OFFSET BORDER2
+	CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
+	MOV BP, OFFSET  NAMEP1           ; SAVE THE NAME OF THE FIRST PLAYER IN NAMEP1
+	CALL FIRSTSCREEN                 ; CALL THE FIRST SCREEN OF THE PROJECT       
+	MOV DX, NAMELENGTH             
+	MOV NAMEP1LEN, DX     
+	MOV NAMELENGTH,0
+	MOV DH , InitialPoints
+	MOV InitialPointsP1, DH
+	CALL CLEARSCREEN                 
+	MOV DL, 1
+	MOV DH, 1
+	CALL MOVECURSOR
+	MOV DX,OFFSET BORDER1
+	CALL PRINTMESSAGE
+	MOV DL, 0
+	MOV DH, 22
+	CALL MOVECURSOR
+	MOV DX,OFFSET BORDER2
+	CALL PRINTMESSAGE
+	MOV BP, OFFSET   NAMEP2         ; SAVE THE NAEM OF THE SECOND PLAYER IN NAEMP2
+	CALL FIRSTSCREEN
+	MOV DX, NAMELENGTH
+	MOV NAMEP2LEN, DX
+	MOV NAMELENGTH,0
+	MOV BH , InitialPoints
+	MOV InitialPointsP2, BH
+	CALL CLEARSCREEN
+    ;---------------------------------------------------------------------------------------------------------------------------------------	
+BACK_TO_MAIN_SCREEN:
+	MOV Exit_Chat , 0
+	MOV firs_half , 0400h
+	MOV sec_half , 0f00h
+	CALL MAINSCREEN                              ; CALLING THE MAIN SCREEN MENU 
+	MOV AH,1                                     ; GET KEY PRESSED WITHOUT WAITING 
+	INT 16H
+	JZ BACK_TO_MAIN_SCREEN                       ; JUMP TO MAIN SCREEN IF THERE IS NO KEY PRESSED 
+	MOV AH,0									 ; CONSUME THE ENTERED KEY FROM THE KEYBOARD BUFFER
+	INT 16H
+	CMP AX,1C0DH                                 ; CHECK IF THE ENTERED KEY IS THE ENTER KEY 
+	JE  NEXTSCREEN                               ; JUMP IF THE ENTERED KEY IS PRESSED 
+	CALL CHECKCHOICE                             ; CALL CHECKCHOICE TO NAVIGATE THE CHOICES 
+	JMP BACK_TO_MAIN_SCREEN
+NEXTSCREEN: 
+    CMP  CHOSEN,1
+    JNE CHECK_CHAT
+GAME_AGAIN:
+	CALL GAME  
+	MOV BH , InitialPointsP1
+	MOV BL , InitialPointsP2
+	CMP BL, BH
+	JB TAKE_PLAYER2POINTS
+	MOV Player1_Points, BH
+	MOV Player2_Points, BH
+	JMP NEXT_FORWARD
+TAKE_PLAYER2POINTS:
+;	MOV Player1_Points, BL
+;	MOV Player2_Points, BL
+NEXT_FORWARD:	                                  ; CALL GAME FUNCTION 
+	JMP BACK_TO_MAIN_SCREEN
+CHECK_CHAT:  CMP CHOSEN,2
+			 JNE EXITP_ROGRAM
+			 CALL CHATMODE
+			 JMP BACK_TO_MAIN_SCREEN
+EXITP_ROGRAM:   MOV AH,0                        ; NORMAL TERMINATION OF THE GAME 
+				MOV AL,12H 
+				INT 10H
+				MOV BL,2
+				MOV AH,4CH
+				INT 21H	
 MAIN    ENDP
-	
-;---------------------------------------------------------------------------------------------------------------------------------------
-;---------------------------------------------------------------------------------------------------------------------------------------
-;*************************************************************** Proc Implementation ***************************************************;
-;---------------------------------------------------------------------------------------------------------------------------------------
-;---------------------------------------------------------------------------------------------------------------------------------------
 
-;-----------------------------------------------------------MOVE CURSOR FUNCTION-------------------------------------------------------------	
+	;-----------------------------------------------------------MOVE CURSOR FUNCTION-------------------------------------------------------------	
 MOVECURSOR    PROC   NEAR
         ; DL HOLDS THE X COORDINATE AND  DH HOLDS THE Y COORDINATE 
 			  MOV AH,2
@@ -695,59 +922,60 @@ FIRSTSCREEN     ENDP
 ;--------------------------------------------------------------------------------------------------------------------------------------------
 ;-----------------------------------------------------------READ NAME FUNCTION---------------------------------------------------------------
 READNAME     PROC     NEAR
-
-        MOV CX,15                           ; LOOP TILL THE TOTAL VALID CHARACTERS INPUT ARE 15
-        MOV SI,0                            ; INITIALIZE SI WITH 0 TO USE IT AS A POINTER 
-    CHECK_FIRST_CHARACTER:
-        MOV AH,0                  ; WAIT FOR KEY TO BE PRESSED 
-        INT 16H 
-        CMP AL,41H                          ; CHECK IF IT WITHIN THE ALPHABET LETTERS  'A' = 41H
-        JB CHECK_FIRST_CHARACTER                             
-        CMP AL,5AH                          ; IF IT WAS LESS THAN 'Z' = 5AH, SO IT IS A VALID FIRST CHARACTER 
-        JB VALID_FIRST_CHAR
-        CMP AL,61H
-        JB CHECK_FIRST_CHARACTER
-        CMP AL,7AH
-        JA CHECK_FIRST_CHARACTER
-    TAKE_ANOTHER_INPUT: 
-        MOV AH,0
-        INT 16H
-        CMP AX,1C0DH                        ; CHECK IF THE PRESSED KEY IS ENTER TO END ENTERING NAME 
-        JZ END_TYPING 
-        CMP AX, 0E08H                       ; CHECK IF THE PRESSED KEY IS BACKSPACE
-        JZ  DELETE_CHAR
-    VALID_FIRST_CHAR:
-        MOV [BX+SI],AL                 ; AFTER ALL VALIDATIONS ADD THE LETTER TO THE PLAYER NAME 
-        INC SI
-        INC NAMELENGTH  
-        MOV DL,AL                           ; PRINT THE VALID INPUT CHARACTER 
-        MOV AH,2
-        INT 21H
-        LOOP TAKE_ANOTHER_INPUT
-        JMP END_TYPING
-    DELETE_CHAR: 
-        DEC NAMELENGTH
-        DEC SI
-        INC CX
-        MOV DL,08H                          ; IN ORDER TO REMOVE THE CHARACTER 
-        MOV AH,2                            ; BACKSPACE WAS FIRST PRINTED 
-        INT 21H
-        MOV DL,' '                          ; THEN SPACE WAS PRINTED 
-        MOV AH,2
-        INT 21H
-        MOV DL, "$"
-        MOV [BX+SI],DL                      ; OVERRIDE THE DATA SAVED PREVIUOSY 
-        MOV DL,08H                          ; THEN BACKSPACE AGAIN "NOTE: BACKSPACE ONLY BRING THE CURSOR OF TYPING ONE CHAR BACK WITHOUT DELETING" 
-        MOV AH,2
-        INT 21H
-        CMP CX, 15
-        JZ CHECK_FIRST_CHARACTER
-        JMP TAKE_ANOTHER_INPUT
-    END_TYPING:	
-        RET
+             MOV CX,15                           ; LOOP TILL THE TOTAL VALID CHARACTERS INPUT ARE 15
+             MOV SI,0                            ; INITIALIZE SI WITH 0 TO USE IT AS A POINTER 
+CHECK_FIRST_CHARACTER: MOV AH,0                  ; WAIT FOR KEY TO BE PRESSED 
+    		 INT 16H 
+			 CMP AL,41H                          ; CHECK IF IT WITHIN THE ALPHABET LETTERS  'A' = 41H
+			 JB CHECK_FIRST_CHARACTER                             
+			 CMP AL,5AH                          ; IF IT WAS LESS THAN 'Z' = 5AH, SO IT IS A VALID FIRST CHARACTER 
+			 JB VALID_FIRST_CHAR
+			 CMP AL,61H
+			 JB CHECK_FIRST_CHARACTER
+			 CMP AL,7AH
+			 JA CHECK_FIRST_CHARACTER
+TAKE_ANOTHER_INPUT: MOV AH,0
+    		 INT 16H
+    		 CMP AX,1C0DH                        ; CHECK IF THE PRESSED KEY IS ENTER TO END ENTERING NAME 
+    		 JZ END_TYPING 
+			 CMP AX, 0E08H                       ; CHECK IF THE PRESSED KEY IS BACKSPACE
+			 JZ  DELETE_CHAR
+VALID_FIRST_CHAR: MOV [BX+SI],AL                 ; AFTER ALL VALIDATIONS ADD THE LETTER TO THE PLAYER NAME 
+             INC SI
+			 INC NAMELENGTH  
+             MOV DL,AL                           ; PRINT THE VALID INPUT CHARACTER 
+             MOV AH,2
+             INT 21H
+     		LOOP TAKE_ANOTHER_INPUT
+			JMP END_TYPING
+DELETE_CHAR: 
+			DEC NAMELENGTH
+			DEC SI
+			INC CX
+			MOV DL,08H                          ; IN ORDER TO REMOVE THE CHARACTER 
+            MOV AH,2                            ; BACKSPACE WAS FIRST PRINTED 
+            INT 21H
+			MOV DL,' '                          ; THEN SPACE WAS PRINTED 
+            MOV AH,2
+            INT 21H
+			MOV DL, "$"
+			MOV [BX+SI],DL                      ; OVERRIDE THE DATA SAVED PREVIUOSY 
+			MOV DL,08H                          ; THEN BACKSPACE AGAIN "NOTE: BACKSPACE ONLY BRING THE CURSOR OF TYPING ONE CHAR BACK WITHOUT DELETING" 
+            MOV AH,2
+            INT 21H
+			CMP CX, 15
+			JZ CHECK_FIRST_CHARACTER
+			JMP TAKE_ANOTHER_INPUT
+END_TYPING:	RET
 READNAME	ENDP
 ;--------------------------------------------------------------------------------------------------------------------------------------------
 ;-------------------------------------------------------------CLEAR SCREEN FUNCTION----------------------------------------------------------
+CLEARSCREEN  PROC  NEAR 
+			  MOV AH,0
+			  MOV AL,3
+			  INT 10H
+			  RET
+CLEARSCREEN	 ENDP
 ;--------------------------------------------------------------------------------------------------------------------------------------------
 READINITIALPOINT PROC NEAR
 			  MOV CX , 0
@@ -1123,17 +1351,15 @@ configuration 		Proc near
 configuration 		endp
 ;-----------------------------------------------------------------------------------------------------------------------------
 Sending_Char        PROC NEAR 
-    
-    mov dx , 3FDH            ; Line Status Register
-    CHECK_AGAIN:
-        IN  al , dx               ;Read Line Status
-        TEST al , 00100000b
-        JZ CHECK_AGAIN
-        ;If empty put the VALUE in Transmit data register
-        mov dx , 3F8H ; Transmit data register
-        mov al,Char_Send
-        OUT dx , al
-        RET
+					mov dx , 3FDH            ; Line Status Register
+CHECK_AGAIN:        IN  al , dx               ;Read Line Status
+					TEST al , 00100000b
+					JZ CHECK_AGAIN
+					;If empty put the VALUE in Transmit data register
+					mov dx , 3F8H ; Transmit data register
+					mov al,Char_Send
+					OUT dx , al
+					RET
 Sending_Char        ENDP 
 ;-----------------------------------------------------------------------------------------------------------------------------
 Recieving_Char      PROC NEAR
@@ -1150,108 +1376,105 @@ CHK_AGAIN: 			IN al , dx
 Recieving_Char      ENDP					
 ;-----------------------------------------------------------------------------------------------------------------------------										
 GAME PROC NEAR 
-	GET_ANOTHER_INPUT:	
-		MOV AH,0                      ; GO TO GRAPHIC MODE 
-		MOV AL,3H
-		INT 10H
-		MOV DL,25
-		MOV DH,10
-		CALL MOVECURSOR
-		MOV DX, OFFSET MESG7
-		CALL PRINTMESSAGE
-		MOV AH, 0
-		INT 16H 
-		CMP AL, 31H                   ; THE LEVEL CHOSEN IS 1
-		JNZ LEVEL_2
-		MOV LEVEL, 1
-		JMP LEVEL_1
-	LEVEL_2:
-		CMP AL, 32H
-		JNZ GET_ANOTHER_INPUT
-		;-----------------------------------------------ADD THE NEW FEATURES HERE FOR LEVEL 2-----------------------------------------
-		MOV LEVEL, 2
-	LEVEL_1:
-		MOV DH, 0
-		MOV DL, LEVEL					; PRINT THE VALID INPUT CHARACTER 
-		ADD DL,30H
-		MOV AH,2
-		INT 21H
-		MOV DL,25
-		MOV DH,14
-		CALL MOVECURSOR
-		MOV DX, OFFSET MESG4
-		CALL PRINTMESSAGE				; SHOW 'PRESS ANY KEY TO CONTINUE' MASSEGE AT DL 'COLUMN' = 25 AND DH 'ROW' = 10
-		; Wait for a key press to proceed
-		MOV AH,0
-		INT 16H
-		CALL CLEARSCREEN
-		CALL GETFORBIDDEN
-		MOV Player1_ForbidChar, BL
-		CALL GETFORBIDDEN
-		MOV Player2_ForbidChar, BL
-		MOV AH,0                      ; GO TO GRAPHICAL MODE 
-		MOV AL,13H
-		INT 10H
-		MOV SI,320                         ; DRAW THE Command Line AT START ROW = 170 AND END ROW = 175
-		MOV DI,175                         ; DI = END ROW , DX = START ROW 
-		MOV CX,0                           ; CX =START COLUMN , SI = END COLUMN 
-		MOV DX,170             
-		MOV AL,7                           ; AL = COLOR OF THE GROUND 
-        ; ==================================================== GAME STARTS HERE ================================================ ;
-		CALL GUI
-	SHADI:
-	    JMP SHADI
+GET_ANOTHER_INPUT:	
+		     MOV AH,0                      ; GO TO GRAPHIC MODE 
+             MOV AL,3H
+             INT 10H
+			 MOV DL,25
+			 MOV DH,10
+			 CALL MOVECURSOR
+			 MOV DX, OFFSET MESG7
+			 CALL PRINTMESSAGE
+			 MOV AH, 0
+			 INT 16H 
+			 CMP AL, 31H                   ; THE LEVEL CHOSEN IS 1
+			 JNZ LEVEL_2
+			 MOV LEVEL, 1
+			 JMP LEVEL_1
+LEVEL_2:	 CMP AL, 32H
+			 JNZ GET_ANOTHER_INPUT
+			 ;-----------------------------------------------ADD THE NEW FEATURES HERE FOR LEVEL 2-----------------------------------------
+			 MOV LEVEL, 2
+LEVEL_1:	 MOV DH, 0
+			 MOV DL, LEVEL                           ; PRINT THE VALID INPUT CHARACTER 
+			 ADD DL,30H
+             MOV AH,2
+             INT 21H
+			 MOV DL,25
+			 MOV DH,14
+			 CALL MOVECURSOR
+			 MOV DX, OFFSET MESG4
+			 CALL PRINTMESSAGE              ; SHOW 'PRESS ANY KEY TO CONTINUE' MASSEGE AT DL 'COLUMN' = 25 AND DH 'ROW' = 10
+			 MOV AH,0                       ; WAIT FOR A KEY TO PROCEED FOR THE NEXT SCREEN 
+			 INT 16H
+			 CALL CLEARSCREEN
+			 CALL GETFORBIDDEN
+			 MOV Player1_ForbidChar, BL
+			 CALL GETFORBIDDEN
+			 MOV Player2_ForbidChar, BL
+			 MOV AH,0                      ; GO TO GRAPHICAL MODE 
+             MOV AL,13H
+             INT 10H
+			 MOV SI,320                         ; DRAW THE Command Line AT START ROW = 170 AND END ROW = 175
+		     MOV DI,175                         ; DI = END ROW , DX = START ROW 
+			 MOV CX,0                           ; CX =START COLUMN , SI = END COLUMN 
+			 MOV DX,170             
+			 MOV AL,7                           ; AL = COLOR OF THE GROUND 
+             TestSkip:
+			 CALL GUI
+SHADI:       JMP SHADI
 GAME ENDP
 ;-----------------------------------------------------------------------DRAW FUNCTION--------------------------------------------------------
-Draw Proc NEAR
-	;  CX = FINAL COLUMN , BX = START COLUMN , DX = FINAL ROW , BP = START ROW , DI = OFFSET IMAGE 
-	MOV SI,CX           ; Save the value of CX for further calculations
-	JMP StartX    	    ;Avoid drawing before the calculations
-	Drawx:
-		MOV AH,0Ch   	;set the configuration to writing a pixel
-		MOV AL, [DI]     ; color of the current coordinates
-		PUSH BX          ; TO SAVE THE VALUE OF BX FOR CALCULATIONS
-		MOV BH,00h   	;set the page number
-		INT 10h      	;execute the configuration
-		POP BX           ; RETURN THE INITIAL VALUE OF BX 
-	StartX: 
-		INC DI
-		DEC Cx       	;  loop iteration in x direction
-		CMP CX,BX 
-		JNZ	Drawx	    ;  check if we can draw c urrent x and y and excape the y iteration
-		MOV CX, SI 	    ;  if loop iteration in y direction, then x should start over so that we sweep the grid
-		DEC DX       	;  loop iteration in y direction
-		CMP DX,BP      
-		JZ  ENDINGx   	;  both x and y reached 00 so end program
-		Jmp Drawx
-	ENDINGx:
-	    RET			
-Draw ENDP
+Draw                    Proc    NEAR
+            ;  CX = FINAL COLUMN , BX = START COLUMN , DX = FINAL ROW , BP = START ROW , DI = OFFSET IMAGE 
+						MOV SI,CX           ; Save the value of CX for further calculations
+					    JMP StartX    	    ;Avoid drawing before the calculations
+					Drawx:
+						   MOV AH,0Ch   	;set the configuration to writing a pixel
+						   MOV AL, [DI]     ; color of the current coordinates
+						   PUSH BX          ; TO SAVE THE VALUE OF BX FOR CALCULATIONS
+						   MOV BH,00h   	;set the page number
+						   INT 10h      	;execute the configuration
+						   POP BX           ; RETURN THE INITIAL VALUE OF BX 
+					StartX: 
+						   INC DI
+						   DEC Cx       	;  loop iteration in x direction
+						   CMP CX,BX 
+						   JNZ	Drawx	    ;  check if we can draw c urrent x and y and excape the y iteration
+						   MOV CX, SI 	    ;  if loop iteration in y direction, then x should start over so that we sweep the grid
+						   DEC DX       	;  loop iteration in y direction
+						   CMP DX,BP      
+						   JZ  ENDINGx   	;  both x and y reached 00 so end program
+						   Jmp Drawx
+ENDINGx:                   RET			
+Draw                    ENDP
 
-GETFORBIDDEN PROC NEAR
-	MOV AH,0                      ; GO TO GRAPHICAL MODE 
-	MOV AL,3H
-	INT 10H
-	MOV DL,25
-	MOV DH,10
-	CALL MOVECURSOR
-	MOV DX, OFFSET MESG8          
-	CALL PRINTMESSAGE
-	MOV AH,0                       ; WAIT FOR A KEY TO PROCEED FOR THE NEXT SCREEN 
-	INT 16H
-	MOV DL,AL                           ; PRINT THE VALID INPUT CHARACTER 
-	MOV BL,AL
-	MOV AH,2
-	INT 21H
-	MOV DL,25
-	MOV DH,14
-	CALL MOVECURSOR
-	MOV DX, OFFSET MESG4
-	CALL PRINTMESSAGE              ; SHOW 'PRESS ANY KEY TO CONTINUE' MASSEGE AT DL 'COLUMN' = 25 AND DH 'ROW' = 10
-	MOV AH,0                       ; WAIT FOR A KEY TO PROCEED FOR THE NEXT SCREEN 
-	INT 16H
-	RET
-GETFORBIDDEN ENDP
+GETFORBIDDEN    PROC NEAR
+				MOV AH,0                      ; GO TO GRAPHICAL MODE 
+                MOV AL,3H
+                INT 10H
+				MOV DL,25
+				MOV DH,10
+				CALL MOVECURSOR
+				MOV DX, OFFSET MESG8          
+				CALL PRINTMESSAGE
+				MOV AH,0                       ; WAIT FOR A KEY TO PROCEED FOR THE NEXT SCREEN 
+				INT 16H
+				MOV DL,AL                           ; PRINT THE VALID INPUT CHARACTER 
+				MOV BL,AL
+                MOV AH,2
+                INT 21H
+				MOV DL,25
+				MOV DH,14
+				CALL MOVECURSOR
+				MOV DX, OFFSET MESG4
+				CALL PRINTMESSAGE              ; SHOW 'PRESS ANY KEY TO CONTINUE' MASSEGE AT DL 'COLUMN' = 25 AND DH 'ROW' = 10
+				MOV AH,0                       ; WAIT FOR A KEY TO PROCEED FOR THE NEXT SCREEN 
+				INT 16H
+				RET
+GETFORBIDDEN    ENDP
+
+
 ;------------------------------------------------------------DRAW SOLID RECTANGLE IN THE SCREEN----------------------------------------------	
 DrawRect PROC NEAR 
 	PUSH SI          ; SAVE THE REGISTERS IN THE STACK FOR FURTHER CALCULATION 
@@ -1281,18 +1504,9 @@ CLEAR_SCREEN PROC FAR
     MOV AH, 0H 
     MOV AL, 3H 
     INT 10H 
-CLEAR_SCREEN ENDP 
-GUI PROC FAR
-
-	mov cx,22
-	mov ax, 13h 
-	int 10h   ;converting to graphics mode
-
-	CALL DrawGuiLayout
-
-	
-
-	; Draw the Zeros in all their places/////////////////////////////////
+CLEAR_SCREEN ENDP
+DisplayGUIValues PROC FAR
+    ; Draw the Zeros in all their places/////////////////////////////////
 		;Draw them for the left processor and its memory
 
         ; DI 
@@ -1652,77 +1866,33 @@ GUI PROC FAR
 		Set 18 102
 		PrintChar '2'
 
-
-	; Create the mini game (inside the big game!!!)/////////////////////////////////////////////////////////////////
-    Set 21 0
-    lea dx, InstructionMsg
-    CALL DisplayString
-
-    CALL CommMenu
-
-	; Drawing the shoooter /////////////////////////////////////////////////////////////////////////////
+        ;shooter game points for red ball
+        Set 0 8
+        draw_point '0', 0ch
+    
+    RET
+ENDP
+DrawShooter PROC FAR
+    ; Drawing the shoooter /////////////////////////////////////////////////////////////////////////////
 		mov ax,0
 	Draw_shooter:
 		Set 19 Xposition
 		PrintChar '^'
 		Set 19 32
 		PrintChar '^'
-		
-	check_scan:
-		CALL DrawFlyingObj
-		
-		mov ah,1
-		int 16h ; read the key pressed from the buffer
-		jz check_scan
 
-		mov inputKey,ah
-		cmp inputKey,77  ; right arrow
-		je Is_greater
-		cmp inputKey,75  ; left arrow 
-		je Is_smaller
-		cmp inputKey,57  ; space arrow 
-		je Draw_bullet
-        ;cmp inputKey, EscScanCode
-        ;je Exit
-
-		JMP check_scan
-
-		Is_greater:  ; check the right boundry
-			mov ah,0
-			int 16h
-			cmp Xposition,14
-			jg check_scan
-			jle moveRight
-
-		Is_smaller:  ; check the left boundry 
-			mov ah,0
-			int 16h
-			cmp Xposition,2
-			jl check_scan
-			jge moveleft
-
-		moveleft:
-			;draw the shooter with the black color as im deleting it 
-			Set 19 Xposition
-			PrintChar_black '^'
-			dec Xposition
-			jmp Draw_shooter
-
-		moveRight:
-			;draw the shooter with the black color as im deleting it
-			Set 19 Xposition
-			PrintChar_black '^' 
-			inc Xposition
-			jmp Draw_shooter
-
-	Draw_bullet:
-		mov ah,0
-		int 16h
-		
-		mov cl,Xposition
-		mov  Xbullet,cl
-		Set Ybullet Xbullet; move the bullet
-		PrintChar '.'
+    RET
+ENDP
+DrawBullet PROC FAR
+    Draw_bullet:
+        push dx
+            mov ah,0
+            int 16h
+            
+            mov cl,Xposition
+            mov  Xbullet,cl
+            Set Ybullet Xbullet; move the bullet
+            PrintChar '.'
 	jmp update_bullet
 
 	set_bullet:
@@ -1746,15 +1916,121 @@ GUI PROC FAR
 		Set Ybullet Xbullet ;clear the bullet
 		PrintChar_black '.'
 		dec Ybullet
-		cmp Ybullet,13; compare with the boundry
-		jg set_bullet
-		Set Ybullet Xbullet ;clear the bullet
-		PrintChar_black '.'
-		mov cl,Xposition
-		mov  Xbullet,cl
-		mov cl,17
-		mov Ybullet,cl
-	jmp check_scan
+
+    ; check if the bullet hits any flying object or the boundry
+    chk_red:
+        mov cl,X_Arr[0]
+        cmp Ybullet,13
+        je chk_red_col
+        jg chk_bound
+    chk_red_col:
+        mov cl,X_Arr[0]
+        cmp Xbullet,cl
+        je increment_red
+
+    chk_bound:
+            cmp Ybullet,13; compare with the boundry
+            jg set_bullet
+
+    back_to_update:
+            Set Ybullet Xbullet ;clear the bullet
+            PrintChar_black '.'
+            mov cl,Xposition
+            mov  Xbullet,cl
+            mov cl,17
+            mov Ybullet,cl
+        POP Dx
+        RET
+
+        
+    increment_red:; increment the red points
+    ; cmp red_pt,9
+    ; jl do_red
+    ; jge back_to_update
+    ; do_red:
+        inc red_pt
+        Set 0 8
+        draw_point red_pt, 0ch
+        jmp back_to_update
+
+    RET
+ENDP
+MoveShooterLeft PROC FAR
+    Is_smaller:  ; check the left boundry 
+        ;mov ah,0
+        ;int 16h
+        cmp Xposition,2
+        jl RETURN_MoveShooterLeft
+        jge moveleft
+
+    moveleft:
+        push dx
+            ;draw the shooter with the black color as im deleting it 
+            Set 19 Xposition
+            PrintChar_black '^'
+            dec Xposition
+        pop dx
+
+    RETURN_MoveShooterLeft:
+        RET
+ENDP
+MoveShooterRight PROC FAR
+    Is_greater:  ; check the right boundry
+        cmp Xposition,14
+        jg RETURN_MoveShooterRight
+        jle moveRight
+
+    moveRight:
+        push dx
+            ;draw the shooter with the black color as im deleting it
+            Set 19 Xposition
+            PrintChar_black '^' 
+            inc Xposition
+        pop dx
+    
+    RETURN_MoveShooterRight:
+        RET
+ENDP
+GUI PROC FAR
+
+	mov cx,22
+	mov ax, 13h 
+	int 10h   ;converting to graphics mode
+
+	CALL DrawGuiLayout
+    CALL DisplayGUIValues
+
+	; Create the mini game (inside the big game!!!)/////////////////////////////////////////////////////////////////
+    Set 21 0
+    lea dx, InstructionMsg
+    CALL DisplayString
+
+	CALL DrawShooter
+
+    
+		
+	check_scan:
+		CALL DrawFlyingObj
+        CALL CommMenu
+		
+		mov ah,1
+		int 16h ; read the key pressed from the buffer
+		jz check_scan
+
+		mov inputKey,ah
+		cmp inputKey,77  ; right arrow
+		je Is_greater
+		cmp inputKey,75  ; left arrow 
+		je Is_smaller
+		cmp inputKey,57  ; space arrow 
+		je Draw_bullet
+        cmp inputKey, EscScanCode
+        je Exit
+
+		JMP check_scan
+	
+    
+    RET
 
 GUI ENDP
 ; ------------------------------------------- GUI Procedures ------------------------------------------- ;
@@ -1767,19 +2043,19 @@ DrawFlyingObj PROC FAR
         draw_obj 0ch
         inc X_Arr[1]
 
-        set 14 X_Arr[3]
-        draw_obj 0bh
-        inc X_Arr[3]
+        ; set 14 X_Arr[3]
+        ; draw_obj 0bh
+        ; inc X_Arr[3]
 
-        set 13 X_Arr[5]
-        draw_obj 0eh
-        inc X_Arr[5]
+        ; set 13 X_Arr[5]
+        ; draw_obj 0eh
+        ; inc X_Arr[5]
 
-        set 14 X_Arr[7]
-        draw_obj 0ah
-        inc X_Arr[7]
+        ; set 14 X_Arr[7]
+        ; draw_obj 0ah
+        ; inc X_Arr[7]
 
-        cmp X_Arr[7],15
+        cmp X_Arr[1],15
         jle clear_old_pos
         jg dum2
 
@@ -1799,17 +2075,17 @@ DrawFlyingObj PROC FAR
         PrintChar_black 'o'
         inc X_Arr[0] 
 
-        set 14 X_Arr[2]
-        PrintChar_black 'o'
-        inc X_Arr[2]
+        ; set 14 X_Arr[2]
+        ; PrintChar_black 'o'
+        ; inc X_Arr[2]
 
-        set 13 X_Arr[4]
-        PrintChar_black 'o'
-        inc X_Arr[4]
+        ; set 13 X_Arr[4]
+        ; PrintChar_black 'o'
+        ; inc X_Arr[4]
 
-        set 14 X_Arr[6]
-        PrintChar_black 'o'
-        inc X_Arr[6]
+        ; set 14 X_Arr[6]
+        ; PrintChar_black 'o'
+        ; inc X_Arr[6]
 
         RET
 
@@ -1821,25 +2097,24 @@ DrawFlyingObj PROC FAR
         mov X_Arr[0],2
         mov X_Arr[1],2
 
-        set 14 X_Arr[2]
-        PrintChar_black 'o' 
-        mov X_Arr[2],3
-        mov X_Arr[3],3
+        ; set 14 X_Arr[2]
+        ; PrintChar_black 'o' 
+        ; mov X_Arr[2],3
+        ; mov X_Arr[3],3
 
-        set 13 X_Arr[4]
-        PrintChar_black 'o' 
-        mov X_Arr[4],5
-        mov X_Arr[5],5
+        ; set 13 X_Arr[4]
+        ; PrintChar_black 'o' 
+        ; mov X_Arr[4],5
+        ; mov X_Arr[5],5
 
-        set 14 X_Arr[6]
-        PrintChar_black 'o' 
-        mov X_Arr[6],6
-        mov X_Arr[7],6
+        ; set 14 X_Arr[6]
+        ; PrintChar_black 'o' 
+        ; mov X_Arr[6],6
+        ; mov X_Arr[7],6
     
 
     RET
 ENDP
- 
 DrawGuiLayout PROC FAR
 
     ; Drawing the layout
@@ -1864,12 +2139,12 @@ DrawGuiLayout PROC FAR
 		mov AL,09h ; choose the blue color
 		mov BH,0h  ; choose the page number
 		push cx
-		mov Cx,319 ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,0  ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,160  ; choose the column position (which is constant)
-		INT 10H
+            mov Cx,319 ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,0  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,160  ; choose the column position (which is constant)
+            INT 10H
 		pop cx
 		inc DX
 		dec CX
@@ -1896,11 +2171,11 @@ DrawGuiLayout PROC FAR
 		mov AH,0ch ; set for drawing a pixel
 		mov AL,0eh ; choose the yellow color
 		push cx
-		mov cx,bx
-		mov DX,0fh ; choose the row position
-		INT 10H
-		mov DX,160 ; choose the row position
-		INT 10H
+            mov cx,bx
+            mov DX,0fh ; choose the row position
+            INT 10H
+            mov DX,160 ; choose the row position
+            INT 10H
 		pop cx
 		inc bx
 		dec CX
@@ -1915,11 +2190,11 @@ DrawGuiLayout PROC FAR
 		mov AL,0dh ; choose the purble color
 		mov BH,0h  ; choose the page number
 		push cx
-		mov Cx,130  ; choose the column position (which is constant)
-		INT 10H
-		mov AL,0eh ; choose the yellow color
-		mov Cx,190  ; choose the column position (which is constant)
-		INT 10H
+            mov Cx,130  ; choose the column position (which is constant)
+            INT 10H
+            mov AL,0eh ; choose the yellow color
+            mov Cx,190  ; choose the column position (which is constant)
+            INT 10H
 		pop cx
 		inc DX
 		dec CX
@@ -1934,19 +2209,19 @@ DrawGuiLayout PROC FAR
 		mov ah,0ch
 		mov al,0dh ;choose purble color
 		push cx  ; save the value of cx in stack
-		mov cx,bx
-		mov dx,1fh
-		INT 10h
-		mov cx,bx
-		mov dx,2fh
-		INT 10h
-		mov cx,bx
-		mov dx,3fh
-		INT 10h
-		mov dx,4fh
-		INT 10h
-		mov dx,5fh
-		INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
 		pop cx  ; retrieve the value of cx
 		inc bx
 		dec cx
@@ -1960,19 +2235,19 @@ DrawGuiLayout PROC FAR
 		mov ah,0ch
 		mov al,0eh ;choose yellow color
 		push cx  ; save the value of cx in stack
-		mov cx,bx
-		mov dx,1fh
-		INT 10h
-		mov cx,bx
-		mov dx,2fh
-		INT 10h
-		mov cx,bx
-		mov dx,3fh
-		INT 10h
-		mov dx,4fh
-		INT 10h
-		mov dx,5fh
-		INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
 		pop cx  ; retrieve the value of cx
 		inc bx
 		dec cx
@@ -1987,15 +2262,15 @@ DrawGuiLayout PROC FAR
 		mov AL,0dh ; choose the purble color
 		mov BH,0h  ; choose the page number
 		push cx
-		mov Cx,24  ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,64  ; choose the column position (which is constant)
-		INT 10H
-		mov al,0eh  ;choose yellow color
-		mov Cx,257  ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,296  ; choose the column position (which is constant)
-		INT 10H
+            mov Cx,24  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,64  ; choose the column position (which is constant)
+            INT 10H
+            mov al,0eh  ;choose yellow color
+            mov Cx,257  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,296  ; choose the column position (which is constant)
+            INT 10H
 		pop cx
 		inc DX
 		dec CX
@@ -2011,19 +2286,19 @@ DrawGuiLayout PROC FAR
 		mov ah,0ch
 		mov al,0dh ;choose purble color
 		push cx  ; save the value of cx in stack
-		mov cx,bx
-		mov dx,1fh
-		INT 10h
-		mov cx,bx
-		mov dx,2fh
-		INT 10h
-		mov cx,bx
-		mov dx,3fh
-		INT 10h
-		mov dx,4fh
-		INT 10h
-		mov dx,5fh
-		INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
 		pop cx  ; retrieve the value of cx
 		inc bx
 		dec cx
@@ -2038,19 +2313,19 @@ DrawGuiLayout PROC FAR
 		mov ah,0ch
 		mov al,0eh ;choose yellow color
 		push cx  ; save the value of cx in stack
-		mov cx,bx
-		mov dx,1fh
-		INT 10h
-		mov cx,bx
-		mov dx,2fh
-		INT 10h
-		mov cx,bx
-		mov dx,3fh
-		INT 10h
-		mov dx,4fh
-		INT 10h
-		mov dx,5fh
-		INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
 		pop cx  ; retrieve the value of cx
 		inc bx
 		dec cx
@@ -2066,15 +2341,15 @@ DrawGuiLayout PROC FAR
 		mov AL,0dh ; choose the purble color
 		mov BH,0h  ; choose the page number
 		push cx
-		mov Cx,70  ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,108  ; choose the column position (which is constant)
-		INT 10H
-		mov al,0eh  ;choose yellow color
-		mov Cx,211  ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,249  ; choose the column position (which is constant)
-		INT 10H
+            mov Cx,70  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,108  ; choose the column position (which is constant)
+            INT 10H
+            mov al,0eh  ;choose yellow color
+            mov Cx,211  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,249  ; choose the column position (which is constant)
+            INT 10H
 		pop cx
 		inc DX
 		dec CX
@@ -2089,9 +2364,9 @@ DrawGuiLayout PROC FAR
 		mov AH,0ch ; set for drawing a pixel
 		mov AL,0dh ; choose the purble color
 		push cx
-		mov cx,bx
-		mov DX,97 ; choose the row position
-		INT 10H
+            mov cx,bx
+            mov DX,97 ; choose the row position
+            INT 10H
 		pop cx
 		inc bx
 		dec CX
@@ -2104,9 +2379,9 @@ DrawGuiLayout PROC FAR
 		mov AH,0ch ; set for drawing a pixel
 		mov AL,0eh ; choose the yellow color
 		push cx
-		mov cx,bx
-		mov DX,97 ; choose the row position
-		INT 10H
+            mov cx,bx
+            mov DX,97 ; choose the row position
+            INT 10H
 		pop cx
 		inc bx
 		dec CX
@@ -2120,14 +2395,14 @@ DrawGuiLayout PROC FAR
 		mov AL,0bh ; choose the blue color
 		mov BH,0h  ; choose the page number
 		push cx
-		mov Cx,135 ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,152  ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,167 ; choose the column position (which is constant)
-		INT 10H
-		mov Cx,185  ; choose the column position (which is constant)
-		INT 10H
+            mov Cx,135 ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,152  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,167 ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,185  ; choose the column position (which is constant)
+            INT 10H
 		pop cx
 		inc DX
 		dec CX
@@ -11405,122 +11680,20 @@ CommMenu proc far
                     sub Player1_Points,30
                     notthispower5:
 
-            ; Test Messages
-            ;LEA DX, mesSelCom
-            ;CALL DisplayString
-            ;mov dl, selectedComm
-            ;add dl, '0'
-            ;CALL DisplayChar 
-
-            ;LEA DX, mesSelOp1Type
-            ;CALL DisplayString
-            ;mov dl, selectedOp1Type
-            ;add dl, '0'
-            ;CALL DisplayChar
-
-            ;LEA DX, mesSelReg
-            ;CALL DisplayString
-            ;mov dl, selectedOp1Reg
-            ;add dl, '0'
-            ;CALL DisplayChar 
-
-            ;lea dx, mesMem
-            ;CAll DisplayString
-            ;lea dx, ValMem
-            ;CALL DisplayString
-
-            ;lea dx, mesStack
-            ;CAll DisplayString
-            ;lea dx, ValStack
-            ;Call DisplayString
-
-            ;lea dx, mesStackPointer
-            ;CALL DisplayString
-            ;mov dl, ValStackPointer
-            ;add dl, '0'
-            ;Call DisplayChar
-
-            ;lea dx, mesEntVal
-            ;CALL DisplayString
-            ;mov dx, Op1Val
-            ;Call DisplayChar
-
-            ;LEA DX, mesRegAX
-            ;CALL DisplayString
-            ;mov dl,Byte ptr ValRegAX
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegAX+1
-            ;CALL DisplayChar
-
-            ;LEA DX, mesRegBX
-            ;CALL DisplayString
-            ;mov dl,Byte ptr ValRegBX
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegBX+1
-            ;CALL DisplayChar 
-
-            ;LEA DX, mesRegCX
-            ;CALL DisplayString
-            ;;mov dl,Byte ptr ValRegCX
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegCX+1
-            ;CALL DisplayChar 
-
-            ;LEA DX, mesRegDX
-            ;CALL DisplayString
-            ;mov dl,Byte ptr ValRegDX
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegDX+1
-            ;CALL DisplayChar 
-
-            ;LEA DX, mesRegSI
-            ;CALL DisplayString
-            ;mov dl,Byte ptr ValRegSI
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegSI+1
-            ;CALL DisplayChar 
-
-            ;LEA DX, mesRegDI
-            ;CALL DisplayString
-            ;mov dl,Byte ptr ValRegDI
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegDI+1
-            ;CALL DisplayChar 
-
-            ;LEA DX, mesRegBP
-            ;CALL DisplayString
-            ;mov dl,Byte ptr ValRegBP
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegBP+1
-            ;CALL DisplayChar 
-
-            ;LEA DX, mesRegSP
-            ;CALL DisplayString
-            ;mov dl,Byte ptr ValRegSP
-            ;CALL DisplayChar
-            ;mov dl, byte ptr ValRegSP+1
-            ;CALL DisplayChar
-            
-            ;LEA DX, mesRegCF
-            ;CALL DisplayString
-            ;mov dl, ValCF
-            ;add dl, '0'
-            ;CALL DisplayChar  
-        ;JMP Start
-        ; Return to dos
+        ; ----    
+        
         RET
 
 
 CommMenu ENDP
 ;================================================================================================================
-ClearScreen PROC far
-    ; Change to text mode (clear screen)
-    mov ah,0
-    mov al,3
-    int 10h
+Terminate PROC FAR
+    ; Return to dos
+    mov ah,4ch
+    int 21h
 
     ret
-ClearScreen ENDP
+ENDP
 SetCarryFlag PROC far
     ;This is used to set the carry flag of our processor
     push dx
@@ -11594,7 +11767,28 @@ MnemonicMenu PROC
     jz CommDown
     cmp ah, EnterScanCode
     jz Selected
+    cmp ah, RightScanCode
+    jz MoveRight_MnemonicMenu
+    cmp ah, LeftScanCode
+    jz MoveLeft_MnemonicMenu
+    cmp ah, 57
+    jz DrawBullet_MnemonicMenu
+    cmp ah, EscScanCode
+    jz Exit__MnemonicMenu
+
     jmp CheckKeyComType
+
+    DrawBullet_MnemonicMenu:
+        Call DrawBullet
+        JMP CheckKeyComType
+    MoveLeft_MnemonicMenu:
+        CALL MoveShooterLeft
+        JMP CheckKeyComType
+    MoveRight_MnemonicMenu:
+        CALL MoveShooterRight
+        JMP CheckKeyComType
+    Exit__MnemonicMenu:
+        Call Terminate
 
 
     CommUp:
@@ -11636,7 +11830,16 @@ MnemonicMenu PROC
 MnemonicMenu ENDP
 WaitKeyPress PROC ; AH:scancode,AL:ASCII
     ; Wait for a key pressed
-    CHECK: 
+    CHECK:
+        push dx
+            CALL DrawShooter
+            CALL DrawFlyingObj
+            CALL DrawGuiLayout
+            Set 21 0
+            lea dx, InstructionMsg
+            CALL DisplayString
+        pop dx
+
         mov ah,1
         int 16h
     jz CHECK
@@ -11791,7 +11994,29 @@ Op1TypeMenu PROC
     jz CommDown_1
     cmp ah, EnterScanCode
     jz Selected_1
-    JMP CheckKeyOp1Type
+    cmp ah, RightScanCode
+    jz MoveRight_Op1TypeMenu
+    cmp ah, LeftScanCode
+    jz MoveLeft_Op1TypeMenu
+    cmp ah, 57
+    jz DrawBullet_Op1TypeMenu
+    cmp ah, EscScanCode
+    jz Exit_Op1TypeMenu
+
+    jmp CheckKeyOp1Type
+
+    DrawBullet_Op1TypeMenu:
+        Call DrawBullet
+        JMP CheckKeyOp1Type
+    MoveLeft_Op1TypeMenu:
+        CALL MoveShooterLeft
+        JMP CheckKeyOp1Type
+    MoveRight_Op1TypeMenu:
+        CALL MoveShooterRight
+        JMP CheckKeyOp1Type
+    Exit_Op1TypeMenu:
+        CALL Terminate
+    
 
 
     CommUp_1:
@@ -11957,8 +12182,28 @@ Op2TypeMenu PROC
     jz CommDown_Op2Type
     cmp ah, EnterScanCode
     jz Selected_Op2Type
-    JMP CheckKey_Op2Type
+    cmp ah, RightScanCode
+    jz MoveRight_Op2Type
+    cmp ah, LeftScanCode
+    jz MoveLeft_Op2Type
+    cmp ah, 57
+    jz DrawBullet_Op2Type
+    cmp ah, EscScanCode
+    jz Exit_Op2Type
 
+    jmp CheckKey_Op2Type
+
+    DrawBullet_Op2Type:
+        Call DrawBullet
+        JMP CheckKey_Op2Type
+    MoveLeft_Op2Type:
+        CALL MoveShooterLeft
+        JMP CheckKey_Op2Type
+    MoveRight_Op2Type:
+        CALL MoveShooterRight
+        JMP CheckKey_Op2Type
+    Exit_Op2Type:
+        CALL Terminate
 
     CommUp_Op2Type:
         mov ah, 9
@@ -12017,6 +12262,7 @@ Op1Menu PROC
     JZ ChooseMem
     CMP selectedOp1Type, ValIndex
     JZ EnterVal
+    
     jmp InvalidOp1Type
 
     ChooseReg: 
@@ -12052,7 +12298,28 @@ Op1Menu PROC
         jz CommDown2
         cmp ah, EnterScanCode
         jz Selected2
+        cmp ah, RightScanCode
+        jz MoveRight_Op1RegType
+        cmp ah, LeftScanCode
+        jz MoveLeft_Op1RegType
+        cmp ah, 57
+        jz DrawBullet_Op1RegType
+        CMP AH, EscScanCode
+        JZ Exit_Op1RegType
+
         jmp CheckKeyRegType
+
+        DrawBullet_Op1RegType:
+            Call DrawBullet
+            jmp CheckKeyRegType
+        MoveLeft_Op1RegType:
+            CALL MoveShooterLeft
+            jmp CheckKeyRegType
+        MoveRight_Op1RegType:
+            CALL MoveShooterRight
+            jmp CheckKeyRegType
+        Exit_Op1RegType:
+            CALL Terminate
 
 
         CommUp2:
@@ -12122,7 +12389,29 @@ Op1Menu PROC
         jz CommDown_AddReg
         cmp ah, EnterScanCode
         jz Selected_AddReg
+        cmp ah, RightScanCode
+        jz MoveRight_Op1AddReg
+        cmp ah, LeftScanCode
+        jz MoveLeft_Op1AddReg
+        cmp ah, 57
+        jz DrawBullet_Op1AddReg
+        CMP AH, EscScanCode
+        JZ Exit_Op1AddReg
+
         jmp CheckKey_AddReg
+
+        DrawBullet_Op1AddReg:
+            Call DrawBullet
+            jmp CheckKey_AddReg
+        MoveLeft_Op1AddReg:
+            CALL MoveShooterLeft
+            jmp CheckKey_AddReg
+        MoveRight_Op1AddReg:
+            CALL MoveShooterRight
+            jmp CheckKey_AddReg
+        Exit_Op1AddReg:
+            CALL Terminate
+
 
 
         CommUp_AddReg:
@@ -12193,8 +12482,28 @@ Op1Menu PROC
         jz CommDown3
         cmp ah, EnterScanCode
         jz Selected3
+        cmp ah, RightScanCode
+        jz MoveRight_Op1Mem
+        cmp ah, LeftScanCode
+        jz MoveLeft_Op1Mem
+        cmp ah, 57
+        jz DrawBullet_Op1Mem
+        CMP AH, EscScanCode
+        JZ Exit_Op1Mem
+
         jmp CheckKeyMemType
 
+        DrawBullet_Op1Mem:
+            Call DrawBullet
+            jmp CheckKeyMemType
+        MoveLeft_Op1Mem:
+            CALL MoveShooterLeft
+            jmp CheckKeyMemType
+        MoveRight_Op1Mem:
+            CALL MoveShooterRight
+            jmp CheckKeyMemType
+        Exit_Op1Mem:
+            CALL Terminate
 
         CommUp3:
             mov ah, 9
@@ -12487,6 +12796,7 @@ Op2Menu PROC
     JZ ChooseMem_Op2Menu
     CMP selectedOp2Type, ValIndex
     JZ EnterVal_Op2Menu
+    
     jmp InvalidOp2Type
 
     ChooseReg_Op2Menu: 
@@ -12522,8 +12832,29 @@ Op2Menu PROC
         jz CommDown_RegType_Op2Menu
         cmp ah, EnterScanCode
         jz Selected_RegType_Op2Menu
+        
+        cmp ah, RightScanCode
+        jz MoveRight_RegType_Op2Menu
+        cmp ah, LeftScanCode
+        jz MoveLeft_RegType_Op2Menu
+        cmp ah, 57
+        jz DrawBullet_RegType_Op2Menu
+        CMP AH, EscScanCode
+        JZ EXIT_RegType_Op2Menu
+
         jmp CheckKey_RegType_Op2Menu
 
+        DrawBullet_RegType_Op2Menu:
+            Call DrawBullet
+            jmp CheckKey_RegType_Op2Menu
+        MoveLeft_RegType_Op2Menu:
+            CALL MoveShooterLeft
+            jmp CheckKey_RegType_Op2Menu
+        MoveRight_RegType_Op2Menu:
+            CALL MoveShooterRight
+            jmp CheckKey_RegType_Op2Menu
+        EXIT_RegType_Op2Menu:
+            CALL Terminate
 
         CommUp_RegType_Op2Menu:
             mov ah, 9
@@ -12592,7 +12923,30 @@ Op2Menu PROC
         jz CommDown_AddReg_Op2Menu
         cmp ah, EnterScanCode
         jz Selected_AddReg
+
+        cmp ah, RightScanCode
+        jz MoveRight_AddReg_Op2Menu
+        cmp ah, LeftScanCode
+        jz MoveLeft_AddReg_Op2Menu
+        cmp ah, 57
+        jz DrawBullet_AddReg_Op2Menu
+        CMP AH, EscScanCode
+        JZ EXIT__AddReg_Op2Menu
+
         jmp CheckKey_AddReg_Op2Menu
+
+        DrawBullet_AddReg_Op2Menu:
+            Call DrawBullet
+            jmp CheckKey_AddReg_Op2Menu
+        MoveLeft_AddReg_Op2Menu:
+            CALL MoveShooterLeft
+            jmp CheckKey_AddReg_Op2Menu
+        MoveRight_AddReg_Op2Menu:
+            CALL MoveShooterRight
+            jmp CheckKey_AddReg_Op2Menu
+        EXIT__AddReg_Op2Menu:
+            CALL Terminate
+        
 
 
         CommUp_AddReg_Op2Menu:
@@ -12663,7 +13017,28 @@ Op2Menu PROC
         jz CommDown_Op2Menu
         cmp ah, EnterScanCode
         jz Selected_Op2Menu
+        cmp ah, RightScanCode
+        jz MoveRight_Op2MenuMem
+        cmp ah, LeftScanCode
+        jz MoveLeft_Op2MenuMem 
+        cmp ah, 57
+        jz DrawBullet_Op2MenuMem
+        CMP AH, EscScanCode
+        JZ EXIT_Op2MenuMem
+
         jmp CheckKey_MemType_Op2Menu
+
+        DrawBullet_Op2MenuMem:
+            Call DrawBullet
+            jmp CheckKey_MemType_Op2Menu
+        MoveLeft_Op2MenuMem:
+            CALL MoveShooterLeft
+            jmp CheckKey_MemType_Op2Menu
+        MoveRight_Op2MenuMem:
+            CALL MoveShooterRight
+            jmp CheckKey_MemType_Op2Menu
+        EXIT_Op2MenuMem:
+            CALL Terminate
 
 
         CommUp_Op2Menu:
@@ -12931,6 +13306,7 @@ CheckOp2Size PROC
         RET
         Op2Val_16Bit:
             mov selectedOp2Size, 16
+            RET
 ENDP
 ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
 
