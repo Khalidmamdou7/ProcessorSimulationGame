@@ -448,7 +448,7 @@ ENDM
     ; Power Up Variables
     UsedBeforeOrNot db 1    ;Chance to use forbiden power up
     PwrUpDataLineIndex db 0
-    PwrUpStuckVal db 0
+    PwrUpStuckVal db 1
     PwrUpStuckEnabled db 1
 
 
@@ -1870,112 +1870,112 @@ CommMenu proc far
             CALL CheckForbidCharProc
 
             cmp selectedOp1Type, 0
-            je Mul_Reg
+            je MUL_Reg
             cmp selectedOp1Type, 1
-            je Mul_AddMem
+            je MUL_AddMem
             cmp selectedOp1Type, 2
-            je Mul_Mem
+            je MUL_Mem
             cmp selectedOp1Type, 3
-            je Mul_invalid
-            Mul_Reg:
+            je MUL_invalid
+            MUL_Reg:
                 cmp selectedOp1Reg, 0
-                je Mul_Ax
+                je MUL_Ax
                 cmp selectedOp1Reg, 1
-                je Mul_Al
+                je MUL_Al
                 cmp selectedOp1Reg, 2
-                je Mul_Ah
+                je MUL_Ah
                 cmp selectedOp1Reg, 3
-                je Mul_Bx
+                je MUL_Bx
                 cmp selectedOp1Reg, 4
-                je Mul_Bl
+                je MUL_Bl
                 cmp selectedOp1Reg, 5
-                je Mul_Bh
+                je MUL_Bh
                 cmp selectedOp1Reg, 6
-                je Mul_Cx
+                je MUL_Cx
                 cmp selectedOp1Reg, 7
-                je Mul_Cl
+                je MUL_Cl
                 cmp selectedOp1Reg, 8
-                je Mul_Ch
+                je MUL_Ch
                 cmp selectedOp1Reg, 9
-                je Mul_Dx
+                je MUL_Dx
                 cmp selectedOp1Reg, 10
-                je Mul_Dl
+                je MUL_Dl
                 cmp selectedOp1Reg, 11
-                je Mul_Dh
+                je MUL_Dh
                 cmp selectedOp1Reg, 15
-                je Mul_Bp
+                je MUL_Bp
                 cmp selectedOp1Reg, 16
-                je Mul_Sp
+                je MUL_Sp
                 cmp selectedOp1Reg, 17
-                je Mul_Si
+                je MUL_Si
                 cmp selectedOp1Reg, 18
-                je Mul_Di
-                jmp Mul_invalid
-                Mul_Ax:
+                je MUL_Di
+                jmp MUL_invalid
+                MUL_Ax:
                     cmp selectedPUPType,1
-                    jne Mul_Ax_his
-                    Mul_Ax_our:
+                    jne MUL_Ax_his
+                    MUL_Ax_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
-                    Mul ax
+                    MUL ax
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Ax_his:
+                    MUL_Ax_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     call LineStuckPwrUp
-                    Mul ax
+                    MUL ax
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Ax_our
+                    je MUL_Ax_our
                     jmp Exit
-                Mul_Al:
+                MUL_Al:
                     cmp selectedPUPType,1
-                    jne Mul_Al_his
-                    Mul_Al_our:
+                    jne MUL_Al_his
+                    MUL_Al_our:
                     mov ax,ourValRegAX
-                    Mul al
+                    MUL al
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Al_his:
+                    MUL_Al_his:
                     mov ax,ValRegAX
                     call LineStuckPwrUp
-                    Mul al
+                    MUL al
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Al_our
+                    je MUL_Al_our
                     jmp Exit
-                Mul_Ah:
+                MUL_Ah:
                     cmp selectedPUPType,1
-                    jne Mul_Ah_his
-                    Mul_Ah_our:
+                    jne MUL_Ah_his
+                    MUL_Ah_our:
                     mov ax,ourValRegAX
-                    Mul ah
+                    MUL ah
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Ah_his:
+                    MUL_Ah_his:
                     mov ax,ValRegAX
                     mov al,ah
                     call LineStuckPwrUp
-                    Mul al
+                    MUL al
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Ah_our
+                    je MUL_Ah_our
                     jmp Exit
-                Mul_Bx:
+                MUL_Bx:
                     cmp selectedPUPType,1
-                    jne Mul_Bx_his
-                    Mul_Bx_our:
+                    jne MUL_Bx_his
+                    MUL_Bx_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov bx,ourValRegBX
-                    Mul bx
+                    MUL bx
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Bx_his:
+                    MUL_Bx_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov bx,ValRegBX
@@ -1984,22 +1984,22 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    Mul bx
+                    MUL bx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Bx_our
+                    je MUL_Bx_our
                     jmp Exit
-                Mul_Bl:
+                MUL_Bl:
                     cmp selectedPUPType,1
-                    jne Mul_Bl_his
-                    Mul_Bl_our:
+                    jne MUL_Bl_his
+                    MUL_Bl_our:
                     mov ax,ourValRegAX
                     mov bx,ourValRegBX
-                    Mul bl
+                    MUL bl
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Bl_his:
+                    MUL_Bl_his:
                     mov ax,ValRegAX
                     mov bx,ValRegBX
                     push ax
@@ -2007,21 +2007,21 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    Mul bl
+                    MUL bl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Bl_our
+                    je MUL_Bl_our
                     jmp Exit
-                Mul_Bh:
+                MUL_Bh:
                     cmp selectedPUPType,1
-                    jne Mul_Bh_his
-                    Mul_Bh_our:
+                    jne MUL_Bh_his
+                    MUL_Bh_our:
                     mov ax,ourValRegAX
                     mov bx,ourValRegBX
-                    Mul Bh
+                    MUL Bh
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Bh_his:
+                    MUL_Bh_his:
                     mov ax,ValRegAX
                     mov bx,ValRegBX
                     push ax
@@ -2029,23 +2029,23 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    Mul Bh
+                    MUL Bh
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Bh_our
+                    je MUL_Bh_our
                     jmp Exit
-                Mul_Cx:
+                MUL_Cx:
                     cmp selectedPUPType,1
-                    jne Mul_Cx_his
-                    Mul_Cx_our:
+                    jne MUL_Cx_his
+                    MUL_Cx_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Cx,ourValRegCx
-                    Mul Cx
+                    MUL Cx
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Cx_his:
+                    MUL_Cx_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Cx,ValRegCx
@@ -2054,22 +2054,22 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    Mul Cx
+                    MUL Cx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Cx_our
+                    je MUL_Cx_our
                     jmp Exit
-                Mul_Cl:
+                MUL_Cl:
                     cmp selectedPUPType,1
-                    jne Mul_Cl_his
-                    Mul_Cl_our:
+                    jne MUL_Cl_his
+                    MUL_Cl_our:
                     mov ax,ourValRegAX
                     mov Cx,ourValRegCx
-                    Mul Cl
+                    MUL Cl
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Cl_his:
+                    MUL_Cl_his:
                     mov ax,ValRegAX
                     mov Cx,ValRegCx
                     push ax
@@ -2077,21 +2077,21 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    Mul Cl
+                    MUL Cl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Cl_our
+                    je MUL_Cl_our
                     jmp Exit
-                Mul_Ch:
+                MUL_Ch:
                     cmp selectedPUPType,1
-                    jne Mul_Ch_his
-                    Mul_Ch_our:
+                    jne MUL_Ch_his
+                    MUL_Ch_our:
                     mov ax,ourValRegAX
                     mov Cx,ourValRegCx
-                    Mul Ch
+                    MUL Ch
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Ch_his:
+                    MUL_Ch_his:
                     mov ax,ValRegAX
                     mov Cx,ValRegCx
                     push ax
@@ -2099,22 +2099,22 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    Mul Ch
+                    MUL Ch
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Ch_our
+                    je MUL_Ch_our
                     jmp Exit
-                Mul_Dx:
+                MUL_Dx:
                     cmp selectedPUPType,1
-                    jne Mul_Dx_his
-                    Mul_Dx_our:
+                    jne MUL_Dx_his
+                    MUL_Dx_our:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
-                    Mul dx
+                    MUL dx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     jmp Exit
-                    Mul_Dx_his:
+                    MUL_Dx_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     push ax
@@ -2122,22 +2122,22 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    Mul dx
+                    MUL dx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Dx_our
+                    je MUL_Dx_our
                     jmp Exit
-                Mul_Dl:
+                MUL_Dl:
                     cmp selectedPUPType,1
-                    jne Mul_Dl_his
-                    Mul_Dl_our:
+                    jne MUL_Dl_his
+                    MUL_Dl_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegBX
-                    Mul dl
+                    MUL dl
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Dl_his:
+                    MUL_Dl_his:
                     mov ax,ValRegAX
                     mov dx,ValRegBX
                     push ax
@@ -2145,21 +2145,21 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    Mul dl
+                    MUL dl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Dl_our
+                    je MUL_Dl_our
                     jmp Exit
-                Mul_Dh:
+                MUL_Dh:
                     cmp selectedPUPType,1
-                    jne Mul_Dh_his
-                    Mul_Dh_our:
+                    jne MUL_Dh_his
+                    MUL_Dh_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegBX
-                    Mul Dh
+                    MUL Dh
                     mov ourValRegAX,ax
                     jmp Exit
-                    Mul_Dh_his:
+                    MUL_Dh_his:
                     mov ax,ValRegAX
                     mov dx,ValRegBX
                     push ax
@@ -2167,23 +2167,23 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    Mul Dh
+                    MUL Dh
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
-                    je Mul_Dh_our
+                    je MUL_Dh_our
                     jmp Exit
-                Mul_Bp:
+                MUL_Bp:
                     cmp selectedPUPType,1
-                    jne Mul_Bp_his
-                    Mul_Bp_our:
+                    jne MUL_Bp_his
+                    MUL_Bp_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Bp,ourValRegBp
-                    Mul Bp
+                    MUL Bp
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Bp_his:
+                    MUL_Bp_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Bp,ValRegBp
@@ -2192,24 +2192,24 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bp,ax
                     pop ax
-                    Mul Bp
+                    MUL Bp
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Bp_our
+                    je MUL_Bp_our
                     jmp Exit
-                Mul_Sp:
+                MUL_Sp:
                     cmp selectedPUPType,1
-                    jne Mul_Sp_his
-                    Mul_Sp_our:
+                    jne MUL_Sp_his
+                    MUL_Sp_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Sp,ourValRegSp
-                    Mul Sp
+                    MUL Sp
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Sp_his:
+                    MUL_Sp_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Sp,ValRegSp
@@ -2218,24 +2218,24 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov sp,ax
                     pop ax
-                    Mul Sp
+                    MUL Sp
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Sp_our
+                    je MUL_Sp_our
                     jmp Exit
-                Mul_Si:
+                MUL_Si:
                     cmp selectedPUPType,1
-                    jne Mul_Si_his
-                    Mul_Si_our:
+                    jne MUL_Si_his
+                    MUL_Si_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Si,ourValRegSi
-                    Mul Si
+                    MUL Si
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Si_his:
+                    MUL_Si_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Si,ValRegSi
@@ -2244,25 +2244,25 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov si,ax
                     pop ax
-                    Mul Si
+                    MUL Si
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Si_our
+                    je MUL_Si_our
                     jmp Exit
-                Mul_di:
-                    Mul_Di:
+                MUL_di:
+                    MUL_Di:
                     cmp selectedPUPType,1
-                    jne Mul_Di_his
-                    Mul_Di_our:
+                    jne MUL_Di_his
+                    MUL_Di_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Di,ourValRegDi
-                    Mul Di
+                    MUL Di
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Di_his:
+                    MUL_Di_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Di,ValRegDi
@@ -2271,563 +2271,176 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov di,ax
                     pop ax
-                    Mul Di
+                    MUL Di
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Di_our
+                    je MUL_Di_our
                     jmp Exit
-            Mul_AddMem:
+            MUL_AddMem:
                 cmp selectedOp1AddReg, 3
-                je Mul_AddBx
+                je MUL_AddBx
                 cmp selectedOp1AddReg, 15
-                je Mul_AddBp
+                je MUL_AddBp
                 cmp selectedOp1AddReg, 17
-                je Mul_AddSi
+                je MUL_AddSi
                 cmp selectedOp1AddReg, 18
-                je Mul_AddDi
-                jmp Mul_invalid
-                Mul_AddBx:
+                je MUL_AddDi
+                jmp MUL_invalid
+                MUL_AddBx:
                     cmp selectedPUPType,1
-                    jne Mul_AddBx_his
-                    Mul_AddBx_our:
+                    jne MUL_AddBx_his
+                    MUL_AddBx_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov bx,ourValRegBX
                     cmp bx,15d
-                    ja Mul_invalid
-                    Mul ourValMem[bx]
+                    ja MUL_invalid
+                    MUL ourValMem[bx]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_AddBx_his:
+                    MUL_AddBx_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov bx,ValRegBX
                     cmp bx,15d
-                    ja Mul_invalid
+                    ja MUL_invalid
                     push ax
                     mov al,ValMem[bx]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    Mul cl
+                    MUL cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_AddBx_our
+                    je MUL_AddBx_our
                     jmp Exit
-                Mul_AddBp:
+                MUL_AddBp:
                     cmp selectedPUPType,1
-                    jne Mul_AddBp_his
-                    Mul_AddBp_our:
+                    jne MUL_AddBp_his
+                    MUL_AddBp_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Bp,ourValRegBp
                     cmp Bp,15d
-                    ja Mul_invalid
-                    Mul ourValMem[bp]
+                    ja MUL_invalid
+                    MUL ourValMem[bp]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_AddBp_his:
+                    MUL_AddBp_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Bp,ValRegBp
                     cmp Bp,15d
-                    ja Mul_invalid
+                    ja MUL_invalid
                     push ax
                     mov al,ValMem[bp]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    Mul cl
+                    MUL cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_AddBp_our
+                    je MUL_AddBp_our
                     jmp Exit
-                Mul_AddSi:
+                MUL_AddSi:
                     cmp selectedPUPType,1
-                    jne Mul_AddSi_his
-                    Mul_AddSi_our:
+                    jne MUL_AddSi_his
+                    MUL_AddSi_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Si,ourValRegSi
                     cmp Si,15d
-                    ja Mul_invalid
-                    Mul ourValMem[si]
+                    ja MUL_invalid
+                    MUL ourValMem[si]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_AddSi_his:
+                    MUL_AddSi_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Si,ValRegSi
                     cmp Si,15d
-                    ja Mul_invalid
+                    ja MUL_invalid
                     push ax
                     mov al,ValMem[si]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    Mul cl
+                    MUL cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_AddSi_our
+                    je MUL_AddSi_our
                     jmp Exit
-                Mul_AddDi:
+                MUL_AddDi:
                     cmp selectedPUPType,1
-                    jne Mul_AddDi_his
-                    Mul_AddDi_our:
+                    jne MUL_AddDi_his
+                    MUL_AddDi_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Di,ourValRegDi
                     cmp Di,15d
-                    ja Mul_invalid
-                    Mul ourValMem[di]
+                    ja MUL_invalid
+                    MUL ourValMem[di]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_AddDi_his:
+                    MUL_AddDi_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     mov Di,ValRegDi
                     cmp Di,15d
-                    ja Mul_invalid
+                    ja MUL_invalid
                     push ax
                     mov al,ValMem[di]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    Mul cl
+                    MUL cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_AddDi_our
+                    je MUL_AddDi_our
                     jmp Exit
-            Mul_Mem:
-                cmp selectedOp1Mem,0
-                je Mul_Mem0
-                cmp selectedOp1Mem,1
-                je Mul_Mem1
-                cmp selectedOp1Mem,2
-                je Mul_Mem2
-                cmp selectedOp1Mem,3
-                je Mul_Mem3
-                cmp selectedOp1Mem,4
-                je Mul_Mem4
-                cmp selectedOp1Mem,5
-                je Mul_Mem5
-                cmp selectedOp1Mem,6
-                je Mul_Mem6
-                cmp selectedOp1Mem,7
-                je Mul_Mem7
-                cmp selectedOp1Mem,8
-                je Mul_Mem8
-                cmp selectedOp1Mem,9
-                je Mul_Mem9
-                cmp selectedOp1Mem,10
-                je Mul_Mem10
-                cmp selectedOp1Mem,11
-                je Mul_Mem11
-                cmp selectedOp1Mem,12
-                je Mul_Mem12
-                cmp selectedOp1Mem,13
-                je Mul_Mem13
-                cmp selectedOp1Mem,14
-                je Mul_Mem14
-                cmp selectedOp1Mem,15
-                je Mul_Mem15
-                Mul_Mem0:
+            mov si,0
+            MUL_Mem:
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne MUL_NotIt
                     cmp selectedPUPType,1
-                    jne Mul_Mem0_his
-                    Mul_Mem0_our:
+                    jne MUL_Mem_his
+                    MUL_Mem_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
-                    Mul ourValMem[0]
+                    MUL ourValMem[si]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    Mul_Mem0_his:
+                    MUL_Mem_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     push ax
-                    mov al,ValMem[0]
+                    mov al,ValMem[si]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    Mul cl
+                    MUL cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je Mul_Mem0_our
+                    je MUL_Mem_our
                     jmp Exit
-                Mul_Mem1:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem1_his
-                    Mul_Mem1_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[1]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem1_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[1]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem1_our
-                    jmp Exit
-                Mul_Mem2:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem2_his
-                    Mul_Mem2_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[2]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem2_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[2]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem2_our
-                    jmp Exit
-                Mul_Mem3:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem3_his
-                    Mul_Mem3_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[3]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem3_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[3]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem3_our
-                    jmp Exit
-                Mul_Mem4:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem4_his
-                    Mul_Mem4_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[4]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem4_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[4]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem4_our
-                    jmp Exit
-                Mul_Mem5:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem5_his
-                    Mul_Mem5_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[5]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem5_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[5]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem5_our
-                    jmp Exit
-                Mul_Mem6:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem6_his
-                    Mul_Mem6_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[6]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem6_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[6]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem6_our
-                    jmp Exit
-                Mul_Mem7:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem7_his
-                    Mul_Mem7_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[7]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem7_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[7]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem7_our
-                    jmp Exit
-                Mul_Mem8:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem8_his
-                    Mul_Mem8_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[8]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem8_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[8]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem8_our
-                    jmp Exit
-                Mul_Mem9:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem9_his
-                    Mul_Mem9_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[9]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem9_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[9]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem9_our
-                    jmp Exit
-                Mul_Mem10:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem10_his
-                    Mul_Mem10_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[10]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem10_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[10]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem10_our
-                    jmp Exit
-                Mul_Mem11:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem11_his
-                    Mul_Mem11_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[11]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem11_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[11]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem11_our
-                    jmp Exit
-                Mul_Mem12:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem12_his
-                    Mul_Mem12_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[12]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem12_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[12]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem12_our
-                    jmp Exit
-                Mul_Mem13:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem13_his
-                    Mul_Mem13_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[13]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem13_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[13]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem13_our
-                    jmp Exit
-                Mul_Mem14:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem14_his
-                    Mul_Mem14_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[14]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem14_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[14]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem14_our
-                    jmp Exit
-                Mul_Mem15:
-                    cmp selectedPUPType,1
-                    jne Mul_Mem15_his
-                    Mul_Mem15_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    Mul ourValMem[15]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    Mul_Mem15_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[15]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    Mul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je Mul_Mem15_our
-                    jmp Exit
-            Mul_invalid:
+                MUL_NotIt:
+                inc si
+                jmp MUL_Mem
+            MUL_invalid:
             jmp InValidCommand
             JMP Exit
-        
         DIV_Comm:
             CALL Op1Menu
 
@@ -2882,9 +2495,6 @@ CommMenu proc far
                     DIV_Ax_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
-                    cmp ax,0
-                    cmp ax,0
-                    je DIV_invalid
                     DIV ax
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -2893,8 +2503,6 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     call LineStuckPwrUp
-                    cmp ax,0
-                    je DIV_invalid
                     DIV ax
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -2906,16 +2514,12 @@ CommMenu proc far
                     jne DIV_Al_his
                     DIV_Al_our:
                     mov ax,ourValRegAX
-                    cmp al,0
-                    je DIV_invalid
                     DIV al
                     mov ourValRegAX,ax
                     jmp Exit
                     DIV_Al_his:
                     mov ax,ValRegAX
                     call LineStuckPwrUp
-                    cmp al,0
-                    je DIV_invalid
                     DIV al
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -2926,8 +2530,6 @@ CommMenu proc far
                     jne DIV_Ah_his
                     DIV_Ah_our:
                     mov ax,ourValRegAX
-                    cmp ah,0
-                    je DIV_invalid
                     DIV ah
                     mov ourValRegAX,ax
                     jmp Exit
@@ -2935,8 +2537,6 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov al,ah
                     call LineStuckPwrUp
-                    cmp al,0
-                    je DIV_invalid
                     DIV al
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -2949,8 +2549,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov bx,ourValRegBX
-                    cmp bx,0
-                    je DIV_invalid
                     DIV bx
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -2964,8 +2562,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    cmp bx,0
-                    je DIV_invalid
                     DIV bx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -2978,8 +2574,6 @@ CommMenu proc far
                     DIV_Bl_our:
                     mov ax,ourValRegAX
                     mov bx,ourValRegBX
-                    cmp bl,0
-                    je DIV_invalid
                     DIV bl
                     mov ourValRegAX,ax
                     jmp Exit
@@ -2991,8 +2585,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    cmp bl,0
-                    je DIV_invalid
                     DIV bl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -3004,8 +2596,6 @@ CommMenu proc far
                     DIV_Bh_our:
                     mov ax,ourValRegAX
                     mov bx,ourValRegBX
-                    cmp bh,0
-                    je DIV_invalid
                     DIV Bh
                     mov ourValRegAX,ax
                     jmp Exit
@@ -3017,8 +2607,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    cmp bh,0
-                    je DIV_invalid
                     DIV Bh
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -3031,8 +2619,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Cx,ourValRegCx
-                    cmp cx,0
-                    je DIV_invalid
                     DIV Cx
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3046,8 +2632,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    cmp cx,0
-                    je DIV_invalid
                     DIV Cx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3060,8 +2644,6 @@ CommMenu proc far
                     DIV_Cl_our:
                     mov ax,ourValRegAX
                     mov Cx,ourValRegCx
-                    cmp cl,0
-                    je DIV_invalid
                     DIV Cl
                     mov ourValRegAX,ax
                     jmp Exit
@@ -3073,8 +2655,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    cmp cl,0
-                    je DIV_invalid
                     DIV Cl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -3086,8 +2666,6 @@ CommMenu proc far
                     DIV_Ch_our:
                     mov ax,ourValRegAX
                     mov Cx,ourValRegCx
-                    cmp ch,0
-                    je DIV_invalid
                     DIV Ch
                     mov ourValRegAX,ax
                     jmp Exit
@@ -3099,8 +2677,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    cmp ch,0
-                    je DIV_invalid
                     DIV Ch
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -3112,8 +2688,6 @@ CommMenu proc far
                     DIV_Dx_our:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
-                    cmp dx,0
-                    je DIV_invalid
                     DIV dx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3126,8 +2700,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    cmp dx,0
-                    je DIV_invalid
                     DIV dx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3140,8 +2712,6 @@ CommMenu proc far
                     DIV_Dl_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegBX
-                    cmp dl,0
-                    je DIV_invalid
                     DIV dl
                     mov ourValRegAX,ax
                     jmp Exit
@@ -3153,8 +2723,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    cmp dl,0
-                    je DIV_invalid
                     DIV dl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -3166,8 +2734,6 @@ CommMenu proc far
                     DIV_Dh_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegBX
-                    cmp dh,0
-                    je DIV_invalid
                     DIV Dh
                     mov ourValRegAX,ax
                     jmp Exit
@@ -3179,8 +2745,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    cmp dh,0
-                    je DIV_invalid
                     DIV Dh
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -3193,8 +2757,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Bp,ourValRegBp
-                    cmp bp,0
-                    je DIV_invalid
                     DIV Bp
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3208,8 +2770,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bp,ax
                     pop ax
-                    cmp bp,0
-                    je DIV_invalid
                     DIV Bp
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3223,8 +2783,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Sp,ourValRegSp
-                    cmp sp,0
-                    je DIV_invalid
                     DIV Sp
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3238,8 +2796,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov sp,ax
                     pop ax
-                    cmp sp,0
-                    je DIV_invalid
                     DIV Sp
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3253,8 +2809,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Si,ourValRegSi
-                    cmp si,0
-                    je DIV_invalid
                     DIV Si
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3268,8 +2822,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov si,ax
                     pop ax
-                    cmp si,0
-                    je DIV_invalid
                     DIV Si
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3284,8 +2836,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Di,ourValRegDi
-                    cmp di,0
-                    je DIV_invalid
                     DIV Di
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3299,8 +2849,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov di,ax
                     pop ax
-                    cmp di,0
-                    je DIV_invalid
                     DIV Di
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3326,8 +2874,6 @@ CommMenu proc far
                     mov bx,ourValRegBX
                     cmp bx,15d
                     ja DIV_invalid
-                    cmp ourValMem[bx],0
-                    je DIV_invalid
                     DIV ourValMem[bx]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3343,8 +2889,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je DIV_invalid
                     DIV cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3360,8 +2904,6 @@ CommMenu proc far
                     mov Bp,ourValRegBp
                     cmp Bp,15d
                     ja DIV_invalid
-                    cmp ourValMem[bp],0
-                    je DIV_invalid
                     DIV ourValMem[bp]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3377,8 +2919,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je DIV_invalid
                     DIV cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3394,8 +2934,6 @@ CommMenu proc far
                     mov Si,ourValRegSi
                     cmp Si,15d
                     ja DIV_invalid
-                    cmp ourValMem[si],0
-                    je DIV_invalid
                     DIV ourValMem[si]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3411,8 +2949,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je DIV_invalid
                     DIV cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -3428,8 +2964,6 @@ CommMenu proc far
                     mov Di,ourValRegDi
                     cmp Di,15d
                     ja DIV_invalid
-                    cmp ourValMem[di],0
-                    je DIV_invalid
                     DIV ourValMem[di]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -3445,499 +2979,46 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je DIV_invalid
                     DIV cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_AddDi_our
                     jmp Exit
+            mov si,0
             DIV_Mem:
-                cmp selectedOp1Mem,0
-                je DIV_Mem0
-                cmp selectedOp1Mem,1
-                je DIV_Mem1
-                cmp selectedOp1Mem,2
-                je DIV_Mem2
-                cmp selectedOp1Mem,3
-                je DIV_Mem3
-                cmp selectedOp1Mem,4
-                je DIV_Mem4
-                cmp selectedOp1Mem,5
-                je DIV_Mem5
-                cmp selectedOp1Mem,6
-                je DIV_Mem6
-                cmp selectedOp1Mem,7
-                je DIV_Mem7
-                cmp selectedOp1Mem,8
-                je DIV_Mem8
-                cmp selectedOp1Mem,9
-                je DIV_Mem9
-                cmp selectedOp1Mem,10
-                je DIV_Mem10
-                cmp selectedOp1Mem,11
-                je DIV_Mem11
-                cmp selectedOp1Mem,12
-                je DIV_Mem12
-                cmp selectedOp1Mem,13
-                je DIV_Mem13
-                cmp selectedOp1Mem,14
-                je DIV_Mem14
-                cmp selectedOp1Mem,15
-                je DIV_Mem15
-                DIV_Mem0:
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne DIV_NotIt
                     cmp selectedPUPType,1
-                    jne DIV_Mem0_his
-                    DIV_Mem0_our:
+                    jne DIV_Mem_his
+                    DIV_Mem_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
-                    cmp ourValMem[0],0
-                    je DIV_invalid
-                    DIV ourValMem[0]
+                    DIV ourValMem[si]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    DIV_Mem0_his:
+                    DIV_Mem_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     push ax
-                    mov al,ValMem[0]
+                    mov al,ValMem[si]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je DIV_invalid
                     DIV cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je DIV_Mem0_our
+                    je DIV_Mem_our
                     jmp Exit
-                DIV_Mem1:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem1_his
-                    DIV_Mem1_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[1],0
-                    je DIV_invalid
-                    DIV ourValMem[1]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem1_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[1]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem1_our
-                    jmp Exit
-                DIV_Mem2:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem2_his
-                    DIV_Mem2_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[2],0
-                    je DIV_invalid
-                    DIV ourValMem[2]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem2_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[2]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem2_our
-                    jmp Exit
-                DIV_Mem3:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem3_his
-                    DIV_Mem3_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[3],0
-                    je DIV_invalid
-                    DIV ourValMem[3]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem3_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[3]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem3_our
-                    jmp Exit
-                DIV_Mem4:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem4_his
-                    DIV_Mem4_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[4],0
-                    je DIV_invalid
-                    DIV ourValMem[4]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem4_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[4]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem4_our
-                    jmp Exit
-                DIV_Mem5:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem5_his
-                    DIV_Mem5_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[5],0
-                    je DIV_invalid
-                    DIV ourValMem[5]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem5_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[5]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem5_our
-                    jmp Exit
-                DIV_Mem6:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem6_his
-                    DIV_Mem6_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[6],0
-                    je DIV_invalid
-                    DIV ourValMem[6]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem6_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[6]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem6_our
-                    jmp Exit
-                DIV_Mem7:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem7_his
-                    DIV_Mem7_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[7],0
-                    je DIV_invalid
-                    DIV ourValMem[7]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem7_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[7]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem7_our
-                    jmp Exit
-                DIV_Mem8:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem8_his
-                    DIV_Mem8_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[8],0
-                    je DIV_invalid
-                    DIV ourValMem[8]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem8_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[8]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem8_our
-                    jmp Exit
-                DIV_Mem9:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem9_his
-                    DIV_Mem9_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[9],0
-                    je DIV_invalid
-                    DIV ourValMem[9]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem9_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[9]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem9_our
-                    jmp Exit
-                DIV_Mem10:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem10_his
-                    DIV_Mem10_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[10],0
-                    je DIV_invalid
-                    DIV ourValMem[10]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem10_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[10]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem10_our
-                    jmp Exit
-                DIV_Mem11:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem11_his
-                    DIV_Mem11_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[11],0
-                    je DIV_invalid
-                    DIV ourValMem[11]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem11_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[11]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem11_our
-                    jmp Exit
-                DIV_Mem12:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem12_his
-                    DIV_Mem12_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[12],0
-                    je DIV_invalid
-                    DIV ourValMem[12]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem12_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[12]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem12_our
-                    jmp Exit
-                DIV_Mem13:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem13_his
-                    DIV_Mem13_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[13],0
-                    je DIV_invalid
-                    DIV ourValMem[13]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem13_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[13]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem13_our
-                    jmp Exit
-                DIV_Mem14:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem14_his
-                    DIV_Mem14_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[14],0
-                    je DIV_invalid
-                    DIV ourValMem[14]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem14_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[14]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem14_our
-                    jmp Exit
-                DIV_Mem15:
-                    cmp selectedPUPType,1
-                    jne DIV_Mem15_his
-                    DIV_Mem15_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[15],0
-                    je DIV_invalid
-                    DIV ourValMem[15]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    DIV_Mem15_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[15]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je DIV_invalid
-                    DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je DIV_Mem15_our
-                    jmp Exit
+                DIV_NotIt:
+                inc si
+                jmp DIV_Mem
             DIV_invalid:
             jmp InValidCommand
             JMP Exit
-        
         IMul_Comm:
             CALL Op1Menu
 
@@ -4482,54 +3563,25 @@ CommMenu proc far
                     cmp selectedPUPType,2
                     je IMul_AddDi_our
                     jmp Exit
+            mov si,0
             IMul_Mem:
-                cmp selectedOp1Mem,0
-                je IMul_Mem0
-                cmp selectedOp1Mem,1
-                je IMul_Mem1
-                cmp selectedOp1Mem,2
-                je IMul_Mem2
-                cmp selectedOp1Mem,3
-                je IMul_Mem3
-                cmp selectedOp1Mem,4
-                je IMul_Mem4
-                cmp selectedOp1Mem,5
-                je IMul_Mem5
-                cmp selectedOp1Mem,6
-                je IMul_Mem6
-                cmp selectedOp1Mem,7
-                je IMul_Mem7
-                cmp selectedOp1Mem,8
-                je IMul_Mem8
-                cmp selectedOp1Mem,9
-                je IMul_Mem9
-                cmp selectedOp1Mem,10
-                je IMul_Mem10
-                cmp selectedOp1Mem,11
-                je IMul_Mem11
-                cmp selectedOp1Mem,12
-                je IMul_Mem12
-                cmp selectedOp1Mem,13
-                je IMul_Mem13
-                cmp selectedOp1Mem,14
-                je IMul_Mem14
-                cmp selectedOp1Mem,15
-                je IMul_Mem15
-                IMul_Mem0:
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne IMul_NotIt
                     cmp selectedPUPType,1
-                    jne IMul_Mem0_his
-                    IMul_Mem0_our:
+                    jne IMul_Mem_his
+                    IMul_Mem_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
-                    IMul ourValMem[0]
+                    IMul ourValMem[si]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    IMul_Mem0_his:
+                    IMul_Mem_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     push ax
-                    mov al,ValMem[0]
+                    mov al,ValMem[si]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
@@ -4537,372 +3589,14 @@ CommMenu proc far
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je IMul_Mem0_our
+                    je IMul_Mem_our
                     jmp Exit
-                IMul_Mem1:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem1_his
-                    IMul_Mem1_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[1]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem1_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[1]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem1_our
-                    jmp Exit
-                IMul_Mem2:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem2_his
-                    IMul_Mem2_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[2]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem2_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[2]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem2_our
-                    jmp Exit
-                IMul_Mem3:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem3_his
-                    IMul_Mem3_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[3]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem3_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[3]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem3_our
-                    jmp Exit
-                IMul_Mem4:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem4_his
-                    IMul_Mem4_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[4]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem4_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[4]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem4_our
-                    jmp Exit
-                IMul_Mem5:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem5_his
-                    IMul_Mem5_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[5]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem5_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[5]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem5_our
-                    jmp Exit
-                IMul_Mem6:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem6_his
-                    IMul_Mem6_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[6]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem6_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[6]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem6_our
-                    jmp Exit
-                IMul_Mem7:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem7_his
-                    IMul_Mem7_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[7]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem7_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[7]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem7_our
-                    jmp Exit
-                IMul_Mem8:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem8_his
-                    IMul_Mem8_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[8]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem8_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[8]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem8_our
-                    jmp Exit
-                IMul_Mem9:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem9_his
-                    IMul_Mem9_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[9]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem9_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[9]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem9_our
-                    jmp Exit
-                IMul_Mem10:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem10_his
-                    IMul_Mem10_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[10]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem10_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[10]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem10_our
-                    jmp Exit
-                IMul_Mem11:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem11_his
-                    IMul_Mem11_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[11]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem11_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[11]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem11_our
-                    jmp Exit
-                IMul_Mem12:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem12_his
-                    IMul_Mem12_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[12]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem12_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[12]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem12_our
-                    jmp Exit
-                IMul_Mem13:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem13_his
-                    IMul_Mem13_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[13]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem13_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[13]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem13_our
-                    jmp Exit
-                IMul_Mem14:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem14_his
-                    IMul_Mem14_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[14]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem14_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[14]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem14_our
-                    jmp Exit
-                IMul_Mem15:
-                    cmp selectedPUPType,1
-                    jne IMul_Mem15_his
-                    IMul_Mem15_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[15]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IMul_Mem15_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[15]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IMul_Mem15_our
-                    jmp Exit
+                IMul_NotIt:
+                inc si
+                jmp IMul_Mem
             IMul_invalid:
             jmp InValidCommand
             JMP Exit
-        
         IDiv_Comm:
             CALL Op1Menu
 
@@ -4957,9 +3651,6 @@ CommMenu proc far
                     IDiv_Ax_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
-                    cmp ax,0
-                    cmp ax,0
-                    je IDiv_invalid
                     IDiv ax
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -4968,8 +3659,6 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     call LineStuckPwrUp
-                    cmp ax,0
-                    je IDiv_invalid
                     IDiv ax
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -4981,16 +3670,12 @@ CommMenu proc far
                     jne IDiv_Al_his
                     IDiv_Al_our:
                     mov ax,ourValRegAX
-                    cmp al,0
-                    je IDiv_invalid
                     IDiv al
                     mov ourValRegAX,ax
                     jmp Exit
                     IDiv_Al_his:
                     mov ax,ValRegAX
                     call LineStuckPwrUp
-                    cmp al,0
-                    je IDiv_invalid
                     IDiv al
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5001,8 +3686,6 @@ CommMenu proc far
                     jne IDiv_Ah_his
                     IDiv_Ah_our:
                     mov ax,ourValRegAX
-                    cmp ah,0
-                    je IDiv_invalid
                     IDiv ah
                     mov ourValRegAX,ax
                     jmp Exit
@@ -5010,8 +3693,6 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov al,ah
                     call LineStuckPwrUp
-                    cmp al,0
-                    je IDiv_invalid
                     IDiv al
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5024,8 +3705,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov bx,ourValRegBX
-                    cmp bx,0
-                    je IDiv_invalid
                     IDiv bx
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5039,8 +3718,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    cmp bx,0
-                    je IDiv_invalid
                     IDiv bx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5053,8 +3730,6 @@ CommMenu proc far
                     IDiv_Bl_our:
                     mov ax,ourValRegAX
                     mov bx,ourValRegBX
-                    cmp bl,0
-                    je IDiv_invalid
                     IDiv bl
                     mov ourValRegAX,ax
                     jmp Exit
@@ -5066,8 +3741,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    cmp bl,0
-                    je IDiv_invalid
                     IDiv bl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5079,8 +3752,6 @@ CommMenu proc far
                     IDiv_Bh_our:
                     mov ax,ourValRegAX
                     mov bx,ourValRegBX
-                    cmp bh,0
-                    je IDiv_invalid
                     IDiv Bh
                     mov ourValRegAX,ax
                     jmp Exit
@@ -5092,8 +3763,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bx,ax
                     pop ax
-                    cmp bh,0
-                    je IDiv_invalid
                     IDiv Bh
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5106,8 +3775,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Cx,ourValRegCx
-                    cmp cx,0
-                    je IDiv_invalid
                     IDiv Cx
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5121,8 +3788,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    cmp cx,0
-                    je IDiv_invalid
                     IDiv Cx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5135,8 +3800,6 @@ CommMenu proc far
                     IDiv_Cl_our:
                     mov ax,ourValRegAX
                     mov Cx,ourValRegCx
-                    cmp cl,0
-                    je IDiv_invalid
                     IDiv Cl
                     mov ourValRegAX,ax
                     jmp Exit
@@ -5148,8 +3811,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    cmp cl,0
-                    je IDiv_invalid
                     IDiv Cl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5161,8 +3822,6 @@ CommMenu proc far
                     IDiv_Ch_our:
                     mov ax,ourValRegAX
                     mov Cx,ourValRegCx
-                    cmp ch,0
-                    je IDiv_invalid
                     IDiv Ch
                     mov ourValRegAX,ax
                     jmp Exit
@@ -5174,8 +3833,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cx,ax
                     pop ax
-                    cmp ch,0
-                    je IDiv_invalid
                     IDiv Ch
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5187,8 +3844,6 @@ CommMenu proc far
                     IDiv_Dx_our:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
-                    cmp dx,0
-                    je IDiv_invalid
                     IDiv dx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5201,8 +3856,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    cmp dx,0
-                    je IDiv_invalid
                     IDiv dx
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5215,8 +3868,6 @@ CommMenu proc far
                     IDiv_Dl_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegBX
-                    cmp dl,0
-                    je IDiv_invalid
                     IDiv dl
                     mov ourValRegAX,ax
                     jmp Exit
@@ -5228,8 +3879,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    cmp dl,0
-                    je IDiv_invalid
                     IDiv dl
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5241,8 +3890,6 @@ CommMenu proc far
                     IDiv_Dh_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegBX
-                    cmp dh,0
-                    je IDiv_invalid
                     IDiv Dh
                     mov ourValRegAX,ax
                     jmp Exit
@@ -5254,8 +3901,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov dx,ax
                     pop ax
-                    cmp dh,0
-                    je IDiv_invalid
                     IDiv Dh
                     mov ValRegAX,ax
                     cmp selectedPUPType,2
@@ -5268,8 +3913,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Bp,ourValRegBp
-                    cmp bp,0
-                    je IDiv_invalid
                     IDiv Bp
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5283,8 +3926,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov bp,ax
                     pop ax
-                    cmp bp,0
-                    je IDiv_invalid
                     IDiv Bp
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5298,8 +3939,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Sp,ourValRegSp
-                    cmp sp,0
-                    je IDiv_invalid
                     IDiv Sp
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5313,8 +3952,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov sp,ax
                     pop ax
-                    cmp sp,0
-                    je IDiv_invalid
                     IDiv Sp
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5328,8 +3965,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Si,ourValRegSi
-                    cmp si,0
-                    je IDiv_invalid
                     IDiv Si
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5343,8 +3978,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov si,ax
                     pop ax
-                    cmp si,0
-                    je IDiv_invalid
                     IDiv Si
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5359,8 +3992,6 @@ CommMenu proc far
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
                     mov Di,ourValRegDi
-                    cmp di,0
-                    je IDiv_invalid
                     IDiv Di
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5374,8 +4005,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov di,ax
                     pop ax
-                    cmp di,0
-                    je IDiv_invalid
                     IDiv Di
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5401,8 +4030,6 @@ CommMenu proc far
                     mov bx,ourValRegBX
                     cmp bx,15d
                     ja IDiv_invalid
-                    cmp ourValMem[bx],0
-                    je IDiv_invalid
                     IDiv ourValMem[bx]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5418,8 +4045,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je IDiv_invalid
                     IDiv cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5435,8 +4060,6 @@ CommMenu proc far
                     mov Bp,ourValRegBp
                     cmp Bp,15d
                     ja IDiv_invalid
-                    cmp ourValMem[bp],0
-                    je IDiv_invalid
                     IDiv ourValMem[bp]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5452,8 +4075,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je IDiv_invalid
                     IDiv cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5469,8 +4090,6 @@ CommMenu proc far
                     mov Si,ourValRegSi
                     cmp Si,15d
                     ja IDiv_invalid
-                    cmp ourValMem[si],0
-                    je IDiv_invalid
                     IDiv ourValMem[si]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5486,8 +4105,6 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je IDiv_invalid
                     IDiv cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
@@ -5503,8 +4120,6 @@ CommMenu proc far
                     mov Di,ourValRegDi
                     cmp Di,15d
                     ja IDiv_invalid
-                    cmp ourValMem[di],0
-                    je IDiv_invalid
                     IDiv ourValMem[di]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
@@ -5520,499 +4135,46 @@ CommMenu proc far
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je IDiv_invalid
                     IDiv cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_AddDi_our
                     jmp Exit
+            mov si,0
             IDiv_Mem:
-                cmp selectedOp1Mem,0
-                je IDiv_Mem0
-                cmp selectedOp1Mem,1
-                je IDiv_Mem1
-                cmp selectedOp1Mem,2
-                je IDiv_Mem2
-                cmp selectedOp1Mem,3
-                je IDiv_Mem3
-                cmp selectedOp1Mem,4
-                je IDiv_Mem4
-                cmp selectedOp1Mem,5
-                je IDiv_Mem5
-                cmp selectedOp1Mem,6
-                je IDiv_Mem6
-                cmp selectedOp1Mem,7
-                je IDiv_Mem7
-                cmp selectedOp1Mem,8
-                je IDiv_Mem8
-                cmp selectedOp1Mem,9
-                je IDiv_Mem9
-                cmp selectedOp1Mem,10
-                je IDiv_Mem10
-                cmp selectedOp1Mem,11
-                je IDiv_Mem11
-                cmp selectedOp1Mem,12
-                je IDiv_Mem12
-                cmp selectedOp1Mem,13
-                je IDiv_Mem13
-                cmp selectedOp1Mem,14
-                je IDiv_Mem14
-                cmp selectedOp1Mem,15
-                je IDiv_Mem15
-                IDiv_Mem0:
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne IDiv_NotIt
                     cmp selectedPUPType,1
-                    jne IDiv_Mem0_his
-                    IDiv_Mem0_our:
+                    jne IDiv_Mem_his
+                    IDiv_Mem_our:
                     mov ax,ourValRegAX
                     mov dx,ourValRegDX
-                    cmp ourValMem[0],0
-                    je IDiv_invalid
-                    IDiv ourValMem[0]
+                    IDiv ourValMem[si]
                     mov ourValRegAX,ax
                     mov ourValRegDX,dx
                     jmp Exit
-                    IDiv_Mem0_his:
+                    IDiv_Mem_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     push ax
-                    mov al,ValMem[0]
+                    mov al,ValMem[si]
                     call LineStuckPwrUp
                     mov cl,al
                     pop ax
-                    cmp cl,0
-                    je IDiv_invalid
                     IDiv cl
                     mov ValRegAX,ax
                     mov ValRegDX,dx
                     cmp selectedPUPType,2
-                    je IDiv_Mem0_our
+                    je IDiv_Mem_our
                     jmp Exit
-                IDiv_Mem1:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem1_his
-                    IDiv_Mem1_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[1],0
-                    je IDiv_invalid
-                    IDiv ourValMem[1]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem1_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[1]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem1_our
-                    jmp Exit
-                IDiv_Mem2:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem2_his
-                    IDiv_Mem2_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[2],0
-                    je IDiv_invalid
-                    IDiv ourValMem[2]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem2_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[2]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem2_our
-                    jmp Exit
-                IDiv_Mem3:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem3_his
-                    IDiv_Mem3_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[3],0
-                    je IDiv_invalid
-                    IDiv ourValMem[3]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem3_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[3]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem3_our
-                    jmp Exit
-                IDiv_Mem4:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem4_his
-                    IDiv_Mem4_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[4],0
-                    je IDiv_invalid
-                    IDiv ourValMem[4]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem4_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[4]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem4_our
-                    jmp Exit
-                IDiv_Mem5:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem5_his
-                    IDiv_Mem5_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[5],0
-                    je IDiv_invalid
-                    IDiv ourValMem[5]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem5_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[5]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem5_our
-                    jmp Exit
-                IDiv_Mem6:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem6_his
-                    IDiv_Mem6_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[6],0
-                    je IDiv_invalid
-                    IDiv ourValMem[6]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem6_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[6]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem6_our
-                    jmp Exit
-                IDiv_Mem7:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem7_his
-                    IDiv_Mem7_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[7],0
-                    je IDiv_invalid
-                    IDiv ourValMem[7]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem7_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[7]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem7_our
-                    jmp Exit
-                IDiv_Mem8:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem8_his
-                    IDiv_Mem8_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[8],0
-                    je IDiv_invalid
-                    IDiv ourValMem[8]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem8_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[8]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem8_our
-                    jmp Exit
-                IDiv_Mem9:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem9_his
-                    IDiv_Mem9_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[9],0
-                    je IDiv_invalid
-                    IDiv ourValMem[9]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem9_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[9]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem9_our
-                    jmp Exit
-                IDiv_Mem10:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem10_his
-                    IDiv_Mem10_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[10],0
-                    je IDiv_invalid
-                    IDiv ourValMem[10]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem10_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[10]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem10_our
-                    jmp Exit
-                IDiv_Mem11:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem11_his
-                    IDiv_Mem11_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[11],0
-                    je IDiv_invalid
-                    IDiv ourValMem[11]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem11_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[11]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem11_our
-                    jmp Exit
-                IDiv_Mem12:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem12_his
-                    IDiv_Mem12_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[12],0
-                    je IDiv_invalid
-                    IDiv ourValMem[12]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem12_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[12]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem12_our
-                    jmp Exit
-                IDiv_Mem13:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem13_his
-                    IDiv_Mem13_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[13],0
-                    je IDiv_invalid
-                    IDiv ourValMem[13]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem13_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[13]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem13_our
-                    jmp Exit
-                IDiv_Mem14:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem14_his
-                    IDiv_Mem14_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[14],0
-                    je IDiv_invalid
-                    IDiv ourValMem[14]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem14_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[14]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem14_our
-                    jmp Exit
-                IDiv_Mem15:
-                    cmp selectedPUPType,1
-                    jne IDiv_Mem15_his
-                    IDiv_Mem15_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    cmp ourValMem[15],0
-                    je IDiv_invalid
-                    IDiv ourValMem[15]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
-                    jmp Exit
-                    IDiv_Mem15_his:
-                    mov ax,ValRegAX
-                    mov dx,ValRegDX
-                    push ax
-                    mov al,ValMem[15]
-                    call LineStuckPwrUp
-                    mov cl,al
-                    pop ax
-                    cmp cl,0
-                    je IDiv_invalid
-                    IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
-                    cmp selectedPUPType,2
-                    je IDiv_Mem15_our
-                    jmp Exit
+                IDiv_NotIt:
+                inc si
+                jmp IDiv_Mem
             IDiv_invalid:
             jmp InValidCommand
             JMP Exit
-        
         ROR_Comm:
             CALL Op1Menu
             MOV DX, CommaCursorLoc
@@ -7136,808 +5298,61 @@ CommMenu proc far
                         cmp selectedPUPType,2
                         je ROR_AddDi_Val_our
                         jmp Exit
+            mov si,0
             ROR_Mem:
-                cmp selectedOp1Mem,0
-                je ROR_Mem0
-                cmp selectedOp1Mem,1
-                je ROR_Mem1
-                cmp selectedOp1Mem,2
-                je ROR_Mem2
-                cmp selectedOp1Mem,3
-                je ROR_Mem3
-                cmp selectedOp1Mem,4
-                je ROR_Mem4
-                cmp selectedOp1Mem,5
-                je ROR_Mem5
-                cmp selectedOp1Mem,6
-                je ROR_Mem6
-                cmp selectedOp1Mem,7
-                je ROR_Mem7
-                cmp selectedOp1Mem,8
-                je ROR_Mem8
-                cmp selectedOp1Mem,9
-                je ROR_Mem9
-                cmp selectedOp1Mem,10
-                je ROR_Mem10
-                cmp selectedOp1Mem,11
-                je ROR_Mem11
-                cmp selectedOp1Mem,12
-                je ROR_Mem12
-                cmp selectedOp1Mem,13
-                je ROR_Mem13
-                cmp selectedOp1Mem,14
-                je ROR_Mem14
-                cmp selectedOp1Mem,15
-                je ROR_Mem15
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne ROR_NotIt
+                cmp selectedOp2Type,0
+                je ROR_Mem_Reg
+                cmp selectedOp2Type,3
+                je ROR_Mem_Val
                 jmp ROR_invalid
-                ROR_Mem0:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem0_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem0_Val
-                    jmp ROR_invalid
-                    ROR_Mem0_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem0_Reg_his
-                        ROR_Mem0_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem0_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        Ror ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem0_Reg_our
-                        jmp Exit
-                    ROR_Mem0_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem0_Val_his
-                        ROR_Mem0_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem0_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        ror ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem0_Val_our
-                        jmp Exit
-                ROR_Mem1:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem1_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem1_Val
-                    jmp ROR_invalid
-                    ROR_Mem1_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem1_Reg_his
-                        ROR_Mem1_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem1_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        Ror ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem1_Reg_our
-                        jmp Exit
-                    ROR_Mem1_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem1_Val_his
-                        ROR_Mem1_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem1_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        ror ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem1_Val_our
-                        jmp Exit
-                ROR_Mem2:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem2_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem2_Val
-                    jmp ROR_invalid
-                    ROR_Mem2_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem2_Reg_his
-                        ROR_Mem2_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem2_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        Ror ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem2_Reg_our
-                        jmp Exit
-                    ROR_Mem2_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem2_Val_his
-                        ROR_Mem2_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem2_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        ror ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem2_Val_our
-                        jmp Exit
-                ROR_Mem3:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem3_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem3_Val
-                    jmp ROR_invalid
-                    ROR_Mem3_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem3_Reg_his
-                        ROR_Mem3_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem3_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        Ror ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem3_Reg_our
-                        jmp Exit
-                    ROR_Mem3_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem3_Val_his
-                        ROR_Mem3_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem3_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        ror ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem3_Val_our
-                        jmp Exit
-                ROR_Mem4:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem4_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem4_Val
-                    jmp ROR_invalid
-                    ROR_Mem4_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem4_Reg_his
-                        ROR_Mem4_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem4_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        Ror ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem4_Reg_our
-                        jmp Exit
-                    ROR_Mem4_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem4_Val_his
-                        ROR_Mem4_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem4_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        ror ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem4_Val_our
-                        jmp Exit
-                ROR_Mem5:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem5_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem5_Val
-                    jmp ROR_invalid
-                    ROR_Mem5_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem5_Reg_his
-                        ROR_Mem5_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem5_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        Ror ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem5_Reg_our
-                        jmp Exit
-                    ROR_Mem5_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem5_Val_his
-                        ROR_Mem5_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem5_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        ror ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem5_Val_our
-                        jmp Exit
-                ROR_Mem6:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem6_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem6_Val
-                    jmp ROR_invalid
-                    ROR_Mem6_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem6_Reg_his
-                        ROR_Mem6_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem6_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        Ror ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem6_Reg_our
-                        jmp Exit
-                    ROR_Mem6_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem6_Val_his
-                        ROR_Mem6_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem6_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        ror ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem6_Val_our
-                        jmp Exit
-                ROR_Mem7:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem7_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem7_Val
-                    jmp ROR_invalid
-                    ROR_Mem7_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem7_Reg_his
-                        ROR_Mem7_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem7_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        Ror ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem7_Reg_our
-                        jmp Exit
-                    ROR_Mem7_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem7_Val_his
-                        ROR_Mem7_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem7_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        ror ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem7_Val_our
-                        jmp Exit
-                ROR_Mem8:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem8_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem8_Val
-                    jmp ROR_invalid
-                    ROR_Mem8_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem8_Reg_his
-                        ROR_Mem8_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem8_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        Ror ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem8_Reg_our
-                        jmp Exit
-                    ROR_Mem8_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem8_Val_his
-                        ROR_Mem8_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem8_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        ror ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem8_Val_our
-                        jmp Exit
-                ROR_Mem9:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem9_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem9_Val
-                    jmp ROR_invalid
-                    ROR_Mem9_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem9_Reg_his
-                        ROR_Mem9_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem9_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        Ror ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem9_Reg_our
-                        jmp Exit
-                    ROR_Mem9_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem9_Val_his
-                        ROR_Mem9_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem9_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        ror ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem9_Val_our
-                        jmp Exit
-                ROR_Mem10:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem10_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem10_Val
-                    jmp ROR_invalid
-                    ROR_Mem10_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem10_Reg_his
-                        ROR_Mem10_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem10_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        Ror ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem10_Reg_our
-                        jmp Exit
-                    ROR_Mem10_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem10_Val_his
-                        ROR_Mem10_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem10_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        ror ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem10_Val_our
-                        jmp Exit
-                ROR_Mem11:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem11_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem11_Val
-                    jmp ROR_invalid
-                    ROR_Mem11_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem11_Reg_his
-                        ROR_Mem11_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem11_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        Ror ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem11_Reg_our
-                        jmp Exit
-                    ROR_Mem11_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem11_Val_his
-                        ROR_Mem11_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem11_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        ror ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem11_Val_our
-                        jmp Exit
-                ROR_Mem12:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem12_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem12_Val
-                    jmp ROR_invalid
-                    ROR_Mem12_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem12_Reg_his
-                        ROR_Mem12_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem12_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        Ror ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem12_Reg_our
-                        jmp Exit
-                    ROR_Mem12_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem12_Val_his
-                        ROR_Mem12_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem12_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        ror ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem12_Val_our
-                        jmp Exit
-                ROR_Mem13:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem13_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem13_Val
-                    jmp ROR_invalid
-                    ROR_Mem13_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem13_Reg_his
-                        ROR_Mem13_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem13_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        Ror ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem13_Reg_our
-                        jmp Exit
-                    ROR_Mem13_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem13_Val_his
-                        ROR_Mem13_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem13_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        ror ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem13_Val_our
-                        jmp Exit
-                ROR_Mem14:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem14_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem14_Val
-                    jmp ROR_invalid
-                    ROR_Mem14_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem14_Reg_his
-                        ROR_Mem14_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem14_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        Ror ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem14_Reg_our
-                        jmp Exit
-                    ROR_Mem14_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem14_Val_his
-                        ROR_Mem14_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem14_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        ror ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem14_Val_our
-                        jmp Exit
-                ROR_Mem15:
-                    cmp selectedOp2Type,0
-                    je ROR_Mem15_Reg
-                    cmp selectedOp2Type,3
-                    je ROR_Mem15_Val
-                    jmp ROR_invalid
-                    ROR_Mem15_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem15_Reg_his
-                        ROR_Mem15_Reg_our:
-                        mov cx,ourValRegCX
-                        Ror ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem15_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        Ror ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem15_Reg_our
-                        jmp Exit
-                    ROR_Mem15_Val:
-                        cmp Op2Val,255d
-                        ja ROR_invalid
-                        cmp selectedPUPType,1
-                        jne ROR_Mem15_Val_his
-                        ROR_Mem15_Val_our:
-                        mov cx,Op2Val
-                        ror ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROR_Mem15_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        ror ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROR_Mem15_Val_our
-                        jmp Exit
+                ROR_Mem_Reg:
+                    cmp selectedOp2Reg,7
+                    jne ROR_invalid
+                    cmp selectedPUPType,1
+                    jne ROR_Mem_Reg_his
+                    ROR_Mem_Reg_our:
+                    mov cx,ourValRegCX
+                    Ror ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    ROR_Mem_Reg_his:
+                    mov cx,ValRegCX
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    Ror ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je ROR_Mem_Reg_our
+                    jmp Exit
+                ROR_Mem_Val:
+                    cmp Op2Val,255d
+                    ja ROR_invalid
+                    cmp selectedPUPType,1
+                    jne ROR_Mem_Val_his
+                    ROR_Mem_Val_our:
+                    mov cx,Op2Val
+                    ror ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    ROR_Mem_Val_his:
+                    mov cx,Op2Val
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    ror ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je ROR_Mem_Val_our
+                    jmp Exit
+                ROR_NotIt:
+                inc si
+                jmp ROR_Mem
             ROR_invalid:
             jmp InValidCommand
             JMP Exit
@@ -9065,808 +6480,61 @@ CommMenu proc far
                         cmp selectedPUPType,2
                         je ROL_AddDi_Val_our
                         jmp Exit
+            mov si,0
             ROL_Mem:
-                cmp selectedOp1Mem,0
-                je ROL_Mem0
-                cmp selectedOp1Mem,1
-                je ROL_Mem1
-                cmp selectedOp1Mem,2
-                je ROL_Mem2
-                cmp selectedOp1Mem,3
-                je ROL_Mem3
-                cmp selectedOp1Mem,4
-                je ROL_Mem4
-                cmp selectedOp1Mem,5
-                je ROL_Mem5
-                cmp selectedOp1Mem,6
-                je ROL_Mem6
-                cmp selectedOp1Mem,7
-                je ROL_Mem7
-                cmp selectedOp1Mem,8
-                je ROL_Mem8
-                cmp selectedOp1Mem,9
-                je ROL_Mem9
-                cmp selectedOp1Mem,10
-                je ROL_Mem10
-                cmp selectedOp1Mem,11
-                je ROL_Mem11
-                cmp selectedOp1Mem,12
-                je ROL_Mem12
-                cmp selectedOp1Mem,13
-                je ROL_Mem13
-                cmp selectedOp1Mem,14
-                je ROL_Mem14
-                cmp selectedOp1Mem,15
-                je ROL_Mem15
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne ROL_NotIt
+                cmp selectedOp2Type,0
+                je ROL_Mem_Reg
+                cmp selectedOp2Type,3
+                je ROL_Mem_Val
                 jmp ROL_invalid
-                ROL_Mem0:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem0_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem0_Val
-                    jmp ROL_invalid
-                    ROL_Mem0_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem0_Reg_his
-                        ROL_Mem0_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem0_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        ROL ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem0_Reg_our
-                        jmp Exit
-                    ROL_Mem0_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem0_Val_his
-                        ROL_Mem0_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem0_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        ROL ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem0_Val_our
-                        jmp Exit
-                ROL_Mem1:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem1_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem1_Val
-                    jmp ROL_invalid
-                    ROL_Mem1_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem1_Reg_his
-                        ROL_Mem1_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem1_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        ROL ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem1_Reg_our
-                        jmp Exit
-                    ROL_Mem1_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem1_Val_his
-                        ROL_Mem1_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem1_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        ROL ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem1_Val_our
-                        jmp Exit
-                ROL_Mem2:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem2_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem2_Val
-                    jmp ROL_invalid
-                    ROL_Mem2_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem2_Reg_his
-                        ROL_Mem2_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem2_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        ROL ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem2_Reg_our
-                        jmp Exit
-                    ROL_Mem2_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem2_Val_his
-                        ROL_Mem2_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem2_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        ROL ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem2_Val_our
-                        jmp Exit
-                ROL_Mem3:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem3_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem3_Val
-                    jmp ROL_invalid
-                    ROL_Mem3_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem3_Reg_his
-                        ROL_Mem3_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem3_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        ROL ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem3_Reg_our
-                        jmp Exit
-                    ROL_Mem3_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem3_Val_his
-                        ROL_Mem3_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem3_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        ROL ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem3_Val_our
-                        jmp Exit
-                ROL_Mem4:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem4_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem4_Val
-                    jmp ROL_invalid
-                    ROL_Mem4_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem4_Reg_his
-                        ROL_Mem4_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem4_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        ROL ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem4_Reg_our
-                        jmp Exit
-                    ROL_Mem4_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem4_Val_his
-                        ROL_Mem4_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem4_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        ROL ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem4_Val_our
-                        jmp Exit
-                ROL_Mem5:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem5_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem5_Val
-                    jmp ROL_invalid
-                    ROL_Mem5_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem5_Reg_his
-                        ROL_Mem5_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem5_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        ROL ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem5_Reg_our
-                        jmp Exit
-                    ROL_Mem5_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem5_Val_his
-                        ROL_Mem5_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem5_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        ROL ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem5_Val_our
-                        jmp Exit
-                ROL_Mem6:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem6_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem6_Val
-                    jmp ROL_invalid
-                    ROL_Mem6_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem6_Reg_his
-                        ROL_Mem6_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem6_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        ROL ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem6_Reg_our
-                        jmp Exit
-                    ROL_Mem6_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem6_Val_his
-                        ROL_Mem6_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem6_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        ROL ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem6_Val_our
-                        jmp Exit
-                ROL_Mem7:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem7_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem7_Val
-                    jmp ROL_invalid
-                    ROL_Mem7_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem7_Reg_his
-                        ROL_Mem7_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem7_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        ROL ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem7_Reg_our
-                        jmp Exit
-                    ROL_Mem7_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem7_Val_his
-                        ROL_Mem7_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem7_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        ROL ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem7_Val_our
-                        jmp Exit
-                ROL_Mem8:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem8_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem8_Val
-                    jmp ROL_invalid
-                    ROL_Mem8_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem8_Reg_his
-                        ROL_Mem8_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem8_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        ROL ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem8_Reg_our
-                        jmp Exit
-                    ROL_Mem8_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem8_Val_his
-                        ROL_Mem8_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem8_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        ROL ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem8_Val_our
-                        jmp Exit
-                ROL_Mem9:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem9_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem9_Val
-                    jmp ROL_invalid
-                    ROL_Mem9_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem9_Reg_his
-                        ROL_Mem9_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem9_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        ROL ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem9_Reg_our
-                        jmp Exit
-                    ROL_Mem9_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem9_Val_his
-                        ROL_Mem9_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem9_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        ROL ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem9_Val_our
-                        jmp Exit
-                ROL_Mem10:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem10_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem10_Val
-                    jmp ROL_invalid
-                    ROL_Mem10_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem10_Reg_his
-                        ROL_Mem10_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem10_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        ROL ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem10_Reg_our
-                        jmp Exit
-                    ROL_Mem10_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem10_Val_his
-                        ROL_Mem10_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem10_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        ROL ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem10_Val_our
-                        jmp Exit
-                ROL_Mem11:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem11_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem11_Val
-                    jmp ROL_invalid
-                    ROL_Mem11_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem11_Reg_his
-                        ROL_Mem11_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem11_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        ROL ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem11_Reg_our
-                        jmp Exit
-                    ROL_Mem11_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem11_Val_his
-                        ROL_Mem11_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem11_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        ROL ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem11_Val_our
-                        jmp Exit
-                ROL_Mem12:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem12_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem12_Val
-                    jmp ROL_invalid
-                    ROL_Mem12_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem12_Reg_his
-                        ROL_Mem12_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem12_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        ROL ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem12_Reg_our
-                        jmp Exit
-                    ROL_Mem12_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem12_Val_his
-                        ROL_Mem12_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem12_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        ROL ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem12_Val_our
-                        jmp Exit
-                ROL_Mem13:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem13_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem13_Val
-                    jmp ROL_invalid
-                    ROL_Mem13_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem13_Reg_his
-                        ROL_Mem13_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem13_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        ROL ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem13_Reg_our
-                        jmp Exit
-                    ROL_Mem13_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem13_Val_his
-                        ROL_Mem13_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem13_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        ROL ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem13_Val_our
-                        jmp Exit
-                ROL_Mem14:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem14_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem14_Val
-                    jmp ROL_invalid
-                    ROL_Mem14_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem14_Reg_his
-                        ROL_Mem14_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem14_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        ROL ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem14_Reg_our
-                        jmp Exit
-                    ROL_Mem14_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem14_Val_his
-                        ROL_Mem14_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem14_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        ROL ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem14_Val_our
-                        jmp Exit
-                ROL_Mem15:
-                    cmp selectedOp2Type,0
-                    je ROL_Mem15_Reg
-                    cmp selectedOp2Type,3
-                    je ROL_Mem15_Val
-                    jmp ROL_invalid
-                    ROL_Mem15_Reg:
-                        cmp selectedOp2Reg,7
-                        jne ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem15_Reg_his
-                        ROL_Mem15_Reg_our:
-                        mov cx,ourValRegCX
-                        ROL ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem15_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        ROL ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem15_Reg_our
-                        jmp Exit
-                    ROL_Mem15_Val:
-                        cmp Op2Val,255d
-                        ja ROL_invalid
-                        cmp selectedPUPType,1
-                        jne ROL_Mem15_Val_his
-                        ROL_Mem15_Val_our:
-                        mov cx,Op2Val
-                        ROL ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        ROL_Mem15_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        ROL ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je ROL_Mem15_Val_our
-                        jmp Exit
+                ROL_Mem_Reg:
+                    cmp selectedOp2Reg,7
+                    jne ROL_invalid
+                    cmp selectedPUPType,1
+                    jne ROL_Mem_Reg_his
+                    ROL_Mem_Reg_our:
+                    mov cx,ourValRegCX
+                    ROL ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    ROL_Mem_Reg_his:
+                    mov cx,ValRegCX
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    ROL ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je ROL_Mem_Reg_our
+                    jmp Exit
+                ROL_Mem_Val:
+                    cmp Op2Val,255d
+                    ja ROL_invalid
+                    cmp selectedPUPType,1
+                    jne ROL_Mem_Val_his
+                    ROL_Mem_Val_our:
+                    mov cx,Op2Val
+                    ROL ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    ROL_Mem_Val_his:
+                    mov cx,Op2Val
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    ROL ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je ROL_Mem_Val_our
+                    jmp Exit
+                ROL_NotIt:
+                inc si
+                jmp ROL_Mem
             ROL_invalid:
             jmp InValidCommand
             JMP Exit
@@ -11074,872 +7742,65 @@ CommMenu proc far
                         cmp selectedPUPType,2
                         je RCR_AddDi_Val_our
                         jmp Exit
+            mov si,0
             RCR_Mem:
-                cmp selectedOp1Mem,0
-                je RCR_Mem0
-                cmp selectedOp1Mem,1
-                je RCR_Mem1
-                cmp selectedOp1Mem,2
-                je RCR_Mem2
-                cmp selectedOp1Mem,3
-                je RCR_Mem3
-                cmp selectedOp1Mem,4
-                je RCR_Mem4
-                cmp selectedOp1Mem,5
-                je RCR_Mem5
-                cmp selectedOp1Mem,6
-                je RCR_Mem6
-                cmp selectedOp1Mem,7
-                je RCR_Mem7
-                cmp selectedOp1Mem,8
-                je RCR_Mem8
-                cmp selectedOp1Mem,9
-                je RCR_Mem9
-                cmp selectedOp1Mem,10
-                je RCR_Mem10
-                cmp selectedOp1Mem,11
-                je RCR_Mem11
-                cmp selectedOp1Mem,12
-                je RCR_Mem12
-                cmp selectedOp1Mem,13
-                je RCR_Mem13
-                cmp selectedOp1Mem,14
-                je RCR_Mem14
-                cmp selectedOp1Mem,15
-                je RCR_Mem15
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne RCR_NotIt
+                cmp selectedOp2Type,0
+                je RCR_Mem_Reg
+                cmp selectedOp2Type,3
+                je RCR_Mem_Val
                 jmp RCR_invalid
-                RCR_Mem0:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem0_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem0_Val
-                    jmp RCR_invalid
-                    RCR_Mem0_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem0_Reg_his
-                        RCR_Mem0_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem0_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        call GetCarryFlag
-                        RCR ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem0_Reg_our
-                        jmp Exit
-                    RCR_Mem0_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem0_Val_his
-                        RCR_Mem0_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem0_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        call GetCarryFlag
-                        RCR ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem0_Val_our
-                        jmp Exit
-                RCR_Mem1:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem1_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem1_Val
-                    jmp RCR_invalid
-                    RCR_Mem1_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem1_Reg_his
-                        RCR_Mem1_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem1_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        call GetCarryFlag
-                        RCR ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem1_Reg_our
-                        jmp Exit
-                    RCR_Mem1_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem1_Val_his
-                        RCR_Mem1_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem1_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        call GetCarryFlag
-                        RCR ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem1_Val_our
-                        jmp Exit
-                RCR_Mem2:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem2_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem2_Val
-                    jmp RCR_invalid
-                    RCR_Mem2_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem2_Reg_his
-                        RCR_Mem2_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem2_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        call GetCarryFlag
-                        RCR ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem2_Reg_our
-                        jmp Exit
-                    RCR_Mem2_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem2_Val_his
-                        RCR_Mem2_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem2_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        call GetCarryFlag
-                        RCR ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem2_Val_our
-                        jmp Exit
-                RCR_Mem3:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem3_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem3_Val
-                    jmp RCR_invalid
-                    RCR_Mem3_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem3_Reg_his
-                        RCR_Mem3_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem3_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        call GetCarryFlag
-                        RCR ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem3_Reg_our
-                        jmp Exit
-                    RCR_Mem3_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem3_Val_his
-                        RCR_Mem3_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem3_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        call GetCarryFlag
-                        RCR ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem3_Val_our
-                        jmp Exit
-                RCR_Mem4:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem4_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem4_Val
-                    jmp RCR_invalid
-                    RCR_Mem4_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem4_Reg_his
-                        RCR_Mem4_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem4_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        call GetCarryFlag
-                        RCR ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem4_Reg_our
-                        jmp Exit
-                    RCR_Mem4_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem4_Val_his
-                        RCR_Mem4_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem4_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        call GetCarryFlag
-                        RCR ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem4_Val_our
-                        jmp Exit
-                RCR_Mem5:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem5_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem5_Val
-                    jmp RCR_invalid
-                    RCR_Mem5_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem5_Reg_his
-                        RCR_Mem5_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem5_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        call GetCarryFlag
-                        RCR ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem5_Reg_our
-                        jmp Exit
-                    RCR_Mem5_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem5_Val_his
-                        RCR_Mem5_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem5_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        call GetCarryFlag
-                        RCR ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem5_Val_our
-                        jmp Exit
-                RCR_Mem6:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem6_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem6_Val
-                    jmp RCR_invalid
-                    RCR_Mem6_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem6_Reg_his
-                        RCR_Mem6_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem6_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        call GetCarryFlag
-                        RCR ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem6_Reg_our
-                        jmp Exit
-                    RCR_Mem6_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem6_Val_his
-                        RCR_Mem6_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem6_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        call GetCarryFlag
-                        RCR ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem6_Val_our
-                        jmp Exit
-                RCR_Mem7:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem7_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem7_Val
-                    jmp RCR_invalid
-                    RCR_Mem7_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem7_Reg_his
-                        RCR_Mem7_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem7_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        call GetCarryFlag
-                        RCR ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem7_Reg_our
-                        jmp Exit
-                    RCR_Mem7_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem7_Val_his
-                        RCR_Mem7_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem7_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        call GetCarryFlag
-                        RCR ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem7_Val_our
-                        jmp Exit
-                RCR_Mem8:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem8_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem8_Val
-                    jmp RCR_invalid
-                    RCR_Mem8_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem8_Reg_his
-                        RCR_Mem8_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem8_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        call GetCarryFlag
-                        RCR ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem8_Reg_our
-                        jmp Exit
-                    RCR_Mem8_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem8_Val_his
-                        RCR_Mem8_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem8_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        call GetCarryFlag
-                        RCR ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem8_Val_our
-                        jmp Exit
-                RCR_Mem9:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem9_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem9_Val
-                    jmp RCR_invalid
-                    RCR_Mem9_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem9_Reg_his
-                        RCR_Mem9_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem9_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        call GetCarryFlag
-                        RCR ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem9_Reg_our
-                        jmp Exit
-                    RCR_Mem9_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem9_Val_his
-                        RCR_Mem9_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem9_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        call GetCarryFlag
-                        RCR ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem9_Val_our
-                        jmp Exit
-                RCR_Mem10:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem10_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem10_Val
-                    jmp RCR_invalid
-                    RCR_Mem10_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem10_Reg_his
-                        RCR_Mem10_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem10_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        call GetCarryFlag
-                        RCR ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem10_Reg_our
-                        jmp Exit
-                    RCR_Mem10_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem10_Val_his
-                        RCR_Mem10_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem10_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        call GetCarryFlag
-                        RCR ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem10_Val_our
-                        jmp Exit
-                RCR_Mem11:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem11_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem11_Val
-                    jmp RCR_invalid
-                    RCR_Mem11_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem11_Reg_his
-                        RCR_Mem11_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem11_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        call GetCarryFlag
-                        RCR ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem11_Reg_our
-                        jmp Exit
-                    RCR_Mem11_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem11_Val_his
-                        RCR_Mem11_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem11_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        call GetCarryFlag
-                        RCR ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem11_Val_our
-                        jmp Exit
-                RCR_Mem12:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem12_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem12_Val
-                    jmp RCR_invalid
-                    RCR_Mem12_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem12_Reg_his
-                        RCR_Mem12_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem12_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        call GetCarryFlag
-                        RCR ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem12_Reg_our
-                        jmp Exit
-                    RCR_Mem12_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem12_Val_his
-                        RCR_Mem12_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem12_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        call GetCarryFlag
-                        RCR ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem12_Val_our
-                        jmp Exit
-                RCR_Mem13:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem13_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem13_Val
-                    jmp RCR_invalid
-                    RCR_Mem13_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem13_Reg_his
-                        RCR_Mem13_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem13_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        call GetCarryFlag
-                        RCR ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem13_Reg_our
-                        jmp Exit
-                    RCR_Mem13_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem13_Val_his
-                        RCR_Mem13_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem13_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        call GetCarryFlag
-                        RCR ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem13_Val_our
-                        jmp Exit
-                RCR_Mem14:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem14_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem14_Val
-                    jmp RCR_invalid
-                    RCR_Mem14_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem14_Reg_his
-                        RCR_Mem14_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem14_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        call GetCarryFlag
-                        RCR ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem14_Reg_our
-                        jmp Exit
-                    RCR_Mem14_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem14_Val_his
-                        RCR_Mem14_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem14_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        call GetCarryFlag
-                        RCR ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem14_Val_our
-                        jmp Exit
-                RCR_Mem15:
-                    cmp selectedOp2Type,0
-                    je RCR_Mem15_Reg
-                    cmp selectedOp2Type,3
-                    je RCR_Mem15_Val
-                    jmp RCR_invalid
-                    RCR_Mem15_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem15_Reg_his
-                        RCR_Mem15_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCR ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem15_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        call GetCarryFlag
-                        RCR ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem15_Reg_our
-                        jmp Exit
-                    RCR_Mem15_Val:
-                        cmp Op2Val,255d
-                        ja RCR_invalid
-                        cmp selectedPUPType,1
-                        jne RCR_Mem15_Val_his
-                        RCR_Mem15_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCR ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCR_Mem15_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        call GetCarryFlag
-                        RCR ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCR_Mem15_Val_our
-                        jmp Exit
+                RCR_Mem_Reg:
+                    cmp selectedOp2Reg,7
+                    jne RCR_invalid
+                    cmp selectedPUPType,1
+                    jne RCR_Mem_Reg_his
+                    RCR_Mem_Reg_our:
+                    mov cx,ourValRegCX
+                    call ourGetCF
+                    RCR ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    RCR_Mem_Reg_his:
+                    mov cx,ValRegCX
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    call GetCarryFlag
+                    RCR ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je RCR_Mem_Reg_our
+                    jmp Exit
+                RCR_Mem_Val:
+                    cmp Op2Val,255d
+                    ja RCR_invalid
+                    cmp selectedPUPType,1
+                    jne RCR_Mem_Val_his
+                    RCR_Mem_Val_our:
+                    mov cx,Op2Val
+                    call ourGetCF
+                    RCR ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    RCR_Mem_Val_his:
+                    mov cx,Op2Val
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    call GetCarryFlag
+                    RCR ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je RCR_Mem_Val_our
+                    jmp Exit
+                RCR_NotIt:
+                inc si
+                jmp RCR_Mem
             RCR_invalid:
             jmp InValidCommand
             JMP Exit
@@ -13147,872 +9008,65 @@ CommMenu proc far
                         cmp selectedPUPType,2
                         je RCL_AddDi_Val_our
                         jmp Exit
+            mov si,0
             RCL_Mem:
-                cmp selectedOp1Mem,0
-                je RCL_Mem0
-                cmp selectedOp1Mem,1
-                je RCL_Mem1
-                cmp selectedOp1Mem,2
-                je RCL_Mem2
-                cmp selectedOp1Mem,3
-                je RCL_Mem3
-                cmp selectedOp1Mem,4
-                je RCL_Mem4
-                cmp selectedOp1Mem,5
-                je RCL_Mem5
-                cmp selectedOp1Mem,6
-                je RCL_Mem6
-                cmp selectedOp1Mem,7
-                je RCL_Mem7
-                cmp selectedOp1Mem,8
-                je RCL_Mem8
-                cmp selectedOp1Mem,9
-                je RCL_Mem9
-                cmp selectedOp1Mem,10
-                je RCL_Mem10
-                cmp selectedOp1Mem,11
-                je RCL_Mem11
-                cmp selectedOp1Mem,12
-                je RCL_Mem12
-                cmp selectedOp1Mem,13
-                je RCL_Mem13
-                cmp selectedOp1Mem,14
-                je RCL_Mem14
-                cmp selectedOp1Mem,15
-                je RCL_Mem15
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne RCL_NotIt
+                cmp selectedOp2Type,0
+                je RCL_Mem_Reg
+                cmp selectedOp2Type,3
+                je RCL_Mem_Val
                 jmp RCL_invalid
-                RCL_Mem0:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem0_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem0_Val
-                    jmp RCL_invalid
-                    RCL_Mem0_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem0_Reg_his
-                        RCL_Mem0_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem0_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        call GetCarryFlag
-                        RCL ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem0_Reg_our
-                        jmp Exit
-                    RCL_Mem0_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem0_Val_his
-                        RCL_Mem0_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem0_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        call GetCarryFlag
-                        RCL ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem0_Val_our
-                        jmp Exit
-                RCL_Mem1:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem1_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem1_Val
-                    jmp RCL_invalid
-                    RCL_Mem1_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem1_Reg_his
-                        RCL_Mem1_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem1_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        call GetCarryFlag
-                        RCL ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem1_Reg_our
-                        jmp Exit
-                    RCL_Mem1_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem1_Val_his
-                        RCL_Mem1_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem1_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        call GetCarryFlag
-                        RCL ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem1_Val_our
-                        jmp Exit
-                RCL_Mem2:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem2_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem2_Val
-                    jmp RCL_invalid
-                    RCL_Mem2_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem2_Reg_his
-                        RCL_Mem2_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem2_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        call GetCarryFlag
-                        RCL ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem2_Reg_our
-                        jmp Exit
-                    RCL_Mem2_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem2_Val_his
-                        RCL_Mem2_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem2_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        call GetCarryFlag
-                        RCL ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem2_Val_our
-                        jmp Exit
-                RCL_Mem3:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem3_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem3_Val
-                    jmp RCL_invalid
-                    RCL_Mem3_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem3_Reg_his
-                        RCL_Mem3_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem3_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        call GetCarryFlag
-                        RCL ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem3_Reg_our
-                        jmp Exit
-                    RCL_Mem3_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem3_Val_his
-                        RCL_Mem3_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem3_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        call GetCarryFlag
-                        RCL ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem3_Val_our
-                        jmp Exit
-                RCL_Mem4:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem4_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem4_Val
-                    jmp RCL_invalid
-                    RCL_Mem4_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem4_Reg_his
-                        RCL_Mem4_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem4_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        call GetCarryFlag
-                        RCL ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem4_Reg_our
-                        jmp Exit
-                    RCL_Mem4_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem4_Val_his
-                        RCL_Mem4_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem4_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        call GetCarryFlag
-                        RCL ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem4_Val_our
-                        jmp Exit
-                RCL_Mem5:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem5_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem5_Val
-                    jmp RCL_invalid
-                    RCL_Mem5_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem5_Reg_his
-                        RCL_Mem5_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem5_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        call GetCarryFlag
-                        RCL ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem5_Reg_our
-                        jmp Exit
-                    RCL_Mem5_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem5_Val_his
-                        RCL_Mem5_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem5_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        call GetCarryFlag
-                        RCL ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem5_Val_our
-                        jmp Exit
-                RCL_Mem6:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem6_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem6_Val
-                    jmp RCL_invalid
-                    RCL_Mem6_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem6_Reg_his
-                        RCL_Mem6_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem6_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        call GetCarryFlag
-                        RCL ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem6_Reg_our
-                        jmp Exit
-                    RCL_Mem6_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem6_Val_his
-                        RCL_Mem6_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem6_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        call GetCarryFlag
-                        RCL ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem6_Val_our
-                        jmp Exit
-                RCL_Mem7:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem7_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem7_Val
-                    jmp RCL_invalid
-                    RCL_Mem7_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem7_Reg_his
-                        RCL_Mem7_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem7_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        call GetCarryFlag
-                        RCL ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem7_Reg_our
-                        jmp Exit
-                    RCL_Mem7_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem7_Val_his
-                        RCL_Mem7_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem7_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        call GetCarryFlag
-                        RCL ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem7_Val_our
-                        jmp Exit
-                RCL_Mem8:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem8_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem8_Val
-                    jmp RCL_invalid
-                    RCL_Mem8_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem8_Reg_his
-                        RCL_Mem8_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem8_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        call GetCarryFlag
-                        RCL ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem8_Reg_our
-                        jmp Exit
-                    RCL_Mem8_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem8_Val_his
-                        RCL_Mem8_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem8_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        call GetCarryFlag
-                        RCL ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem8_Val_our
-                        jmp Exit
-                RCL_Mem9:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem9_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem9_Val
-                    jmp RCL_invalid
-                    RCL_Mem9_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem9_Reg_his
-                        RCL_Mem9_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem9_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        call GetCarryFlag
-                        RCL ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem9_Reg_our
-                        jmp Exit
-                    RCL_Mem9_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem9_Val_his
-                        RCL_Mem9_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem9_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        call GetCarryFlag
-                        RCL ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem9_Val_our
-                        jmp Exit
-                RCL_Mem10:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem10_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem10_Val
-                    jmp RCL_invalid
-                    RCL_Mem10_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem10_Reg_his
-                        RCL_Mem10_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem10_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        call GetCarryFlag
-                        RCL ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem10_Reg_our
-                        jmp Exit
-                    RCL_Mem10_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem10_Val_his
-                        RCL_Mem10_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem10_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        call GetCarryFlag
-                        RCL ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem10_Val_our
-                        jmp Exit
-                RCL_Mem11:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem11_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem11_Val
-                    jmp RCL_invalid
-                    RCL_Mem11_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem11_Reg_his
-                        RCL_Mem11_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem11_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        call GetCarryFlag
-                        RCL ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem11_Reg_our
-                        jmp Exit
-                    RCL_Mem11_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem11_Val_his
-                        RCL_Mem11_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem11_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        call GetCarryFlag
-                        RCL ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem11_Val_our
-                        jmp Exit
-                RCL_Mem12:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem12_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem12_Val
-                    jmp RCL_invalid
-                    RCL_Mem12_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem12_Reg_his
-                        RCL_Mem12_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem12_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        call GetCarryFlag
-                        RCL ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem12_Reg_our
-                        jmp Exit
-                    RCL_Mem12_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem12_Val_his
-                        RCL_Mem12_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem12_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        call GetCarryFlag
-                        RCL ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem12_Val_our
-                        jmp Exit
-                RCL_Mem13:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem13_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem13_Val
-                    jmp RCL_invalid
-                    RCL_Mem13_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem13_Reg_his
-                        RCL_Mem13_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem13_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        call GetCarryFlag
-                        RCL ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem13_Reg_our
-                        jmp Exit
-                    RCL_Mem13_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem13_Val_his
-                        RCL_Mem13_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem13_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        call GetCarryFlag
-                        RCL ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem13_Val_our
-                        jmp Exit
-                RCL_Mem14:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem14_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem14_Val
-                    jmp RCL_invalid
-                    RCL_Mem14_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem14_Reg_his
-                        RCL_Mem14_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem14_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        call GetCarryFlag
-                        RCL ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem14_Reg_our
-                        jmp Exit
-                    RCL_Mem14_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem14_Val_his
-                        RCL_Mem14_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem14_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        call GetCarryFlag
-                        RCL ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem14_Val_our
-                        jmp Exit
-                RCL_Mem15:
-                    cmp selectedOp2Type,0
-                    je RCL_Mem15_Reg
-                    cmp selectedOp2Type,3
-                    je RCL_Mem15_Val
-                    jmp RCL_invalid
-                    RCL_Mem15_Reg:
-                        cmp selectedOp2Reg,7
-                        jne RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem15_Reg_his
-                        RCL_Mem15_Reg_our:
-                        mov cx,ourValRegCX
-                        call ourGetCF
-                        RCL ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem15_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        call GetCarryFlag
-                        RCL ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem15_Reg_our
-                        jmp Exit
-                    RCL_Mem15_Val:
-                        cmp Op2Val,255d
-                        ja RCL_invalid
-                        cmp selectedPUPType,1
-                        jne RCL_Mem15_Val_his
-                        RCL_Mem15_Val_our:
-                        mov cx,Op2Val
-                        call ourGetCF
-                        RCL ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        RCL_Mem15_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        call GetCarryFlag
-                        RCL ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je RCL_Mem15_Val_our
-                        jmp Exit
+                RCL_Mem_Reg:
+                    cmp selectedOp2Reg,7
+                    jne RCL_invalid
+                    cmp selectedPUPType,1
+                    jne RCL_Mem_Reg_his
+                    RCL_Mem_Reg_our:
+                    mov cx,ourValRegCX
+                    call ourGetCF
+                    RCL ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    RCL_Mem_Reg_his:
+                    mov cx,ValRegCX
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    call GetCarryFlag
+                    RCL ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je RCL_Mem_Reg_our
+                    jmp Exit
+                RCL_Mem_Val:
+                    cmp Op2Val,255d
+                    ja RCL_invalid
+                    cmp selectedPUPType,1
+                    jne RCL_Mem_Val_his
+                    RCL_Mem_Val_our:
+                    mov cx,Op2Val
+                    call ourGetCF
+                    RCL ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    RCL_Mem_Val_his:
+                    mov cx,Op2Val
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    call GetCarryFlag
+                    RCL ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je RCL_Mem_Val_our
+                    jmp Exit
+                RCL_NotIt:
+                inc si
+                jmp RCL_Mem
             RCL_invalid:
             jmp InValidCommand
             JMP Exit
@@ -15140,808 +10194,61 @@ CommMenu proc far
                         cmp selectedPUPType,2
                         je SHL_AddDi_Val_our
                         jmp Exit
+            mov si,0
             SHL_Mem:
-                cmp selectedOp1Mem,0
-                je SHL_Mem0
-                cmp selectedOp1Mem,1
-                je SHL_Mem1
-                cmp selectedOp1Mem,2
-                je SHL_Mem2
-                cmp selectedOp1Mem,3
-                je SHL_Mem3
-                cmp selectedOp1Mem,4
-                je SHL_Mem4
-                cmp selectedOp1Mem,5
-                je SHL_Mem5
-                cmp selectedOp1Mem,6
-                je SHL_Mem6
-                cmp selectedOp1Mem,7
-                je SHL_Mem7
-                cmp selectedOp1Mem,8
-                je SHL_Mem8
-                cmp selectedOp1Mem,9
-                je SHL_Mem9
-                cmp selectedOp1Mem,10
-                je SHL_Mem10
-                cmp selectedOp1Mem,11
-                je SHL_Mem11
-                cmp selectedOp1Mem,12
-                je SHL_Mem12
-                cmp selectedOp1Mem,13
-                je SHL_Mem13
-                cmp selectedOp1Mem,14
-                je SHL_Mem14
-                cmp selectedOp1Mem,15
-                je SHL_Mem15
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne SHL_NotIt
+                cmp selectedOp2Type,0
+                je SHL_Mem_Reg
+                cmp selectedOp2Type,3
+                je SHL_Mem_Val
                 jmp SHL_invalid
-                SHL_Mem0:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem0_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem0_Val
-                    jmp SHL_invalid
-                    SHL_Mem0_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem0_Reg_his
-                        SHL_Mem0_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem0_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        SHL ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem0_Reg_our
-                        jmp Exit
-                    SHL_Mem0_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem0_Val_his
-                        SHL_Mem0_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem0_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        SHL ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem0_Val_our
-                        jmp Exit
-                SHL_Mem1:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem1_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem1_Val
-                    jmp SHL_invalid
-                    SHL_Mem1_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem1_Reg_his
-                        SHL_Mem1_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem1_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        SHL ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem1_Reg_our
-                        jmp Exit
-                    SHL_Mem1_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem1_Val_his
-                        SHL_Mem1_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem1_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        SHL ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem1_Val_our
-                        jmp Exit
-                SHL_Mem2:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem2_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem2_Val
-                    jmp SHL_invalid
-                    SHL_Mem2_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem2_Reg_his
-                        SHL_Mem2_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem2_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        SHL ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem2_Reg_our
-                        jmp Exit
-                    SHL_Mem2_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem2_Val_his
-                        SHL_Mem2_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem2_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        SHL ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem2_Val_our
-                        jmp Exit
-                SHL_Mem3:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem3_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem3_Val
-                    jmp SHL_invalid
-                    SHL_Mem3_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem3_Reg_his
-                        SHL_Mem3_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem3_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        SHL ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem3_Reg_our
-                        jmp Exit
-                    SHL_Mem3_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem3_Val_his
-                        SHL_Mem3_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem3_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        SHL ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem3_Val_our
-                        jmp Exit
-                SHL_Mem4:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem4_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem4_Val
-                    jmp SHL_invalid
-                    SHL_Mem4_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem4_Reg_his
-                        SHL_Mem4_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem4_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        SHL ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem4_Reg_our
-                        jmp Exit
-                    SHL_Mem4_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem4_Val_his
-                        SHL_Mem4_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem4_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        SHL ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem4_Val_our
-                        jmp Exit
-                SHL_Mem5:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem5_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem5_Val
-                    jmp SHL_invalid
-                    SHL_Mem5_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem5_Reg_his
-                        SHL_Mem5_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem5_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        SHL ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem5_Reg_our
-                        jmp Exit
-                    SHL_Mem5_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem5_Val_his
-                        SHL_Mem5_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem5_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        SHL ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem5_Val_our
-                        jmp Exit
-                SHL_Mem6:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem6_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem6_Val
-                    jmp SHL_invalid
-                    SHL_Mem6_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem6_Reg_his
-                        SHL_Mem6_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem6_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        SHL ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem6_Reg_our
-                        jmp Exit
-                    SHL_Mem6_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem6_Val_his
-                        SHL_Mem6_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem6_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        SHL ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem6_Val_our
-                        jmp Exit
-                SHL_Mem7:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem7_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem7_Val
-                    jmp SHL_invalid
-                    SHL_Mem7_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem7_Reg_his
-                        SHL_Mem7_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem7_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        SHL ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem7_Reg_our
-                        jmp Exit
-                    SHL_Mem7_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem7_Val_his
-                        SHL_Mem7_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem7_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        SHL ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem7_Val_our
-                        jmp Exit
-                SHL_Mem8:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem8_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem8_Val
-                    jmp SHL_invalid
-                    SHL_Mem8_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem8_Reg_his
-                        SHL_Mem8_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem8_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        SHL ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem8_Reg_our
-                        jmp Exit
-                    SHL_Mem8_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem8_Val_his
-                        SHL_Mem8_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem8_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        SHL ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem8_Val_our
-                        jmp Exit
-                SHL_Mem9:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem9_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem9_Val
-                    jmp SHL_invalid
-                    SHL_Mem9_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem9_Reg_his
-                        SHL_Mem9_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem9_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        SHL ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem9_Reg_our
-                        jmp Exit
-                    SHL_Mem9_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem9_Val_his
-                        SHL_Mem9_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem9_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        SHL ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem9_Val_our
-                        jmp Exit
-                SHL_Mem10:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem10_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem10_Val
-                    jmp SHL_invalid
-                    SHL_Mem10_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem10_Reg_his
-                        SHL_Mem10_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem10_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        SHL ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem10_Reg_our
-                        jmp Exit
-                    SHL_Mem10_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem10_Val_his
-                        SHL_Mem10_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem10_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        SHL ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem10_Val_our
-                        jmp Exit
-                SHL_Mem11:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem11_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem11_Val
-                    jmp SHL_invalid
-                    SHL_Mem11_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem11_Reg_his
-                        SHL_Mem11_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem11_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        SHL ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem11_Reg_our
-                        jmp Exit
-                    SHL_Mem11_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem11_Val_his
-                        SHL_Mem11_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem11_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        SHL ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem11_Val_our
-                        jmp Exit
-                SHL_Mem12:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem12_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem12_Val
-                    jmp SHL_invalid
-                    SHL_Mem12_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem12_Reg_his
-                        SHL_Mem12_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem12_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        SHL ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem12_Reg_our
-                        jmp Exit
-                    SHL_Mem12_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem12_Val_his
-                        SHL_Mem12_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem12_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        SHL ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem12_Val_our
-                        jmp Exit
-                SHL_Mem13:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem13_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem13_Val
-                    jmp SHL_invalid
-                    SHL_Mem13_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem13_Reg_his
-                        SHL_Mem13_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem13_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        SHL ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem13_Reg_our
-                        jmp Exit
-                    SHL_Mem13_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem13_Val_his
-                        SHL_Mem13_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem13_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        SHL ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem13_Val_our
-                        jmp Exit
-                SHL_Mem14:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem14_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem14_Val
-                    jmp SHL_invalid
-                    SHL_Mem14_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem14_Reg_his
-                        SHL_Mem14_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem14_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        SHL ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem14_Reg_our
-                        jmp Exit
-                    SHL_Mem14_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem14_Val_his
-                        SHL_Mem14_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem14_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        SHL ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem14_Val_our
-                        jmp Exit
-                SHL_Mem15:
-                    cmp selectedOp2Type,0
-                    je SHL_Mem15_Reg
-                    cmp selectedOp2Type,3
-                    je SHL_Mem15_Val
-                    jmp SHL_invalid
-                    SHL_Mem15_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem15_Reg_his
-                        SHL_Mem15_Reg_our:
-                        mov cx,ourValRegCX
-                        SHL ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem15_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        SHL ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem15_Reg_our
-                        jmp Exit
-                    SHL_Mem15_Val:
-                        cmp Op2Val,255d
-                        ja SHL_invalid
-                        cmp selectedPUPType,1
-                        jne SHL_Mem15_Val_his
-                        SHL_Mem15_Val_our:
-                        mov cx,Op2Val
-                        SHL ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHL_Mem15_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        SHL ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHL_Mem15_Val_our
-                        jmp Exit
+                SHL_Mem_Reg:
+                    cmp selectedOp2Reg,7
+                    jne SHL_invalid
+                    cmp selectedPUPType,1
+                    jne SHL_Mem_Reg_his
+                    SHL_Mem_Reg_our:
+                    mov cx,ourValRegCX
+                    SHL ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    SHL_Mem_Reg_his:
+                    mov cx,ValRegCX
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    SHL ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je SHL_Mem_Reg_our
+                    jmp Exit
+                SHL_Mem_Val:
+                    cmp Op2Val,255d
+                    ja SHL_invalid
+                    cmp selectedPUPType,1
+                    jne SHL_Mem_Val_his
+                    SHL_Mem_Val_our:
+                    mov cx,Op2Val
+                    SHL ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    SHL_Mem_Val_his:
+                    mov cx,Op2Val
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    SHL ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je SHL_Mem_Val_our
+                    jmp Exit
+                SHL_NotIt:
+                inc si
+                jmp SHL_Mem
             SHL_invalid:
             jmp InValidCommand
             JMP Exit
@@ -17069,808 +11376,61 @@ CommMenu proc far
                         cmp selectedPUPType,2
                         je SHR_AddDi_Val_our
                         jmp Exit
+            mov si,0
             SHR_Mem:
-                cmp selectedOp1Mem,0
-                je SHR_Mem0
-                cmp selectedOp1Mem,1
-                je SHR_Mem1
-                cmp selectedOp1Mem,2
-                je SHR_Mem2
-                cmp selectedOp1Mem,3
-                je SHR_Mem3
-                cmp selectedOp1Mem,4
-                je SHR_Mem4
-                cmp selectedOp1Mem,5
-                je SHR_Mem5
-                cmp selectedOp1Mem,6
-                je SHR_Mem6
-                cmp selectedOp1Mem,7
-                je SHR_Mem7
-                cmp selectedOp1Mem,8
-                je SHR_Mem8
-                cmp selectedOp1Mem,9
-                je SHR_Mem9
-                cmp selectedOp1Mem,10
-                je SHR_Mem10
-                cmp selectedOp1Mem,11
-                je SHR_Mem11
-                cmp selectedOp1Mem,12
-                je SHR_Mem12
-                cmp selectedOp1Mem,13
-                je SHR_Mem13
-                cmp selectedOp1Mem,14
-                je SHR_Mem14
-                cmp selectedOp1Mem,15
-                je SHR_Mem15
+                mov bx,si
+                cmp selectedOp2Mem,bl
+                jne SHR_NotIt
+                cmp selectedOp2Type,0
+                je SHR_Mem_Reg
+                cmp selectedOp2Type,3
+                je SHR_Mem_Val
                 jmp SHR_invalid
-                SHR_Mem0:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem0_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem0_Val
-                    jmp SHR_invalid
-                    SHR_Mem0_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem0_Reg_his
-                        SHR_Mem0_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem0_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        SHR ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem0_Reg_our
-                        jmp Exit
-                    SHR_Mem0_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem0_Val_his
-                        SHR_Mem0_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[0],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem0_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[0]
-                            call LineStuckPwrUp
-                            mov ValMem[0],al
-                        SHR ValMem[0],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem0_Val_our
-                        jmp Exit
-                SHR_Mem1:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem1_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem1_Val
-                    jmp SHR_invalid
-                    SHR_Mem1_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem1_Reg_his
-                        SHR_Mem1_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem1_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        SHR ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem1_Reg_our
-                        jmp Exit
-                    SHR_Mem1_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem1_Val_his
-                        SHR_Mem1_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[1],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem1_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[1]
-                            call LineStuckPwrUp
-                            mov ValMem[1],al
-                        SHR ValMem[1],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem1_Val_our
-                        jmp Exit
-                SHR_Mem2:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem2_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem2_Val
-                    jmp SHR_invalid
-                    SHR_Mem2_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem2_Reg_his
-                        SHR_Mem2_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem2_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        SHR ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem2_Reg_our
-                        jmp Exit
-                    SHR_Mem2_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem2_Val_his
-                        SHR_Mem2_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[2],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem2_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[2]
-                            call LineStuckPwrUp
-                            mov ValMem[2],al
-                        SHR ValMem[2],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem2_Val_our
-                        jmp Exit
-                SHR_Mem3:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem3_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem3_Val
-                    jmp SHR_invalid
-                    SHR_Mem3_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem3_Reg_his
-                        SHR_Mem3_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem3_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        SHR ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem3_Reg_our
-                        jmp Exit
-                    SHR_Mem3_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem3_Val_his
-                        SHR_Mem3_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[3],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem3_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[3]
-                            call LineStuckPwrUp
-                            mov ValMem[3],al
-                        SHR ValMem[3],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem3_Val_our
-                        jmp Exit
-                SHR_Mem4:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem4_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem4_Val
-                    jmp SHR_invalid
-                    SHR_Mem4_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem4_Reg_his
-                        SHR_Mem4_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem4_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        SHR ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem4_Reg_our
-                        jmp Exit
-                    SHR_Mem4_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem4_Val_his
-                        SHR_Mem4_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[4],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem4_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[4]
-                            call LineStuckPwrUp
-                            mov ValMem[4],al
-                        SHR ValMem[4],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem4_Val_our
-                        jmp Exit
-                SHR_Mem5:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem5_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem5_Val
-                    jmp SHR_invalid
-                    SHR_Mem5_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem5_Reg_his
-                        SHR_Mem5_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem5_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        SHR ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem5_Reg_our
-                        jmp Exit
-                    SHR_Mem5_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem5_Val_his
-                        SHR_Mem5_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[5],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem5_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[5]
-                            call LineStuckPwrUp
-                            mov ValMem[5],al
-                        SHR ValMem[5],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem5_Val_our
-                        jmp Exit
-                SHR_Mem6:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem6_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem6_Val
-                    jmp SHR_invalid
-                    SHR_Mem6_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem6_Reg_his
-                        SHR_Mem6_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem6_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        SHR ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem6_Reg_our
-                        jmp Exit
-                    SHR_Mem6_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem6_Val_his
-                        SHR_Mem6_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[6],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem6_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[6]
-                            call LineStuckPwrUp
-                            mov ValMem[6],al
-                        SHR ValMem[6],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem6_Val_our
-                        jmp Exit
-                SHR_Mem7:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem7_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem7_Val
-                    jmp SHR_invalid
-                    SHR_Mem7_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem7_Reg_his
-                        SHR_Mem7_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem7_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        SHR ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem7_Reg_our
-                        jmp Exit
-                    SHR_Mem7_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem7_Val_his
-                        SHR_Mem7_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[7],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem7_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[7]
-                            call LineStuckPwrUp
-                            mov ValMem[7],al
-                        SHR ValMem[7],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem7_Val_our
-                        jmp Exit
-                SHR_Mem8:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem8_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem8_Val
-                    jmp SHR_invalid
-                    SHR_Mem8_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem8_Reg_his
-                        SHR_Mem8_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem8_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        SHR ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem8_Reg_our
-                        jmp Exit
-                    SHR_Mem8_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem8_Val_his
-                        SHR_Mem8_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[8],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem8_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[8]
-                            call LineStuckPwrUp
-                            mov ValMem[8],al
-                        SHR ValMem[8],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem8_Val_our
-                        jmp Exit
-                SHR_Mem9:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem9_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem9_Val
-                    jmp SHR_invalid
-                    SHR_Mem9_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem9_Reg_his
-                        SHR_Mem9_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem9_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        SHR ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem9_Reg_our
-                        jmp Exit
-                    SHR_Mem9_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem9_Val_his
-                        SHR_Mem9_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[9],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem9_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[9]
-                            call LineStuckPwrUp
-                            mov ValMem[9],al
-                        SHR ValMem[9],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem9_Val_our
-                        jmp Exit
-                SHR_Mem10:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem10_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem10_Val
-                    jmp SHR_invalid
-                    SHR_Mem10_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem10_Reg_his
-                        SHR_Mem10_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem10_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        SHR ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem10_Reg_our
-                        jmp Exit
-                    SHR_Mem10_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem10_Val_his
-                        SHR_Mem10_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[10],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem10_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[10]
-                            call LineStuckPwrUp
-                            mov ValMem[10],al
-                        SHR ValMem[10],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem10_Val_our
-                        jmp Exit
-                SHR_Mem11:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem11_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem11_Val
-                    jmp SHR_invalid
-                    SHR_Mem11_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem11_Reg_his
-                        SHR_Mem11_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem11_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        SHR ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem11_Reg_our
-                        jmp Exit
-                    SHR_Mem11_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem11_Val_his
-                        SHR_Mem11_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[11],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem11_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[11]
-                            call LineStuckPwrUp
-                            mov ValMem[11],al
-                        SHR ValMem[11],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem11_Val_our
-                        jmp Exit
-                SHR_Mem12:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem12_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem12_Val
-                    jmp SHR_invalid
-                    SHR_Mem12_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem12_Reg_his
-                        SHR_Mem12_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem12_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        SHR ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem12_Reg_our
-                        jmp Exit
-                    SHR_Mem12_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem12_Val_his
-                        SHR_Mem12_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[12],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem12_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[12]
-                            call LineStuckPwrUp
-                            mov ValMem[12],al
-                        SHR ValMem[12],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem12_Val_our
-                        jmp Exit
-                SHR_Mem13:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem13_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem13_Val
-                    jmp SHR_invalid
-                    SHR_Mem13_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem13_Reg_his
-                        SHR_Mem13_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem13_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        SHR ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem13_Reg_our
-                        jmp Exit
-                    SHR_Mem13_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem13_Val_his
-                        SHR_Mem13_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[13],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem13_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[13]
-                            call LineStuckPwrUp
-                            mov ValMem[13],al
-                        SHR ValMem[13],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem13_Val_our
-                        jmp Exit
-                SHR_Mem14:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem14_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem14_Val
-                    jmp SHR_invalid
-                    SHR_Mem14_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem14_Reg_his
-                        SHR_Mem14_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem14_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        SHR ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem14_Reg_our
-                        jmp Exit
-                    SHR_Mem14_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem14_Val_his
-                        SHR_Mem14_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[14],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem14_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[14]
-                            call LineStuckPwrUp
-                            mov ValMem[14],al
-                        SHR ValMem[14],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem14_Val_our
-                        jmp Exit
-                SHR_Mem15:
-                    cmp selectedOp2Type,0
-                    je SHR_Mem15_Reg
-                    cmp selectedOp2Type,3
-                    je SHR_Mem15_Val
-                    jmp SHR_invalid
-                    SHR_Mem15_Reg:
-                        cmp selectedOp2Reg,7
-                        jne SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem15_Reg_his
-                        SHR_Mem15_Reg_our:
-                        mov cx,ourValRegCX
-                        SHR ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem15_Reg_his:
-                        mov cx,ValRegCX
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        SHR ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem15_Reg_our
-                        jmp Exit
-                    SHR_Mem15_Val:
-                        cmp Op2Val,255d
-                        ja SHR_invalid
-                        cmp selectedPUPType,1
-                        jne SHR_Mem15_Val_his
-                        SHR_Mem15_Val_our:
-                        mov cx,Op2Val
-                        SHR ourValMem[15],cl
-                        call ourSetCF
-                        jmp Exit
-                        SHR_Mem15_Val_his:
-                        mov cx,Op2Val
-                        ;;;;;;;;;;;;;;;;;;
-                            mov al,ValMem[15]
-                            call LineStuckPwrUp
-                            mov ValMem[15],al
-                        SHR ValMem[15],cl
-                        call SetCarryFlag
-                        cmp selectedPUPType,2
-                        je SHR_Mem15_Val_our
-                        jmp Exit
+                SHR_Mem_Reg:
+                    cmp selectedOp2Reg,7
+                    jne SHR_invalid
+                    cmp selectedPUPType,1
+                    jne SHR_Mem_Reg_his
+                    SHR_Mem_Reg_our:
+                    mov cx,ourValRegCX
+                    SHR ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    SHR_Mem_Reg_his:
+                    mov cx,ValRegCX
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    SHR ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je SHR_Mem_Reg_our
+                    jmp Exit
+                SHR_Mem_Val:
+                    cmp Op2Val,255d
+                    ja SHR_invalid
+                    cmp selectedPUPType,1
+                    jne SHR_Mem_Val_his
+                    SHR_Mem_Val_our:
+                    mov cx,Op2Val
+                    SHR ourValMem[si],cl
+                    call ourSetCF
+                    jmp Exit
+                    SHR_Mem_Val_his:
+                    mov cx,Op2Val
+                    ;;;;;;;;;;;;;;;;;;
+                        mov al,ValMem[si]
+                        call LineStuckPwrUp
+                        mov ValMem[si],al
+                    SHR ValMem[si],cl
+                    call SetCarryFlag
+                    cmp selectedPUPType,2
+                    je SHR_Mem_Val_our
+                    jmp Exit
+                SHR_NotIt:
+                inc si
+                jmp SHR_Mem
             SHR_invalid:
             jmp InValidCommand
             JMP Exit
@@ -20290,7 +13850,7 @@ LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
             POP CX
             POP BX
             RET
-    NoStuck:
+    NoTStuck:
         RET
 ENDP
 Op2TypeMenu PROC
