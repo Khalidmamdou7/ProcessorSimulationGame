@@ -20266,8 +20266,8 @@ PowerUpeMenu ENDP
 LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
     PUSH BX
     PUSH CX
-    CMP selectedPUPType, 4
-    jnz NoStuck
+    CMP PwrUpStuckEnabled, 1
+    jnz NoTStuck
         CMP PwrUpStuckVal, 0
         JZ PwrUpZero
         CMP PwrUpStuckVal, 1
@@ -21544,28 +21544,28 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
 
         SrcOp2RegAL_8Bit:
             mov al, BYTE PTR ValRegAX
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegAH_8Bit:
             mov al, BYTE PTR ValRegAX+1
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegBL_8Bit:
             mov al, BYTE PTR ValRegBX
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegBH_8Bit:
             mov al, BYTE PTR ValRegBX+1
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegCL_8Bit:
             mov al, BYTE PTR ValRegCX
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegCH_8Bit:
             mov al, BYTE PTR ValRegCX+1
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegDL_8Bit:
             mov al, BYTE PTR ValRegDX
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegDH_8Bit:
             mov al, BYTE PTR ValRegDX+1
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         
 
 
@@ -21589,7 +21589,7 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
             JZ InValidCommand
             MOV SI, ValRegBX
             MOV AL, [SI]
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2AddRegBP_8Bit:
             MOV DX, ValRegBP
             CALL CheckAddress
@@ -21597,7 +21597,7 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
             JZ InValidCommand
             MOV SI, ValRegBP
             MOV AL, [SI]
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2AddRegSI_8Bit:
             MOV DX, ValRegSI
             CALL CheckAddress
@@ -21605,7 +21605,7 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
             JZ InValidCommand
             MOV SI, ValRegSI
             MOV AL, [SI]
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2AddRegDI_8Bit:
             MOV DX, ValRegDI
             CALL CheckAddress
@@ -21613,7 +21613,7 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
             JZ InValidCommand
             MOV SI, ValRegDI
             MOV AL, [SI]
-            RET
+            JMP RETURN_GetSrcOp_8Bit
 
     SrcOp2Mem_8Bit:
 
@@ -21653,60 +21653,61 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         
         SrcOp2Mem0_8Bit:
             MOV AL, ValMem
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem1_8Bit:
             MOV AL, ValMem+1
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem2_8Bit:
             MOV AL, ValMem+2
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem3_8Bit:
             MOV AL, ValMem+3
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem4_8Bit:
             MOV AL, ValMem+4
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem5_8Bit:
             MOV AL, ValMem+5
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem6_8Bit:
             MOV AL, ValMem+6
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem7_8Bit:
             MOV AL, ValMem+7
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem8_8Bit:
             MOV AL, ValMem+8
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem9_8Bit:
             MOV AL, ValMem+9
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem10_8Bit:
             MOV AL, ValMem+10
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem11_8Bit:
             MOV AL, ValMem+11
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem12_8Bit:
             MOV AL, ValMem+12
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem13_8Bit:
             MOV AL, ValMem+13
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem14_8Bit:
             MOV AL, ValMem+14
-            RET
+            JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem15_8Bit:
             MOV AL, ValMem+15
-            RET
+            JMP RETURN_GetSrcOp_8Bit
     SrcOp2Val_8Bit:
         CMP Op2Valid, 0
         jz InValidCommand
         MOV AL, BYTE PTR Op2Val
+        JMP RETURN_GetSrcOp_8Bit
+    
+    RETURN_GetSrcOp_8Bit:
+        CALL LineStuckPwrUp
         RET
-
-
-    RET
 GetSrcOp_8Bit ENDP
 DisPlayNumber PROC ;display number from Registers   
     mov ax,234h     ;pop ax
@@ -21799,28 +21800,28 @@ GetSrcOp PROC    ; Returned Value is saved in AX
 
         SrcOp2RegAX:
             MOV AX, ValRegAX
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2RegBX:
             MOV AX, ValRegBX
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2RegCX:
             MOV AX, ValRegCX
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2pRegDX:
             MOV AX, ValRegDX
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2RegBP:
             MOV AX, ValRegBP
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2RegSP:
             MOV AX, ValRegSP
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2RegSI:
             MOV AX, ValRegSI
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2RegDI:
             MOV AX, ValRegDI
-            RET
+            JMP RETURN_GetSrcOp
         
 
 
@@ -21844,7 +21845,7 @@ GetSrcOp PROC    ; Returned Value is saved in AX
             JZ InValidCommand
             MOV SI, ValRegBX
             MOV AX, [SI]
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2AddRegBP:
             MOV DX, ValRegBP
             CALL CheckAddress
@@ -21852,7 +21853,7 @@ GetSrcOp PROC    ; Returned Value is saved in AX
             JZ InValidCommand
             MOV SI, ValRegBP
             MOV AX, [SI]
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2AddRegSI:
             MOV DX, ValRegSI
             CALL CheckAddress
@@ -21860,7 +21861,7 @@ GetSrcOp PROC    ; Returned Value is saved in AX
             JZ InValidCommand
             MOV SI, ValRegSI
             MOV AX, [SI]
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2AddRegDI:
             MOV DX, ValRegDI
             CALL CheckAddress
@@ -21868,7 +21869,7 @@ GetSrcOp PROC    ; Returned Value is saved in AX
             JZ InValidCommand
             MOV SI, ValRegDI
             MOV AX, [SI]
-            RET
+            JMP RETURN_GetSrcOp
 
     SrcOp2Mem:
 
@@ -21908,60 +21909,62 @@ GetSrcOp PROC    ; Returned Value is saved in AX
         
         SrcOp2Mem0:
             MOV AX, WORD PTR ValMem
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem1:
             MOV AX, WORD PTR ValMem+1
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem2:
             MOV AX, WORD PTR ValMem+2
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem3:
             MOV AX, WORD PTR ValMem+3
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem4:
             MOV AX, WORD PTR ValMem+4
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem5:
             MOV AX, WORD PTR ValMem+5
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem6:
             MOV AX, WORD PTR ValMem+6
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem7:
             MOV AX, WORD PTR ValMem+7
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem8:
             MOV AX, WORD PTR ValMem+8
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem9:
             MOV AX, WORD PTR ValMem+9
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem10:
             MOV AX, WORD PTR ValMem+10
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem11:
             MOV AX, WORD PTR ValMem+11
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem12:
             MOV AX, WORD PTR ValMem+12
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem13:
             MOV AX, WORD PTR ValMem+13
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem14:
             MOV AX, WORD PTR ValMem+14
-            RET
+            JMP RETURN_GetSrcOp
         SrcOp2Mem15:
             MOV AX, WORD PTR ValMem+15
-            RET
+            JMP RETURN_GetSrcOp
     SrcOp2Val:
         CMP Op2Valid, 0
         jz InValidCommand
         MOV AX, Op2Val
+        JMP RETURN_GetSrcOp
+
+    RETURN_GetSrcOp:
+        CALL LineStuckPwrUp
         RET
 
-
-    RET
 GetSrcOp ENDP
 ourGetSrcOp PROC    ; Returned Value is saved in AX
     CMP selectedOp2Type, 0
