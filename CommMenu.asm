@@ -20263,30 +20263,34 @@ PowerUpeMenu PROC
         
     ret
 PowerUpeMenu ENDP
-LineStuckPwrUp PROC     ; Value to be stucked is saved in AX/AL
+LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
     PUSH BX
     PUSH CX
-    CMP PwrUpStuckVal, 0
-    JZ PwrUpZero
-    CMP PwrUpStuckVal, 1
-    JZ PwrupOne
-    JMP Return_LineStuckPwrUp
-
-    PwrUpZero:
-        MOV BX, 0FFFEH
-        mov cl,PwrUpDataLineIndex
-        ROL BX, cl
-        AND AX, BX
+    CMP selectedPUPType, 4
+    jnz NoStuck
+        CMP PwrUpStuckVal, 0
+        JZ PwrUpZero
+        CMP PwrUpStuckVal, 1
+        JZ PwrupOne
         JMP Return_LineStuckPwrUp
-    PwrupOne:
-        MOV BX, 1
-        mov cl,PwrUpDataLineIndex
-        ROL BX,cl
-        OR AX, BX
 
-    Return_LineStuckPwrUp:
-        POP CX
-        POP BX
+        PwrUpZero:
+            MOV BX, 0FFFEH
+            mov cl,PwrUpDataLineIndex
+            ROL BX, cl
+            AND AX, BX
+            JMP Return_LineStuckPwrUp
+        PwrupOne:
+            MOV BX, 1
+            mov cl,PwrUpDataLineIndex
+            ROL BX,cl
+            OR AX, BX
+
+        Return_LineStuckPwrUp:
+            POP CX
+            POP BX
+            RET
+    NoStuck:
         RET
 ENDP
 Op2TypeMenu PROC
