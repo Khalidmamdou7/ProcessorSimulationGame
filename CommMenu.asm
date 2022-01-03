@@ -13841,19 +13841,41 @@ LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
             ROL BX, cl
             AND AX, BX
             mov PwrUpStuckEnabled,0
-            JMP Return_LineStuckPwrUp
+            JMP NoTStuck
         PwrupOne:
             MOV BX, 1
             mov cl,PwrUpDataLineIndex
             ROL BX,cl
             OR AX, BX
             mov PwrUpStuckEnabled,0
-            jmp Return_LineStuckPwrUp
     NoTStuck:
         cmp selectedPUPType,4
         jne Return_LineStuckPwrUp
         ;TODO Take 1 input from the user as the value to be stuck 0 or 1, and 1 input for the index of the value stuck
+        mov ah,1
+        int 21h
+        cmp al,31h
+        jg notvalid10 
+        sub al,30h
+        mov PwrUpStuckVal,al
+        mov ah,1
+        int 21h
+        sub al,30h
+        mov ah,0
+        mov cx,c
+        mul cx
+        mov dx,ax
+        mov ah,1
+        int 21h
+        sub al,30h 
+        mov ah,0
+        add dx,ax
+        mov PwrUpDataLineIndex,dl
+        cmp dx,15h
+        jg notvalid10
         mov PwrUpStuckEnabled,1
+        notvalid10:
+        mov PwrUpStuckEnabled,0
     Return_LineStuckPwrUp:
     POP CX
     POP BX
