@@ -73,7 +73,7 @@ ExecAndReg MACRO ValReg, CF
     CALL GetSrcOp
     AND ValReg, AX
     MOV CF, 0
-    JMP Exit
+    CALL ExitPROC
 ENDM
 ExecAndReg_8Bit MACRO ValReg, CF
     CALL GetSrcOp_8Bit
@@ -163,14 +163,14 @@ ExecAndAddReg MACRO ValReg, Mem, CF
     MOV SI, ValReg
     And WORD PTR Mem[SI], AX
     MOV CF, 0
-    JMP Exit
+    CALL ExitPROC
 
     AndOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
         MOV SI, ValReg
         And Mem[SI], AL
         MOV CF, 0
-    JMP Exit
+    CALL ExitPROC
 ENDM
 ExecMovAddReg MACRO ValReg, Mem
     Local MOVOp1AddReg_Op2_8Bit 
@@ -556,1988 +556,166 @@ CommMenu proc far
             MOV ValCF, 0  ;command
             JMP Exit
         AND_Comm:
-
-            CALL Op1Menu
-            mov DX, CommaCursorLoc
-            CALL SetCursor
-            mov dl, ','
-            CALL DisplayChar
-            CALL Op2Menu
-
-            call  PowerUpeMenu ; to choose power up
-            CALL CheckForbidCharProc
-
-            CMP selectedOp1Type, 0
-            JZ AndOp1Reg
-            CMP selectedOp1Type, 1
-            JZ AndOp1AddReg
-            CMP selectedOp1Type, 2
-            JZ AndOp1Mem
-            JMP InValidCommand
-
-            AndOp1Reg:
-                CMP selectedOp1Reg, 0
-                JZ AndOp1RegAX
-                CMP selectedOp1Reg, 1
-                JZ AndOp1RegAL
-                CMP selectedOp1Reg, 2
-                JZ AndOp1RegAH
-                CMP selectedOp1Reg, 3
-                JZ AndOp1RegBX
-                CMP selectedOp1Reg, 4
-                JZ AndOp1RegBL
-                CMP selectedOp1Reg, 5
-                JZ AndOp1RegBH
-                CMP selectedOp1Reg, 6
-                JZ AndOp1RegCX
-                CMP selectedOp1Reg, 7
-                JZ AndOp1RegCL
-                CMP selectedOp1Reg, 8
-                JZ AndOp1RegCH
-                CMP selectedOp1Reg, 9
-                JZ AndOp1RegDX
-                CMP selectedOp1Reg, 10
-                JZ AndOp1RegDL
-                CMP selectedOp1Reg, 11
-                JZ AndOp1RegDH
-
-                CMP selectedOp1Reg, 15
-                JZ AndOp1RegBP
-                CMP selectedOp1Reg, 16
-                JZ AndOp1RegSP
-                CMP selectedOp1Reg, 17
-                JZ AndOp1RegSI
-                CMP selectedOp1Reg, 18
-                JZ AndOp1RegDI
-                
-
-                JMP InValidCommand
-
-                AndOp1RegAX: 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andax   
-                    ExecAndReg ourValRegAX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andax:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andax  
-                    ExecAndReg ourValRegAX, ourValCF       ;coomand
-                    notthispower2_andax:
-                    ExecAndReg ValRegAX, ValCF
-                AndOp1RegAL:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andal   
-                    ExecAndReg_8Bit ourValRegAX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andal:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andal  
-                    ExecAndReg_8Bit ourValRegAX, ourValCF       ;coomand
-                    notthispower2_andal:
-                    ExecAndReg_8Bit ValRegAX, ValCF
-                AndOp1RegAH:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andah    
-                    ExecAndReg_8Bit ourValRegAX+1, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andah:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andah  
-                    ExecAndReg_8Bit ourValRegAX+1, ourValCF       ;coomand
-                    notthispower2_andah:
-                    ExecAndReg_8Bit ValRegAX+1, ValCF
-                AndOp1RegBX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andbx   
-                    ExecAndReg ourValRegBX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andbx  
-                    ExecAndReg ourValRegBX, ourValCF       ;coomand
-                    notthispower2_andbx:
-                    ExecAndReg ValRegBX, ValCF
-                AndOp1RegBL:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andbl    
-                    ExecAndReg_8Bit ourValRegBX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andbl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andbl 
-                    ExecAndReg_8Bit ourValRegBX, ourValCF       ;coomand
-                    notthispower2_andbl:
-                    ExecAndReg_8Bit ValRegBX, ValCF
-                AndOp1RegBH:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andbh    
-                    ExecAndReg_8Bit ourValRegBX+1, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andbh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andbh  
-                    ExecAndReg_8Bit ourValRegBX+1, ourValCF       ;coomand
-                    notthispower2_andbh:
-                    ExecAndReg_8Bit ValRegBX+1, ValCF
-                AndOp1RegCX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andcx    
-                    ExecAndReg ourValRegCX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andcx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andcx  
-                    ExecAndReg ourValRegCX, ourValCF       ;coomand
-                    notthispower2_andcx:
-                    ExecAndReg ValRegCX, ValCF
-                AndOp1RegCL:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andcl    
-                    ExecAndReg_8Bit ourValRegCX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andcl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andcl  
-                    ExecAndReg_8Bit ourValRegCX, ourValCF       ;coomand
-                    notthispower2_andcl:
-                    ExecAndReg_8Bit ValRegCX, ValCF
-                AndOp1RegCH:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andch    
-                    ExecAndReg_8Bit ourValRegCX+1, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andch:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andch  
-                    ExecAndReg_8Bit ourValRegCX+1, ourValCF       ;coomand
-                    notthispower2_andch:
-                    ExecAndReg_8Bit ValRegCX+1, ValCF
-                AndOp1RegDX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_anddx    
-                    ExecAndReg ourValRegDX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_anddx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_anddx  
-                    ExecAndReg ourValRegDX, ourValCF       ;coomand
-                    notthispower2_anddx:
-                    ExecAndReg ValRegDX, ValCF
-                AndOp1RegDL:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_anddl    
-                    ExecAndReg_8Bit ourValRegDX, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_anddl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_anddl  
-                    ExecAndReg_8Bit ourValRegDX, ourValCF       ;coomand
-                    notthispower2_anddl:
-                    ExecAndReg_8Bit ValRegDX, ValCF
-                AndOp1RegDH:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_anddh    
-                    ExecAndReg_8Bit ourValRegDX+1, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_anddh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_anddh  
-                    ExecAndReg_8Bit ourValRegDX+1, ourValCF       ;coomand
-                    notthispower2_anddh:
-                    ExecAndReg_8Bit ValRegDX+1, ValCF
-                AndOp1RegBP: 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andbp    
-                    ExecAndReg ourValRegBP, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andbp  
-                    ExecAndReg ourValRegBP, ourValCF       ;coomand
-                    notthispower2_andbp:
-                    ExecAndReg ValRegBP, ValCF
-                AndOp1RegSP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andsp    
-                    ExecAndReg ourValRegSP, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andsp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andsp  
-                    ExecAndReg ourValRegSP, ourValCF       ;coomand
-                    notthispower2_andsp:
-                    ExecAndReg ValRegSP, ValCF
-                AndOp1RegSI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andsi    
-                    ExecAndReg ourValRegSI, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andsi  
-                    ExecAndReg ourValRegSI, ourValCF       ;coomand
-                    notthispower2_andsi:
-                    ExecAndReg ValRegSI, ValCF
-                AndOp1RegDI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_anddi    
-                    ExecAndReg ourValRegDI, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_anddi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_anddi  
-                    ExecAndReg ourValRegDI, ourValCF       ;coomand
-                    notthispower2_anddi:
-                    ExecAndReg ValRegDI, ValCF
-
-            AndOp1AddReg:
-
-                ; Check Memory-to-Memory operations
-                CMP selectedOp2Type, 1
-                JZ InValidCommand
-                CMP selectedOp2Type, 2
-                jz InValidCommand
-
-                CMP selectedOp1AddReg, 3
-                JZ AndOp1AddRegBX
-                CMP selectedOp1AddReg, 15
-                JZ AndOp1AddRegBP
-                CMP selectedOp1AddReg, 17
-                JZ AndOp1AddRegSI
-                CMP selectedOp1AddReg, 18
-                JZ AndOp1AddRegDI
-                JMP InValidCommand
-
-                AndOp1AddRegBX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andaddbx    
-                    ExecAndAddReg ourValRegBX, ourValMem, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andaddbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andaddbx  
-                    ExecAndAddReg ourValRegBX, ourValMem, ourValCF       ;coomand
-                    notthispower2_andaddbx:   
-                    ExecAndAddReg ValRegBX, ValMem, ValCF
-                AndOp1AddRegBP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andaddbp    
-                    ExecAndAddReg ourValRegBP, ourValMem, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andaddbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andaddbp  
-                    ExecAndAddReg ourValRegBP, ourValMem, ourValCF       ;coomand
-                    notthispower2_andaddbp:
-                    ExecAndAddReg ValRegBP, ValMem, ValCF
-                AndOp1AddRegSI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andaddsi    
-                    ExecAndAddReg ourValRegSI, ourValMem, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andaddsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andaddsi 
-                    ExecAndAddReg ourValRegSI, ourValMem, ourValCF       ;coomand
-                    notthispower2_andaddsi:
-                    ExecAndAddReg ValRegSI, ValMem, ValCF
-                AndOp1AddRegDI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andadddi    
-                    ExecAndAddReg ourValRegDI, ourValMem, ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andadddi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andadddi 
-                    ExecAndAddReg ourValRegDI, ourValMem, ourValCF       ;coomand
-                    notthispower2_andadddi:
-                    ExecAndAddReg ValRegDI, ValMem, ValCF
-            AndOp1Mem:
-                
-                    mov si,0
-                    SearchForMemand:
-                    mov cx,si 
-                    cmp selectedOp2Mem,cl
-                    JNE Nextand
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andmem   
-                    ExecAndMem ourValMem[si], ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andmem:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andmem 
-                    ExecAndMem ourValMem[si], ourValCF       ;coomand
-                    notthispower2_andmem:
-                    ExecAndMem ValMem[si], ValCF
-                    JMP Exit 
-                    Nextand:
-                    inc si 
-                    jmp SearchForMemand
+            CALL AND_Comm_PROC
         MOV_Comm:
-
-            CALL Op1Menu
-            mov DX, CommaCursorLoc
-            CALL SetCursor
-            mov dl, ','
-            CALL DisplayChar
-            CALL Op2Menu
-
-            CALL PowerUpeMenu ; to choose power up
-            CALL CheckForbidCharProc
-
-            CMP selectedOp1Type, 0
-            JZ MOVOp1Reg
-            CMP selectedOp1Type, 1
-            JZ MOVOp1AddReg
-            CMP selectedOp1Type, 2
-            JZ MOVOp1Mem
-            JMP InValidCommand
-
-            MOVOp1Reg:
-                CMP selectedOp1Reg, 0
-                JZ MOVOp1RegAX
-                CMP selectedOp1Reg, 1
-                JZ MOVOp1RegAL
-                CMP selectedOp1Reg, 2
-                JZ MOVOp1RegAH
-                CMP selectedOp1Reg, 3
-                JZ MOVOp1RegBX
-                CMP selectedOp1Reg, 4
-                JZ MOVOp1RegBL
-                CMP selectedOp1Reg, 5
-                JZ MOVOp1RegBH
-                CMP selectedOp1Reg, 6
-                JZ MOVOp1RegCX
-                CMP selectedOp1Reg, 7
-                JZ MOVOp1RegCL
-                CMP selectedOp1Reg, 8
-                JZ MOVOp1RegCH
-                CMP selectedOp1Reg, 9
-                JZ MOVOp1RegDX
-                CMP selectedOp1Reg, 10
-                JZ MOVOp1RegDL
-                CMP selectedOp1Reg, 11
-                JZ MOVOp1RegDH
-
-                CMP selectedOp1Reg, 15
-                JZ MOVOp1RegBP
-                CMP selectedOp1Reg, 16
-                JZ MOVOp1RegSP
-                CMP selectedOp1Reg, 17
-                JZ MOVOp1RegSI
-                CMP selectedOp1Reg, 18
-                JZ MOVOp1RegDI
-                
-
-                JMP InValidCommand
-
-                MOVOp1RegAX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movax   
-                    MOV ourValRegAX, AX     ;command
-                    jmp Exit
-                    notthispower1_movax:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movax 
-                    MOV ourValRegAX, AX      ;coomand
-                    notthispower2_movax:
-                    CALL GetSrcOp
-                    MOV ValRegAX, AX
-                    JMP Exit
-                MOVOp1RegAL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_moval  
-                    MOV BYTE PTR ourValRegAX, AL    ;command
-                    jmp Exit
-                    notthispower1_moval:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_moval 
-                    MOV BYTE PTR ourValRegAX, AL      ;coomand
-                    notthispower2_moval:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegAX, AL
-                    JMP Exit
-                MOVOp1RegAH:
-                    ; Delete this lineAH
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movah 
-                    MOV BYTE PTR ourValRegAX+1, AL    ;command
-                    jmp Exit
-                    notthispower1_movah:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movah 
-                    MOV BYTE PTR ourValRegAX+1, AL      ;coomand
-                    notthispower2_movah:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegAX+1, AL
-                    JMP Exit
-                MOVOp1RegBX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movbx   
-                    MOV ourValRegBX, AX    ;command
-                    jmp Exit
-                    notthispower1_movbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movbx 
-                    MOV ourValRegBX, AX      ;coomand
-                    notthispower2_movbx:
-                    CALL GetSrcOp
-                    MOV ValRegBX, AX
-                    JMP Exit
-                MOVOp1RegBL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movbl 
-                    MOV BYTE PTR ourValRegBX, AL    ;command
-                    jmp Exit
-                    notthispower1_movbl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movbl
-                    MOV BYTE PTR ourValRegBX, AL      ;coomand
-                    notthispower2_movbl:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegBX, AL
-                    JMP Exit
-                MOVOp1RegBH:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movbh
-                    MOV BYTE PTR ourValRegBX+1, AL    ;command
-                    jmp Exit
-                    notthispower1_movbh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movbh
-                    MOV BYTE PTR ourValRegBX+1, AL     ;coomand
-                    notthispower2_movbh:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegBX+1, AL
-                    JMP Exit
-                MOVOp1RegCX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movcx   
-                    MOV ourValRegCX, AX    ;command
-                    jmp Exit
-                    notthispower1_movcx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movcx 
-                    MOV ourValRegCX, AX      ;coomand
-                    notthispower2_movcx:
-                    CALL GetSrcOp
-                    MOV ValRegCX, AX
-                    JMP Exit
-                MOVOp1RegCL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movcl
-                    MOV BYTE PTR ourValRegCX, AL    ;command
-                    jmp Exit
-                    notthispower1_movcl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movcl
-                    MOV BYTE PTR ourValRegCX, AL     ;coomand
-                    notthispower2_movcl:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegCX, AL
-                    JMP Exit
-                MOVOp1RegCH:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movch
-                    MOV BYTE PTR ourValRegCX+1, AL    ;command
-                    jmp Exit
-                    notthispower1_movch:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movch
-                    MOV BYTE PTR ourValRegCX+1, AL     ;coomand
-                    notthispower2_movch:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegCX+1, AL
-                    JMP Exit
-                MOVOp1RegDX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movdx   
-                    MOV ourValRegDX, AX    ;command
-                    jmp Exit
-                    notthispower1_movdx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movdx 
-                    MOV ourValRegDX, AX      ;coomand
-                    notthispower2_movdx:
-                    CALL GetSrcOp
-                    MOV ValRegDX, AX
-                    JMP Exit
-                MOVOp1RegDL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movdl
-                    MOV BYTE PTR ourValRegDX, AL    ;command
-                    jmp Exit
-                    notthispower1_movdl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movdl
-                    MOV BYTE PTR ourValRegDX, AL     ;coomand
-                    notthispower2_movdl:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegDX, AL
-                    JMP Exit
-                MOVOp1RegDH:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movdh
-                    MOV BYTE PTR ourValRegDX+1, AL    ;command
-                    jmp Exit
-                    notthispower1_movdh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movdh
-                    MOV BYTE PTR ourValRegDX+1, AL     ;coomand
-                    notthispower2_movdh:
-                    CALL GetSrcOp_8Bit
-                    MOV BYTE PTR ValRegDX+1, AL
-                    JMP Exit
-                MOVOp1RegBP:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movbp   
-                    MOV ourValRegBP, AX    ;command
-                    jmp Exit
-                    notthispower1_movbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movbp 
-                    MOV ourValRegBP, AX      ;coomand
-                    notthispower2_movbp:
-                    CALL GetSrcOp
-                    MOV ValRegBP, AX
-                    JMP Exit
-                MOVOp1RegSP:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movsp   
-                    MOV ourValRegSP, AX    ;command
-                    jmp Exit
-                    notthispower1_movsp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movsp 
-                    MOV ourValRegSP, AX      ;coomand
-                    notthispower2_movsp:
-                    CALL GetSrcOp
-                    MOV ValRegSP, AX
-                    JMP Exit
-                MOVOp1RegSI:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movsi   
-                    MOV ourValRegSI, AX    ;command
-                    jmp Exit
-                    notthispower1_movsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movsi 
-                    MOV ourValRegSI, AX      ;coomand
-                    notthispower2_movsi:
-                    CALL GetSrcOp
-                    MOV ValRegSI, AX
-                    JMP Exit
-                MOVOp1RegDI:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movdi   
-                    MOV ourValRegDI, AX    ;command
-                    jmp Exit
-                    notthispower1_movdi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movdi 
-                    MOV ourValRegDI, AX      ;coomand
-                    notthispower2_movdi:
-                    CALL GetSrcOp
-                    MOV ValRegDI, AX
-                    JMP Exit
-
-            MOVOp1AddReg:
-
-                ; Check Memory-to-Memory operations
-                CMP selectedOp2Type, 1
-                JZ InValidCommand
-                CMP selectedOp2Type, 2
-                jz InValidCommand
-
-                CMP selectedOp1AddReg, 3
-                JZ MOVOp1AddRegBX
-                CMP selectedOp1AddReg, 15
-                JZ MOVOp1AddRegBP
-                CMP selectedOp1AddReg, 17
-                JZ MOVOp1AddRegSI
-                CMP selectedOp1AddReg, 18
-                JZ MOVOp1AddRegDI
-                JMP InValidCommand
-
-                MOVOp1AddRegBX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movaddbx   
-                    ExecMovAddReg ourValRegBX, ourValMem    ;command
-                    jmp Exit
-                    notthispower1_movaddbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movaddbx 
-                    ExecMovAddReg ourValRegBX, ourValMem      ;coomand
-                    notthispower2_movaddbx:
-                    ExecMovAddReg ValRegBX, ValMem
-                MOVOp1AddRegBP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movaddbp   
-                    ExecMovAddReg ourValRegBP, ourValMem    ;command
-                    jmp Exit
-                    notthispower1_movaddbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movaddbp
-                    ExecMovAddReg ourValRegBP, ourValMem      ;coomand
-                    notthispower2_movaddbp:
-                    ExecMovAddReg ValRegBP, ValMem
-                MOVOp1AddRegSI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movaddsi 
-                    ExecMovAddReg ourValRegSI, ourValMem    ;command
-                    jmp Exit
-                    notthispower1_movaddsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movaddsi 
-                    ExecMovAddReg ourValRegSI, ourValMem      ;coomand
-                    notthispower2_movaddsi:
-                    ExecMovAddReg ValRegSI, ValMem
-                MOVOp1AddRegDI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_movadddi 
-                    ExecMovAddReg ourValRegDI, ourValMem    ;command
-                    jmp Exit
-                    notthispower1_movadddi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_movadddi 
-                    ExecMovAddReg ourValRegDI, ourValMem      ;coomand
-                    notthispower2_movadddi:
-                    ExecMovAddReg ValRegDI, ValMem
-            MOVOp1Mem:
-                
-                    mov si,0
-                    SearchForMemmov:
-                    mov cx,si 
-                    cmp selectedOp2Mem,cl
-                    JNE Nextmov
-                    cmp selectedPUPType,1 ; our command
-                    jne notthispower1_movmem
-                    ExecMovMem ourValMem[si] ; command
-                    jmp Exit
-                    notthispower1_movmem:  
-                    cmp selectedPUPType,2 ;his/her and our command 
-                    jne notthispower2_movmem 
-                    ExecMovMem ourValMem[si] ;command
-                    notthispower2_movmem: 
-                    ExecMovMem ValMem[si]
-                    JMP Exit 
-                    Nextmov:
-                    inc si 
-                    jmp SearchForMemmov
-
-            
-            JMP Exit
-        
-
+            CALL MOV_Comm_PROC
         ADD_Comm:
-
-            CALL Op1Menu
-            MOV DX, CommaCursorLoc
-            CALL SetCursor
-            mov dl, ','
-            CALL DisplayChar
-            CALL Op2Menu
-
-            CALL CheckForbidCharProc
-
-            call  PowerUpeMenu ; to choose power up
-
-            CMP selectedOp1Type, 0
-            JZ AddOp1Reg
-            CMP selectedOp1Type, 1
-            JZ AddOp1AddReg
-            CMP selectedOp1Type, 2
-            JZ AddOp1Mem
-            JMP InValidCommand
-
-            AddOp1Reg:
-                CMP selectedOp1Reg, 0
-                JZ AddOp1RegAX
-                CMP selectedOp1Reg, 1
-                JZ AddOp1RegAL
-                CMP selectedOp1Reg, 2
-                JZ AddOp1RegAH
-                CMP selectedOp1Reg, 3
-                JZ AddOp1RegBX
-                CMP selectedOp1Reg, 4
-                JZ AddOp1RegBL
-                CMP selectedOp1Reg, 5
-                JZ AddOp1RegBH
-                CMP selectedOp1Reg, 6
-                JZ AddOp1RegCX
-                CMP selectedOp1Reg, 7
-                JZ AddOp1RegCL
-                CMP selectedOp1Reg, 8
-                JZ AddOp1RegCH
-                CMP selectedOp1Reg, 9
-                JZ AddOp1RegDX
-                CMP selectedOp1Reg, 10
-                JZ AddOp1RegDL
-                CMP selectedOp1Reg, 11
-                JZ AddOp1RegDH
-
-                CMP selectedOp1Reg, 15
-                JZ AddOp1RegBP
-                CMP selectedOp1Reg, 16
-                JZ AddOp1RegSP
-                CMP selectedOp1Reg, 17
-                JZ AddOp1RegSI
-                CMP selectedOp1Reg, 18
-                JZ AddOp1RegDI
-                
-
-                JMP InValidCommand
-
-                AddOp1RegAX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addax 
-                    CLC
-                    ADD ourValRegAX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addax:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addax  
-                    CLC
-                    ADD ourValRegAX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_addax:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegAX, AX ;command
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegAL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addal  
-                    CLC
-                    ADD BYTE PTR ourValRegAX, AL
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addal:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addal 
-                    CLC
-                    ADD BYTE PTR ourValRegAX, AL
-                    CALL ourSetCF        
-                    notthispower2_addal:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegAX, AL
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegAH:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addah  
-                    CLC
-                    ADD BYTE PTR ourValRegAX+1, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addah:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addah 
-                    CLC
-                    ADD BYTE PTR ourValRegAX+1, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_addah:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegAX+1, AL ;command
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegBX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addbx 
-                    CLC
-                    ADD ourValRegBX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addbx  
-                    CLC
-                    ADD ourValRegBX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_addbx:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegBX, AX
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegBL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addbl  
-                    CLC
-                    ADD BYTE PTR ourValRegBX, AL
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addbl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addbl 
-                    CLC
-                    ADD BYTE PTR ourValRegBX, AL
-                    CALL ourSetCF        
-                    notthispower2_addbl:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegBX, AL
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegBH:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addbh  
-                    CLC
-                    ADD BYTE PTR ourValRegBX+1, AL
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addbh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addbh 
-                    CLC
-                    ADD BYTE PTR ourValRegBX+1, AL
-                    CALL ourSetCF        
-                    notthispower2_addbh:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegBX+1, AL
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegCX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addcx 
-                    CLC
-                    ADD ourValRegCX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addcx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addcx  
-                    CLC
-                    ADD ourValRegCX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_addcx:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegCX, AX
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegCL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addcl 
-                    CLC
-                    ADD BYTE PTR ourValRegCX, AL
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addcl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addcl 
-                    CLC
-                    ADD BYTE PTR ourValRegCX, AL
-                    CALL ourSetCF        
-                    notthispower2_addcl:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegCX, AL
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegCH:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addch 
-                    CLC
-                    ADD BYTE PTR ourValRegCX+1, AL
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addch:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addch 
-                    CLC
-                    ADD BYTE PTR ourValRegCX+1, AL
-                    CALL ourSetCF        
-                    notthispower2_addch:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegCX+1, AL
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegDX:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adddx 
-                    CLC
-                    ADD ourValRegDX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adddx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adddx  
-                    CLC
-                    ADD ourValRegDX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adddx:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegDX, AX
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegDL:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adddl 
-                    CLC
-                    ADD BYTE PTR ourValRegDX, AL
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adddl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adddl 
-                    CLC
-                    ADD BYTE PTR ourValRegDX, AL
-                    CALL ourSetCF        
-                    notthispower2_adddl:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegDX, AL
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegDH:
-                    CALL ourGetSrcOp_8Bit
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adddh 
-                    CLC
-                    ADD BYTE PTR ourValRegDX+1, AL
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adddh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adddh
-                    CLC
-                    ADD BYTE PTR ourValRegDX+1, AL
-                    CALL ourSetCF        
-                    notthispower2_adddh:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    ADD BYTE PTR ValRegDX+1, AL
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegBP:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addbp 
-                    CLC
-                    ADD ourValRegBP, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addbp  
-                    CLC
-                    ADD ourValRegBP, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_addbp:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegBP, AX
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegSP:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addsp 
-                    CLC
-                    ADD ourValRegSP, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addsp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addsp  
-                    CLC
-                    ADD ourValRegSP, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_addsp:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegSP, AX
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegSI:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addsi 
-                    CLC
-                    ADD ourValRegSI, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_addsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addsi 
-                    CLC
-                    ADD ourValRegSI, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_addsi:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegSI, AX
-                    CALL SetCF
-                    JMP Exit
-                AddOp1RegDI:
-                    CALL ourGetSrcOp
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adddi 
-                    CLC
-                    ADD ourValRegDI, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adddi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adddi  
-                    CLC
-                    ADD ourValRegDI, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adddi:
-                    CALL GetSrcOp
-                    CLC
-                    ADD ValRegDI, AX
-                    CALL SetCF
-                    JMP Exit
-
-            AddOp1AddReg:
-
-                ; Check Memory-to-Memory operations
-                CMP selectedOp2Type, 1
-                JZ InValidCommand
-                CMP selectedOp2Type, 2
-                jz InValidCommand
-
-                CMP selectedOp1AddReg, 3
-                JZ AddOp1AddRegBX
-                CMP selectedOp1AddReg, 15
-                JZ AddOp1AddRegBP
-                CMP selectedOp1AddReg, 17
-                JZ AddOp1AddRegSI
-                CMP selectedOp1AddReg, 18
-                JZ AddOp1AddRegDI
-                JMP InValidCommand
-
-                AddOp1AddRegBX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addaddbx 
-                    ExecAddAddReg ourValRegBx, ourValMem ;command      
-                    jmp Exit
-                    notthispower1_addaddbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addaddbx   
-                    ExecAddAddReg ourValRegBx, ourValMem ;command       
-                    notthispower2_addaddbx:
-                    ExecAddAddReg ValRegBx, ValMem
-                AddOp1AddRegBP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addaddbp 
-                    ExecAddAddReg ourValRegBP, ourValMem ;command      
-                    jmp Exit
-                    notthispower1_addaddbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addaddbp   
-                    ExecAddAddReg ourValRegBP, ourValMem ;command       
-                    notthispower2_addaddbp:
-                    ExecAddAddReg ValRegBP, ValMem
-                AddOp1AddRegSI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addaddsi 
-                    ExecAddAddReg ourValRegSI, ourValMem ;command      
-                    jmp Exit
-                    notthispower1_addaddsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addaddsi   
-                    ExecAddAddReg ourValRegSI, ourValMem ;command       
-                    notthispower2_addaddsi:
-                    ExecAddAddReg ValRegSI, ValMem
-                AddOp1AddRegDI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_addadddi 
-                    ExecAddAddReg ourValRegDI, ourValMem ;command      
-                    jmp Exit
-                    notthispower1_addadddi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_addadddi   
-                    ExecAddAddReg ourValRegDI, ourValMem ;command       
-                    notthispower2_addadddi:
-                    ExecAddAddReg ValRegDI, ValMem
-
-            AddOp1Mem:
-                
-                    mov si,0
-                    SearchForMemadd:
-                    mov cx,si 
-                    cmp selectedOp2Mem,cl
-                    JNE Nextadd
-                    cmp selectedPUPType,1 ; our command
-                    jne notthispower1_addmem
-                    ExecAddMem ourValMem[si] ; command
-                    jmp Exit
-                    notthispower1_addmem:  
-                    cmp selectedPUPType,2 ;his/her and our command 
-                    jne notthispower2_addmem 
-                    ExecAddMem ourValMem[si] ;command
-                    notthispower2_addmem: 
-                    ExecAddMem ValMem[si]
-                    JMP Exit 
-                    Nextadd:
-                    inc si 
-                    jmp SearchForMemadd
-
-            
-            JMP Exit
-
+            CALL ADD_Comm_PROC
         ADC_Comm:
-            
-            CALL Op1Menu
-            mov DX, CommaCursorLoc
-            CALL SetCursor
-            mov dl, ','
-            CALL DisplayChar
-            CALL Op2Menu
-
-            CALL CheckForbidCharProc
-            call  PowerUpeMenu ; to choose power up
-
-            CMP selectedOp1Type, 0
-            JZ AdcOp1Reg
-            CMP selectedOp1Type, 1
-            JZ AdcOp1Addreg
-            CMP selectedOp1Type, 2
-            JZ AdcOp1Mem
-            JMP InValidCommand
-
-            AdcOp1Reg:
-                CMP selectedOp1Reg, 0
-                JZ AdcOp1RegAX
-                CMP selectedOp1Reg, 1
-                JZ AdcOp1RegAL
-                CMP selectedOp1Reg, 2
-                JZ AdcOp1RegAH
-                CMP selectedOp1Reg, 3
-                JZ AdcOp1RegBX
-                CMP selectedOp1Reg, 4
-                JZ AdcOp1RegBL
-                CMP selectedOp1Reg, 5
-                JZ AdcOp1RegBH
-                CMP selectedOp1Reg, 6
-                JZ AdcOp1RegCX
-                CMP selectedOp1Reg, 7
-                JZ AdcOp1RegCL
-                CMP selectedOp1Reg, 8
-                JZ AdcOp1RegCH
-                CMP selectedOp1Reg, 9
-                JZ AdcOp1RegDX
-                CMP selectedOp1Reg, 10
-                JZ AdcOp1RegDL
-                CMP selectedOp1Reg, 11
-                JZ AdcOp1RegDH
-
-                CMP selectedOp1Reg, 15
-                JZ AdcOp1RegBP
-                CMP selectedOp1Reg, 16
-                JZ AdcOp1RegSP
-                CMP selectedOp1Reg, 17
-                JZ AdcOp1RegSI
-                CMP selectedOp1Reg, 18
-                JZ AdcOp1RegDI
-                
-
-                JMP InValidCommand
-
-                AdcOp1RegAX:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcax 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegAX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcax:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcax  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegAX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adcax:
-                    CALL GetSrcOp 
-                    CLC
-                    CALL GetCF
-                    ADC ValRegAX, AX
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegAL:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcal 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegAX, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcal:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcal  
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegAX, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adcal:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegAX, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegAH:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcah 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegAX+1, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcah:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcah  
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegAX+1, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adcah:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegAX+1, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegBX:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcbx 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegBX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcbx  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegBX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adcbx:
-                    CALL GetSrcOp
-                    CLC
-                    CALL GetCF
-                    ADC ValRegBX, AX
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegBL:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcbl 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegBX, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcbl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcbl  
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegBX, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adcbl:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegBX, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegBH:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcbh 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegBX+1, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcbh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcbh  
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegBX+1, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adcbh:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegBX+1, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegCX:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adccx 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegCX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adccx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adccx  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegCX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adccx:
-                    CALL GetSrcOp
-                    CLC
-                    CALL GetCF
-                    ADC ValRegCX, AX
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegCL:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adccl 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegCX, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adccl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adccl  
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegCX, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adccl:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegCX, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegCH:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcch 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegCX+1, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcch:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcch 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegCX+1, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adcch:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegCX+1, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegDX:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcdx 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegDX, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcdx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcdx  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegDX, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adcdx:
-                    CALL GetSrcOp
-                    CLC
-                    CALL GetCF
-                    ADC ValRegDX, AX
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegDL:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcdl 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegDX, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcdl:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcdl  
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegDX, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adcdl:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegDX, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegDH:
-                    CALL ourGetSrcOp_8Bit 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcdh 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegDX+1, AL ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcdh:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcdh 
-                    CLC
-                    CALL ourGetCF
-                    ADC BYTE PTR ourValRegDX+1, AL ;command
-                    CALL ourSetCF        
-                    notthispower2_adcdh:
-                    CALL GetSrcOp_8Bit
-                    CLC
-                    CALL GetCF
-                    ADC BYTE PTR ValRegDX+1, AL
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegBP:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcbp 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegBP, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcbp  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegBP, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adcbp:
-                    CALL GetSrcOp
-                    CLC
-                    CALL GetCF
-                    ADC ValRegBP, AX
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegSP:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcsp 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegSP, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcsp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcsp  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegSP, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adcsp:
-                    CALL GetSrcOp
-                    CLC
-                    CALL GetCF
-                    ADC ValRegSP, AX
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegSI:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcsi 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegSI, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcsi  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegSI, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adcsi:
-                    CALL GetSrcOp
-                    CLC
-                    CALL GetCF
-                    ADC ValRegSI, AX
-                    CALL SetCF
-                    JMP Exit
-                AdcOp1RegDI:
-                    CALL ourGetSrcOp 
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcdi 
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegDI, AX ;command
-                    CALL ourSetCF      
-                    jmp Exit
-                    notthispower1_adcdi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcdi  
-                    CLC
-                    CALL ourGetCF
-                    ADC ourValRegDI, AX ;command
-                    CALL ourSetCF        
-                    notthispower2_adcdi:
-                    CALL GetSrcOp
-                    CLC
-                    CALL GetCF
-                    ADC ValRegDI, AX
-                    CALL SetCF
-                    JMP Exit
-
-            AdcOp1AddReg:
-
-                ; Check Memory-to-Memory operations
-                CMP selectedOp2Type, 1
-                JZ InValidCommand
-                CMP selectedOp2Type, 2
-                jz InValidCommand
-
-                CMP selectedOp1AddReg, 3
-                JZ AdcOp1AddRegBX
-                CMP selectedOp1AddReg, 15
-                JZ AdcOp1AddRegBP
-                CMP selectedOp1AddReg, 17
-                JZ AdcOp1AddRegSI
-                CMP selectedOp1AddReg, 18
-                JZ AdcOp1AddRegDI
-                JMP InValidCommand
-
-                AdcOp1AddregBX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcaddbx 
-                    EexecAdcAddReg ourValRegBX, ourValMem     
-                    jmp Exit
-                    notthispower1_adcaddbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcaddbx 
-                    EexecAdcAddReg ourValRegBX, ourValMem        
-                    notthispower2_adcaddbx:
-                    EexecAdcAddReg ValRegBX, ValMem
-                AdcOp1AddregBP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcaddbp 
-                    EexecAdcAddReg ourValRegBP, ourValMem     
-                    jmp Exit
-                    notthispower1_adcaddbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcaddbp 
-                    EexecAdcAddReg ourValRegBP, ourValMem        
-                    notthispower2_adcaddbp:
-                    EexecAdcAddReg ValRegBP, ValMem
-                AdcOp1AddregSI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcaddsi 
-                    EexecAdcAddReg ourValRegSI, ourValMem     
-                    jmp Exit
-                    notthispower1_adcaddsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcaddsi
-                    EexecAdcAddReg ourValRegSI, ourValMem        
-                    notthispower2_adcaddsi:
-                    EexecAdcAddReg ValRegSI, ValMem
-                AdcOp1AddregDI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_adcadddi 
-                    EexecAdcAddReg ourValRegDI, ourValMem     
-                    jmp Exit
-                    notthispower1_adcadddi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_adcadddi
-                    EexecAdcAddReg ourValRegDI, ourValMem        
-                    notthispower2_adcadddi:
-                    EexecAdcAddReg ValRegDI, ValMem
-            AdcOp1Mem:
-
-                    mov si,0
-                    SearchForMemadc:
-                    mov cx,si 
-                    cmp selectedOp2Mem,cl
-                    JNE Nextadc
-                    cmp selectedPUPType,1 ; our command
-                    jne notthispower1_adcmem
-                    ExecAdcMem ourValMem[si] ; command
-                    jmp Exit
-                    notthispower1_adcmem:  
-                    cmp selectedPUPType,2 ;his/her and our command 
-                    jne notthispower2_adcmem 
-                    ExecAdcMem ourValMem[si] ;command
-                    notthispower2_adcmem: 
-                    ExecAdcMem ValMem[si]
-                    JMP Exit 
-                    Nextadc:
-                    inc si 
-                    jmp SearchForMemadc
-
-            
-            JMP Exit
-        Exit:
-            jmp FinalExit
+            CALL ADC_Comm_PROC
         PUSH_Comm:
+            CALL PUSH_Comm_PROC
+        Exit:
 
-            CALL Op1Menu
+            ForPwrUp:
+                cmp selectedPUPType,3 ;Changing the forbidden character only once 
+                jne notthispower3  ;-8 points 
+                
+                cmp UsedBeforeOrNot,1
+                jne notthispower3
+                dec UsedBeforeOrNot
 
-            call  PowerUpeMenu ; to choose power up
-            CALL CheckForbidCharProc
+                ; Reset Cursor
+                mov ah,2
+                mov dx, ForbidPUPCursor
+                int 10h
 
-            ; Todo - CHECK VALIDATIONS
-            CMP selectedOp1Size, 8
-            JZ InValidCommand
-            CMP selectedOp1Type, 0
-            JZ PushOpReg
-            CMP selectedOp1Type, 1
-            JZ PushOpAddReg
-            CMP selectedOp1Type, 2
-            JZ PushOpMem
-            CMP selectedOp1Type, 3
-            JZ PushOpVal
+                mov ah,1 ; set forbidchar
+                int 21h
+                mov ForbidChar,al 
+
+                sub Player1Points,8
+                    notthispower3:
+                    cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
+                    jne notthispower5
+                    mov ValRegAX,0
+                    mov ValRegBX,0
+                    mov ValRegCX,0
+                    mov ValRegDX,0 
+                
+                    mov ValRegBP,0
+                    mov ValRegSP,0
+                    mov ValRegSI,0
+                    mov ValRegDI,0
+                
+                    mov ourValRegAX,0
+                    mov ourValRegBX,0
+                    mov ourValRegCX,0
+                    mov ourValRegDX,0
+                
+                    mov ourValRegBP,0
+                    mov ourValRegSP,0
+                    mov ourValRegSI,0
+                    mov ourValRegDI,0
+
+                    sub Player1Points,30
+                    notthispower5:
+
+            ; Test Messages
+            LEA DX, mesCom
+            CALL DisplayString
+            mov dl, selectedComm
+            add dl, '0'
+            CALL DisplayChar 
+
+            LEA DX, mesOp1Type
+            CALL DisplayString
+            mov dl, selectedOp1Type
+            add dl, '0'
+            CALL DisplayChar
+
+            LEA DX, mesReg
+            CALL DisplayString
+            mov dl, selectedOp1Reg
+            add dl, '0'
+            CALL DisplayChar 
+
+            lea dx, mesMem
+            CAll DisplayString
+            lea dx, ValMem
+            CALL DisplayString
+
+            lea dx, mesStack
+            CAll DisplayString
+            lea dx, ValStack
+            Call DisplayString
+
+            lea dx, mesStackPointer
+            CALL DisplayString
+            mov dl, ValStackPointer
+            add dl, '0'
+            Call DisplayChar
+
+            lea dx, mesVal
+            CALL DisplayString
+            mov dx, Op1Val
+            Call DisplayChar
+
+            LEA DX, mesRegAX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegAX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegAX+1
+            CALL DisplayChar
+
+            LEA DX, mesRegBX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegBX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegBX+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegCX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegCX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegCX+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegDX
+            CALL DisplayString
+            mov dl,Byte ptr ValRegDX
+            CALL DisplayChar
+            mov dl, byte ptr ValRegDX+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegSI
+            CALL DisplayString
+            mov dl,Byte ptr ValRegSI
+            CALL DisplayChar
+            mov dl, byte ptr ValRegSI+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegDI
+            CALL DisplayString
+            mov dl,Byte ptr ValRegDI
+            CALL DisplayChar
+            mov dl, byte ptr ValRegDI+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegBP
+            CALL DisplayString
+            mov dl,Byte ptr ValRegBP
+            CALL DisplayChar
+            mov dl, byte ptr ValRegBP+1
+            CALL DisplayChar 
+
+            LEA DX, mesRegSP
+            CALL DisplayString
+            mov dl,Byte ptr ValRegSP
+            CALL DisplayChar
+            mov dl, byte ptr ValRegSP+1
+            CALL DisplayChar
             
-
-            ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
-            ; Reg as operands
-            PushOpReg:
-                
-                CMP selectedOp1Reg, 0
-                JZ PushOpRegAX
-                CMP selectedOp1Reg, 3
-                JZ PushOpRegBX
-                CMP selectedOp1Reg, 6
-                JZ PushOpRegCX
-                CMP selectedOp1Reg, 9
-                JZ PushOpRegDX
-                CMP selectedOp1Reg, 15
-                JZ PushOpRegBP
-                CMP selectedOp1Reg, 16
-                JZ PushOpRegSP
-                CMP selectedOp1Reg, 17
-                JZ PushOpRegSI
-                CMP selectedOp1Reg, 18
-                JZ PushOpRegDI
-                JMP InValidCommand
-
-
-                
-                PushOpRegAX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushax  
-                    ourExecPush ourValRegAX      
-                    jmp Exit
-                    notthispower1_pushax:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushax  
-                    ourExecPush ourValRegAX        
-                    notthispower2_pushax:
-                    ExecPush ValRegAX
-                    JMP Exit
-                PushOpRegBX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushbx  
-                    ourExecPush ourValRegBX      
-                    jmp Exit
-                    notthispower1_pushbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushbx  
-                    ourExecPush ourValRegBX        
-                    notthispower2_pushbx:
-                    ExecPush ValRegBX
-                    JMP Exit
-                PushOpRegCX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushcx  
-                    ourExecPush ourValRegCX      
-                    jmp Exit
-                    notthispower1_pushcx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushcx  
-                    ourExecPush ourValRegCX        
-                    notthispower2_pushcx:
-                    ExecPush ValRegCX
-                    JMP Exit
-                PushOpRegDX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushdx  
-                    ourExecPush ourValRegDX      
-                    jmp Exit
-                    notthispower1_pushdx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushdx  
-                    ourExecPush ourValRegDX        
-                    notthispower2_pushdx:
-                    ExecPush ValRegDX
-                    JMP Exit
-                PushOpRegBP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushbp  
-                    ourExecPush ourValRegBP      
-                    jmp Exit
-                    notthispower1_pushbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushbp  
-                    ourExecPush ourValRegBP       
-                    notthispower2_pushbp:
-                    ExecPush ValRegBP
-                    JMP Exit
-                PushOpRegSP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushsp  
-                    ourExecPush ourValRegSP      
-                    jmp Exit
-                    notthispower1_pushsp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushsp  
-                    ourExecPush ourValRegSP        
-                    notthispower2_pushsp:
-                    ExecPush ValRegSP
-                    JMP Exit
-                PushOpRegSI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushsi  
-                    ourExecPush ourValRegSI      
-                    jmp Exit
-                    notthispower1_pushsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushsi  
-                    ourExecPush ourValRegSI        
-                    notthispower2_pushsi:
-                    ExecPush ValRegSI
-                    JMP Exit
-                PushOpRegDI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushdi  
-                    ourExecPush ourValRegDI      
-                    jmp Exit
-                    notthispower1_pushdi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushdi  
-                    ourExecPush ourValRegDI        
-                    notthispower2_pushdi:
-                    ExecPush ValRegDI
-                    JMP Exit
-
-            ; Mem as operand
-            PushOpMem:
-                    mov si,0
-                    SearchForMempush:
-                    mov cx,si 
-                    cmp selectedOp2Mem,cl
-                    JNE Nextpush
-                    cmp selectedPUPType,1 ; our command
-                    jne notthispower1_pushmem
-                    ourExecPushMem ourValMem[si] ; command
-                    jmp Exit
-                    notthispower1_pushmem:  
-                    cmp selectedPUPType,2 ;his/her and our command 
-                    jne notthispower2_pushmem 
-                    ourExecPushMem ourValMem[si] ;command
-                    notthispower2_pushmem: 
-                    ExecPushMem ValMem[si]
-                    JMP Exit 
-                    Nextpush:
-                    inc si 
-                    jmp SearchForMempush
-
-            
-            PushOpAddReg:
-                
-                CMP selectedOp1AddReg, 3
-                JZ PushOpAddRegBX
-                CMP selectedOp1AddReg, 15
-                JZ PushOpAddRegBP
-                CMP selectedOp1AddReg, 17
-                JZ PushOpAddRegSI
-                CMP selectedOp1AddReg, 18
-                JZ PushOpAddRegDI
-                JMP InValidCommand
-
-                PushOpAddRegBX:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushaddbx  
-                    mov dx, ourValRegBX
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegBX
-                    ourExecPushMem ourValMem[SI]      
-                    jmp Exit
-                    notthispower1_pushaddbx:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushaddbx  
-                    mov dx, ourValRegBX
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegBX
-                    ourExecPushMem ourValMem[SI]       
-                    notthispower2_pushaddbx:
-
-                    mov dx, ValRegBX
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ValRegBX
-                    ExecPushMem ValMem[SI]
-                    JMP Exit
-                PushOpAddRegBP:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushaddbp  
-                    mov dx, ourValRegBP
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegBP
-                    ourExecPushMem ourValMem[SI]      
-                    jmp Exit
-                    notthispower1_pushaddbp:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushaddbp  
-                    mov dx, ourValRegBP
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegBP
-                    ourExecPushMem ourValMem[SI]       
-                    notthispower2_pushaddbp:
-
-                    mov dx, ValRegBP
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ValRegBP
-                    ExecPushMem ValMem[SI]
-                    JMP Exit
-
-                PushOpAddRegSI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushaddsi  
-                    mov dx, ourValRegSI
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegSI
-                    ourExecPushMem ourValMem[SI]      
-                    jmp Exit
-                    notthispower1_pushaddsi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushaddsi  
-                    mov dx, ourValRegSI
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegSI
-                    ourExecPushMem ourValMem[SI]       
-                    notthispower2_pushaddsi:
-
-                    mov dx, ValRegSI
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ValRegSI
-                    ExecPushMem ValMem[SI]
-                    JMP Exit
-                
-                PushOpAddRegDI:
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_pushadddi  
-                    mov dx, ourValRegDI
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegDI
-                    ourExecPushMem ourValMem[SI]      
-                    jmp Exit
-                    notthispower1_pushadddi:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_pushadddi  
-                    mov dx, ourValRegDI
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ourValRegDI
-                    ourExecPushMem ourValMem[SI]       
-                    notthispower2_pushadddi:
-
-                    mov dx, ValRegDI
-                    CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
-                    JZ InValidCommand
-                    mov SI, ValRegDI
-                    ExecPushMem ValMem[SI]
-                    JMP Exit
-
-
-            ; Value as operand
-            PushOpVal:
-                CMP Op1Valid, 0
-                jz InValidCommand
-                cmp selectedPUPType,1 ;command on your own processor  
-                jne notthispower1_pushval  
-                ourExecPush Op1Val      
-                jmp Exit
-                notthispower1_pushval:
-                cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                jne notthispower2_pushval  
-                ourExecPush Op1Val       
-                notthispower2_pushval:
-                ExecPush Op1Val
-                JMP Exit
-            
-            JMP Exit
-
+            LEA DX, mesRegCF
+            CALL DisplayString
+            mov dl, ValCF
+            add dl, '0'
+            CALL DisplayChar  
+            ;JMP Start
+            ; Return to dos
+            mov ah,4ch
+            int 21h
         POP_Comm:
             CALL Op1Menu
             CALL CheckForbidCharProc
@@ -19707,161 +17885,2001 @@ CommMenu proc far
             CALL DisplayString
             ; TODO - BEEP SOUND WHEN INVALID COMMAND ENTERED
 
-        FinalExit:
-
-            ForPwrUp:
-                cmp selectedPUPType,3 ;Changing the forbidden character only once 
-                jne notthispower3  ;-8 points 
-                
-                cmp UsedBeforeOrNot,1
-                jne notthispower3
-                dec UsedBeforeOrNot
-
-                ; Reset Cursor
-                mov ah,2
-                mov dx, ForbidPUPCursor
-                int 10h
-
-                mov ah,1 ; set forbidchar
-                int 21h
-                mov ForbidChar,al 
-
-                sub Player1Points,8
-                    notthispower3:
-                    cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
-                    jne notthispower5
-                    mov ValRegAX,0
-                    mov ValRegBX,0
-                    mov ValRegCX,0
-                    mov ValRegDX,0 
-                
-                    mov ValRegBP,0
-                    mov ValRegSP,0
-                    mov ValRegSI,0
-                    mov ValRegDI,0
-                
-                    mov ourValRegAX,0
-                    mov ourValRegBX,0
-                    mov ourValRegCX,0
-                    mov ourValRegDX,0
-                
-                    mov ourValRegBP,0
-                    mov ourValRegSP,0
-                    mov ourValRegSI,0
-                    mov ourValRegDI,0
-
-                    sub Player1Points,30
-                    notthispower5:
-
-            ; Test Messages
-            LEA DX, mesCom
-            CALL DisplayString
-            mov dl, selectedComm
-            add dl, '0'
-            CALL DisplayChar 
-
-            LEA DX, mesOp1Type
-            CALL DisplayString
-            mov dl, selectedOp1Type
-            add dl, '0'
-            CALL DisplayChar
-
-            LEA DX, mesReg
-            CALL DisplayString
-            mov dl, selectedOp1Reg
-            add dl, '0'
-            CALL DisplayChar 
-
-            lea dx, mesMem
-            CAll DisplayString
-            lea dx, ValMem
-            CALL DisplayString
-
-            lea dx, mesStack
-            CAll DisplayString
-            lea dx, ValStack
-            Call DisplayString
-
-            lea dx, mesStackPointer
-            CALL DisplayString
-            mov dl, ValStackPointer
-            add dl, '0'
-            Call DisplayChar
-
-            lea dx, mesVal
-            CALL DisplayString
-            mov dx, Op1Val
-            Call DisplayChar
-
-            LEA DX, mesRegAX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegAX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegAX+1
-            CALL DisplayChar
-
-            LEA DX, mesRegBX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegBX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegBX+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegCX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegCX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegCX+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegDX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegDX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegDX+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegSI
-            CALL DisplayString
-            mov dl,Byte ptr ValRegSI
-            CALL DisplayChar
-            mov dl, byte ptr ValRegSI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegDI
-            CALL DisplayString
-            mov dl,Byte ptr ValRegDI
-            CALL DisplayChar
-            mov dl, byte ptr ValRegDI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegBP
-            CALL DisplayString
-            mov dl,Byte ptr ValRegBP
-            CALL DisplayChar
-            mov dl, byte ptr ValRegBP+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegSP
-            CALL DisplayString
-            mov dl,Byte ptr ValRegSP
-            CALL DisplayChar
-            mov dl, byte ptr ValRegSP+1
-            CALL DisplayChar
-            
-            LEA DX, mesRegCF
-            CALL DisplayString
-            mov dl, ValCF
-            add dl, '0'
-            CALL DisplayChar  
-            ;JMP Start
-            ; Return to dos
-            mov ah,4ch
-            int 21h
+        
 
 
 CommMenu ENDP
 ;================================================================================================================
+AND_Comm_PROC PROC FAR
+    CALL Op1Menu
+    mov DX, CommaCursorLoc
+    CALL SetCursor
+    mov dl, ','
+    CALL DisplayChar
+    CALL Op2Menu
+
+    call  PowerUpeMenu ; to choose power up
+    CALL CheckForbidCharProc
+
+    CMP selectedOp1Type, 0
+    JZ AndOp1Reg
+    CMP selectedOp1Type, 1
+    JZ AndOp1AddReg
+    CMP selectedOp1Type, 2
+    JZ AndOp1Mem
+    JMP InValidCommand
+
+    AndOp1Reg:
+        CMP selectedOp1Reg, 0
+        JZ AndOp1RegAX
+        CMP selectedOp1Reg, 1
+        JZ AndOp1RegAL
+        CMP selectedOp1Reg, 2
+        JZ AndOp1RegAH
+        CMP selectedOp1Reg, 3
+        JZ AndOp1RegBX
+        CMP selectedOp1Reg, 4
+        JZ AndOp1RegBL
+        CMP selectedOp1Reg, 5
+        JZ AndOp1RegBH
+        CMP selectedOp1Reg, 6
+        JZ AndOp1RegCX
+        CMP selectedOp1Reg, 7
+        JZ AndOp1RegCL
+        CMP selectedOp1Reg, 8
+        JZ AndOp1RegCH
+        CMP selectedOp1Reg, 9
+        JZ AndOp1RegDX
+        CMP selectedOp1Reg, 10
+        JZ AndOp1RegDL
+        CMP selectedOp1Reg, 11
+        JZ AndOp1RegDH
+
+        CMP selectedOp1Reg, 15
+        JZ AndOp1RegBP
+        CMP selectedOp1Reg, 16
+        JZ AndOp1RegSP
+        CMP selectedOp1Reg, 17
+        JZ AndOp1RegSI
+        CMP selectedOp1Reg, 18
+        JZ AndOp1RegDI
+        
+
+        JMP InValidCommand
+
+        AndOp1RegAX: 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andax   
+            ExecAndReg ourValRegAX, ourValCF      ;command
+            jmp Exit
+            notthispower1_andax:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andax  
+            ExecAndReg ourValRegAX, ourValCF       ;coomand
+            notthispower2_andax:
+            ExecAndReg ValRegAX, ValCF
+        AndOp1RegAL:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andal   
+            ExecAndReg_8Bit ourValRegAX, ourValCF      ;command
+            jmp Exit
+            notthispower1_andal:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andal  
+            ExecAndReg_8Bit ourValRegAX, ourValCF       ;coomand
+            notthispower2_andal:
+            ExecAndReg_8Bit ValRegAX, ValCF
+        AndOp1RegAH:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andah    
+            ExecAndReg_8Bit ourValRegAX+1, ourValCF      ;command
+            jmp Exit
+            notthispower1_andah:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andah  
+            ExecAndReg_8Bit ourValRegAX+1, ourValCF       ;coomand
+            notthispower2_andah:
+            ExecAndReg_8Bit ValRegAX+1, ValCF
+        AndOp1RegBX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andbx   
+            ExecAndReg ourValRegBX, ourValCF      ;command
+            jmp Exit
+            notthispower1_andbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andbx  
+            ExecAndReg ourValRegBX, ourValCF       ;coomand
+            notthispower2_andbx:
+            ExecAndReg ValRegBX, ValCF
+        AndOp1RegBL:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andbl    
+            ExecAndReg_8Bit ourValRegBX, ourValCF      ;command
+            jmp Exit
+            notthispower1_andbl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andbl 
+            ExecAndReg_8Bit ourValRegBX, ourValCF       ;coomand
+            notthispower2_andbl:
+            ExecAndReg_8Bit ValRegBX, ValCF
+        AndOp1RegBH:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andbh    
+            ExecAndReg_8Bit ourValRegBX+1, ourValCF      ;command
+            jmp Exit
+            notthispower1_andbh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andbh  
+            ExecAndReg_8Bit ourValRegBX+1, ourValCF       ;coomand
+            notthispower2_andbh:
+            ExecAndReg_8Bit ValRegBX+1, ValCF
+        AndOp1RegCX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andcx    
+            ExecAndReg ourValRegCX, ourValCF      ;command
+            jmp Exit
+            notthispower1_andcx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andcx  
+            ExecAndReg ourValRegCX, ourValCF       ;coomand
+            notthispower2_andcx:
+            ExecAndReg ValRegCX, ValCF
+        AndOp1RegCL:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andcl    
+            ExecAndReg_8Bit ourValRegCX, ourValCF      ;command
+            jmp Exit
+            notthispower1_andcl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andcl  
+            ExecAndReg_8Bit ourValRegCX, ourValCF       ;coomand
+            notthispower2_andcl:
+            ExecAndReg_8Bit ValRegCX, ValCF
+        AndOp1RegCH:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andch    
+            ExecAndReg_8Bit ourValRegCX+1, ourValCF      ;command
+            jmp Exit
+            notthispower1_andch:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andch  
+            ExecAndReg_8Bit ourValRegCX+1, ourValCF       ;coomand
+            notthispower2_andch:
+            ExecAndReg_8Bit ValRegCX+1, ValCF
+        AndOp1RegDX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_anddx    
+            ExecAndReg ourValRegDX, ourValCF      ;command
+            jmp Exit
+            notthispower1_anddx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_anddx  
+            ExecAndReg ourValRegDX, ourValCF       ;coomand
+            notthispower2_anddx:
+            ExecAndReg ValRegDX, ValCF
+        AndOp1RegDL:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_anddl    
+            ExecAndReg_8Bit ourValRegDX, ourValCF      ;command
+            jmp Exit
+            notthispower1_anddl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_anddl  
+            ExecAndReg_8Bit ourValRegDX, ourValCF       ;coomand
+            notthispower2_anddl:
+            ExecAndReg_8Bit ValRegDX, ValCF
+        AndOp1RegDH:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_anddh    
+            ExecAndReg_8Bit ourValRegDX+1, ourValCF      ;command
+            jmp Exit
+            notthispower1_anddh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_anddh  
+            ExecAndReg_8Bit ourValRegDX+1, ourValCF       ;coomand
+            notthispower2_anddh:
+            ExecAndReg_8Bit ValRegDX+1, ValCF
+        AndOp1RegBP: 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andbp    
+            ExecAndReg ourValRegBP, ourValCF      ;command
+            jmp Exit
+            notthispower1_andbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andbp  
+            ExecAndReg ourValRegBP, ourValCF       ;coomand
+            notthispower2_andbp:
+            ExecAndReg ValRegBP, ValCF
+        AndOp1RegSP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andsp    
+            ExecAndReg ourValRegSP, ourValCF      ;command
+            jmp Exit
+            notthispower1_andsp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andsp  
+            ExecAndReg ourValRegSP, ourValCF       ;coomand
+            notthispower2_andsp:
+            ExecAndReg ValRegSP, ValCF
+        AndOp1RegSI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andsi    
+            ExecAndReg ourValRegSI, ourValCF      ;command
+            jmp Exit
+            notthispower1_andsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andsi  
+            ExecAndReg ourValRegSI, ourValCF       ;coomand
+            notthispower2_andsi:
+            ExecAndReg ValRegSI, ValCF
+        AndOp1RegDI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_anddi    
+            ExecAndReg ourValRegDI, ourValCF      ;command
+            jmp Exit
+            notthispower1_anddi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_anddi  
+            ExecAndReg ourValRegDI, ourValCF       ;coomand
+            notthispower2_anddi:
+            ExecAndReg ValRegDI, ValCF
+
+    AndOp1AddReg:
+
+        ; Check Memory-to-Memory operations
+        CMP selectedOp2Type, 1
+        JZ InValidCommand
+        CMP selectedOp2Type, 2
+        jz InValidCommand
+
+        CMP selectedOp1AddReg, 3
+        JZ AndOp1AddRegBX
+        CMP selectedOp1AddReg, 15
+        JZ AndOp1AddRegBP
+        CMP selectedOp1AddReg, 17
+        JZ AndOp1AddRegSI
+        CMP selectedOp1AddReg, 18
+        JZ AndOp1AddRegDI
+        JMP InValidCommand
+
+        AndOp1AddRegBX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andaddbx    
+            ExecAndAddReg ourValRegBX, ourValMem, ourValCF      ;command
+            jmp Exit
+            notthispower1_andaddbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andaddbx  
+            ExecAndAddReg ourValRegBX, ourValMem, ourValCF       ;coomand
+            notthispower2_andaddbx:   
+            ExecAndAddReg ValRegBX, ValMem, ValCF
+        AndOp1AddRegBP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andaddbp    
+            ExecAndAddReg ourValRegBP, ourValMem, ourValCF      ;command
+            jmp Exit
+            notthispower1_andaddbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andaddbp  
+            ExecAndAddReg ourValRegBP, ourValMem, ourValCF       ;coomand
+            notthispower2_andaddbp:
+            ExecAndAddReg ValRegBP, ValMem, ValCF
+        AndOp1AddRegSI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andaddsi    
+            ExecAndAddReg ourValRegSI, ourValMem, ourValCF      ;command
+            jmp Exit
+            notthispower1_andaddsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andaddsi 
+            ExecAndAddReg ourValRegSI, ourValMem, ourValCF       ;coomand
+            notthispower2_andaddsi:
+            ExecAndAddReg ValRegSI, ValMem, ValCF
+        AndOp1AddRegDI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_andadddi    
+            ExecAndAddReg ourValRegDI, ourValMem, ourValCF      ;command
+            jmp Exit
+            notthispower1_andadddi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_andadddi 
+            ExecAndAddReg ourValRegDI, ourValMem, ourValCF       ;coomand
+            notthispower2_andadddi:
+            ExecAndAddReg ValRegDI, ValMem, ValCF
+    AndOp1Mem:
+                
+                    mov si,0
+                    SearchForMemand:
+                    mov cx,si 
+                    cmp selectedOp2Mem,cl
+                    JNE Nextand
+                    cmp selectedPUPType,1 ;command on your own processor  
+                    jne notthispower1_andmem   
+                    ExecAndMem ourValMem[si], ourValCF      ;command
+                    jmp Exit
+                    notthispower1_andmem:
+                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+                    jne notthispower2_andmem 
+                    ExecAndMem ourValMem[si], ourValCF       ;coomand
+                    notthispower2_andmem:
+                    ExecAndMem ValMem[si], ValCF
+                    JMP Exit 
+                    Nextand:
+                    inc si 
+                    jmp SearchForMemand
+    RET
+ENDP
+MOV_Comm_PROC PROC FAR
+    CALL Op1Menu
+    mov DX, CommaCursorLoc
+    CALL SetCursor
+    mov dl, ','
+    CALL DisplayChar
+    CALL Op2Menu
+
+    CALL PowerUpeMenu ; to choose power up
+    CALL CheckForbidCharProc
+
+    CMP selectedOp1Type, 0
+    JZ MOVOp1Reg
+    CMP selectedOp1Type, 1
+    JZ MOVOp1AddReg
+    CMP selectedOp1Type, 2
+    JZ MOVOp1Mem
+    JMP InValidCommand
+
+    MOVOp1Reg:
+        CMP selectedOp1Reg, 0
+        JZ MOVOp1RegAX
+        CMP selectedOp1Reg, 1
+        JZ MOVOp1RegAL
+        CMP selectedOp1Reg, 2
+        JZ MOVOp1RegAH
+        CMP selectedOp1Reg, 3
+        JZ MOVOp1RegBX
+        CMP selectedOp1Reg, 4
+        JZ MOVOp1RegBL
+        CMP selectedOp1Reg, 5
+        JZ MOVOp1RegBH
+        CMP selectedOp1Reg, 6
+        JZ MOVOp1RegCX
+        CMP selectedOp1Reg, 7
+        JZ MOVOp1RegCL
+        CMP selectedOp1Reg, 8
+        JZ MOVOp1RegCH
+        CMP selectedOp1Reg, 9
+        JZ MOVOp1RegDX
+        CMP selectedOp1Reg, 10
+        JZ MOVOp1RegDL
+        CMP selectedOp1Reg, 11
+        JZ MOVOp1RegDH
+
+        CMP selectedOp1Reg, 15
+        JZ MOVOp1RegBP
+        CMP selectedOp1Reg, 16
+        JZ MOVOp1RegSP
+        CMP selectedOp1Reg, 17
+        JZ MOVOp1RegSI
+        CMP selectedOp1Reg, 18
+        JZ MOVOp1RegDI
+        
+
+        JMP InValidCommand
+
+        MOVOp1RegAX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movax   
+            MOV ourValRegAX, AX     ;command
+            jmp Exit
+            notthispower1_movax:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movax 
+            MOV ourValRegAX, AX      ;coomand
+            notthispower2_movax:
+            CALL GetSrcOp
+            MOV ValRegAX, AX
+            JMP Exit
+        MOVOp1RegAL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_moval  
+            MOV BYTE PTR ourValRegAX, AL    ;command
+            jmp Exit
+            notthispower1_moval:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_moval 
+            MOV BYTE PTR ourValRegAX, AL      ;coomand
+            notthispower2_moval:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegAX, AL
+            JMP Exit
+        MOVOp1RegAH:
+            ; Delete this lineAH
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movah 
+            MOV BYTE PTR ourValRegAX+1, AL    ;command
+            jmp Exit
+            notthispower1_movah:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movah 
+            MOV BYTE PTR ourValRegAX+1, AL      ;coomand
+            notthispower2_movah:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegAX+1, AL
+            JMP Exit
+        MOVOp1RegBX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movbx   
+            MOV ourValRegBX, AX    ;command
+            jmp Exit
+            notthispower1_movbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movbx 
+            MOV ourValRegBX, AX      ;coomand
+            notthispower2_movbx:
+            CALL GetSrcOp
+            MOV ValRegBX, AX
+            JMP Exit
+        MOVOp1RegBL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movbl 
+            MOV BYTE PTR ourValRegBX, AL    ;command
+            jmp Exit
+            notthispower1_movbl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movbl
+            MOV BYTE PTR ourValRegBX, AL      ;coomand
+            notthispower2_movbl:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegBX, AL
+            JMP Exit
+        MOVOp1RegBH:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movbh
+            MOV BYTE PTR ourValRegBX+1, AL    ;command
+            jmp Exit
+            notthispower1_movbh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movbh
+            MOV BYTE PTR ourValRegBX+1, AL     ;coomand
+            notthispower2_movbh:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegBX+1, AL
+            JMP Exit
+        MOVOp1RegCX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movcx   
+            MOV ourValRegCX, AX    ;command
+            jmp Exit
+            notthispower1_movcx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movcx 
+            MOV ourValRegCX, AX      ;coomand
+            notthispower2_movcx:
+            CALL GetSrcOp
+            MOV ValRegCX, AX
+            JMP Exit
+        MOVOp1RegCL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movcl
+            MOV BYTE PTR ourValRegCX, AL    ;command
+            jmp Exit
+            notthispower1_movcl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movcl
+            MOV BYTE PTR ourValRegCX, AL     ;coomand
+            notthispower2_movcl:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegCX, AL
+            JMP Exit
+        MOVOp1RegCH:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movch
+            MOV BYTE PTR ourValRegCX+1, AL    ;command
+            jmp Exit
+            notthispower1_movch:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movch
+            MOV BYTE PTR ourValRegCX+1, AL     ;coomand
+            notthispower2_movch:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegCX+1, AL
+            JMP Exit
+        MOVOp1RegDX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movdx   
+            MOV ourValRegDX, AX    ;command
+            jmp Exit
+            notthispower1_movdx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movdx 
+            MOV ourValRegDX, AX      ;coomand
+            notthispower2_movdx:
+            CALL GetSrcOp
+            MOV ValRegDX, AX
+            JMP Exit
+        MOVOp1RegDL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movdl
+            MOV BYTE PTR ourValRegDX, AL    ;command
+            jmp Exit
+            notthispower1_movdl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movdl
+            MOV BYTE PTR ourValRegDX, AL     ;coomand
+            notthispower2_movdl:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegDX, AL
+            JMP Exit
+        MOVOp1RegDH:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movdh
+            MOV BYTE PTR ourValRegDX+1, AL    ;command
+            jmp Exit
+            notthispower1_movdh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movdh
+            MOV BYTE PTR ourValRegDX+1, AL     ;coomand
+            notthispower2_movdh:
+            CALL GetSrcOp_8Bit
+            MOV BYTE PTR ValRegDX+1, AL
+            JMP Exit
+        MOVOp1RegBP:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movbp   
+            MOV ourValRegBP, AX    ;command
+            jmp Exit
+            notthispower1_movbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movbp 
+            MOV ourValRegBP, AX      ;coomand
+            notthispower2_movbp:
+            CALL GetSrcOp
+            MOV ValRegBP, AX
+            JMP Exit
+        MOVOp1RegSP:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movsp   
+            MOV ourValRegSP, AX    ;command
+            jmp Exit
+            notthispower1_movsp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movsp 
+            MOV ourValRegSP, AX      ;coomand
+            notthispower2_movsp:
+            CALL GetSrcOp
+            MOV ValRegSP, AX
+            JMP Exit
+        MOVOp1RegSI:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movsi   
+            MOV ourValRegSI, AX    ;command
+            jmp Exit
+            notthispower1_movsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movsi 
+            MOV ourValRegSI, AX      ;coomand
+            notthispower2_movsi:
+            CALL GetSrcOp
+            MOV ValRegSI, AX
+            JMP Exit
+        MOVOp1RegDI:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movdi   
+            MOV ourValRegDI, AX    ;command
+            jmp Exit
+            notthispower1_movdi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movdi 
+            MOV ourValRegDI, AX      ;coomand
+            notthispower2_movdi:
+            CALL GetSrcOp
+            MOV ValRegDI, AX
+            JMP Exit
+
+    MOVOp1AddReg:
+
+        ; Check Memory-to-Memory operations
+        CMP selectedOp2Type, 1
+        JZ InValidCommand
+        CMP selectedOp2Type, 2
+        jz InValidCommand
+
+        CMP selectedOp1AddReg, 3
+        JZ MOVOp1AddRegBX
+        CMP selectedOp1AddReg, 15
+        JZ MOVOp1AddRegBP
+        CMP selectedOp1AddReg, 17
+        JZ MOVOp1AddRegSI
+        CMP selectedOp1AddReg, 18
+        JZ MOVOp1AddRegDI
+        JMP InValidCommand
+
+        MOVOp1AddRegBX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movaddbx   
+            ExecMovAddReg ourValRegBX, ourValMem    ;command
+            jmp Exit
+            notthispower1_movaddbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movaddbx 
+            ExecMovAddReg ourValRegBX, ourValMem      ;coomand
+            notthispower2_movaddbx:
+            ExecMovAddReg ValRegBX, ValMem
+        MOVOp1AddRegBP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movaddbp   
+            ExecMovAddReg ourValRegBP, ourValMem    ;command
+            jmp Exit
+            notthispower1_movaddbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movaddbp
+            ExecMovAddReg ourValRegBP, ourValMem      ;coomand
+            notthispower2_movaddbp:
+            ExecMovAddReg ValRegBP, ValMem
+        MOVOp1AddRegSI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movaddsi 
+            ExecMovAddReg ourValRegSI, ourValMem    ;command
+            jmp Exit
+            notthispower1_movaddsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movaddsi 
+            ExecMovAddReg ourValRegSI, ourValMem      ;coomand
+            notthispower2_movaddsi:
+            ExecMovAddReg ValRegSI, ValMem
+        MOVOp1AddRegDI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_movadddi 
+            ExecMovAddReg ourValRegDI, ourValMem    ;command
+            jmp Exit
+            notthispower1_movadddi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_movadddi 
+            ExecMovAddReg ourValRegDI, ourValMem      ;coomand
+            notthispower2_movadddi:
+            ExecMovAddReg ValRegDI, ValMem
+    MOVOp1Mem:
+        
+            mov si,0
+            SearchForMemmov:
+            mov cx,si 
+            cmp selectedOp2Mem,cl
+            JNE Nextmov
+            cmp selectedPUPType,1 ; our command
+            jne notthispower1_movmem
+            ExecMovMem ourValMem[si] ; command
+            jmp Exit
+            notthispower1_movmem:  
+            cmp selectedPUPType,2 ;his/her and our command 
+            jne notthispower2_movmem 
+            ExecMovMem ourValMem[si] ;command
+            notthispower2_movmem: 
+            ExecMovMem ValMem[si]
+            JMP Exit 
+            Nextmov:
+            inc si 
+            jmp SearchForMemmov
+
+    
+    JMP Exit
+    RET
+ENDP
+ADD_Comm_PROC PROC FAR
+    CALL Op1Menu
+    MOV DX, CommaCursorLoc
+    CALL SetCursor
+    mov dl, ','
+    CALL DisplayChar
+    CALL Op2Menu
+
+    CALL CheckForbidCharProc
+
+    call  PowerUpeMenu ; to choose power up
+
+    CMP selectedOp1Type, 0
+    JZ AddOp1Reg
+    CMP selectedOp1Type, 1
+    JZ AddOp1AddReg
+    CMP selectedOp1Type, 2
+    JZ AddOp1Mem
+    JMP InValidCommand
+
+    AddOp1Reg:
+        CMP selectedOp1Reg, 0
+        JZ AddOp1RegAX
+        CMP selectedOp1Reg, 1
+        JZ AddOp1RegAL
+        CMP selectedOp1Reg, 2
+        JZ AddOp1RegAH
+        CMP selectedOp1Reg, 3
+        JZ AddOp1RegBX
+        CMP selectedOp1Reg, 4
+        JZ AddOp1RegBL
+        CMP selectedOp1Reg, 5
+        JZ AddOp1RegBH
+        CMP selectedOp1Reg, 6
+        JZ AddOp1RegCX
+        CMP selectedOp1Reg, 7
+        JZ AddOp1RegCL
+        CMP selectedOp1Reg, 8
+        JZ AddOp1RegCH
+        CMP selectedOp1Reg, 9
+        JZ AddOp1RegDX
+        CMP selectedOp1Reg, 10
+        JZ AddOp1RegDL
+        CMP selectedOp1Reg, 11
+        JZ AddOp1RegDH
+
+        CMP selectedOp1Reg, 15
+        JZ AddOp1RegBP
+        CMP selectedOp1Reg, 16
+        JZ AddOp1RegSP
+        CMP selectedOp1Reg, 17
+        JZ AddOp1RegSI
+        CMP selectedOp1Reg, 18
+        JZ AddOp1RegDI
+        
+
+        JMP InValidCommand
+
+        AddOp1RegAX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addax 
+            CLC
+            ADD ourValRegAX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addax:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addax  
+            CLC
+            ADD ourValRegAX, AX ;command
+            CALL ourSetCF        
+            notthispower2_addax:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegAX, AX ;command
+            CALL SetCF
+            JMP Exit
+        AddOp1RegAL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addal  
+            CLC
+            ADD BYTE PTR ourValRegAX, AL
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addal:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addal 
+            CLC
+            ADD BYTE PTR ourValRegAX, AL
+            CALL ourSetCF        
+            notthispower2_addal:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegAX, AL
+            CALL SetCF
+            JMP Exit
+        AddOp1RegAH:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addah  
+            CLC
+            ADD BYTE PTR ourValRegAX+1, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addah:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addah 
+            CLC
+            ADD BYTE PTR ourValRegAX+1, AL ;command
+            CALL ourSetCF        
+            notthispower2_addah:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegAX+1, AL ;command
+            CALL SetCF
+            JMP Exit
+        AddOp1RegBX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addbx 
+            CLC
+            ADD ourValRegBX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addbx  
+            CLC
+            ADD ourValRegBX, AX ;command
+            CALL ourSetCF        
+            notthispower2_addbx:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegBX, AX
+            CALL SetCF
+            JMP Exit
+        AddOp1RegBL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addbl  
+            CLC
+            ADD BYTE PTR ourValRegBX, AL
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addbl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addbl 
+            CLC
+            ADD BYTE PTR ourValRegBX, AL
+            CALL ourSetCF        
+            notthispower2_addbl:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegBX, AL
+            CALL SetCF
+            JMP Exit
+        AddOp1RegBH:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addbh  
+            CLC
+            ADD BYTE PTR ourValRegBX+1, AL
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addbh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addbh 
+            CLC
+            ADD BYTE PTR ourValRegBX+1, AL
+            CALL ourSetCF        
+            notthispower2_addbh:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegBX+1, AL
+            CALL SetCF
+            JMP Exit
+        AddOp1RegCX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addcx 
+            CLC
+            ADD ourValRegCX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addcx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addcx  
+            CLC
+            ADD ourValRegCX, AX ;command
+            CALL ourSetCF        
+            notthispower2_addcx:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegCX, AX
+            CALL SetCF
+            JMP Exit
+        AddOp1RegCL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addcl 
+            CLC
+            ADD BYTE PTR ourValRegCX, AL
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addcl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addcl 
+            CLC
+            ADD BYTE PTR ourValRegCX, AL
+            CALL ourSetCF        
+            notthispower2_addcl:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegCX, AL
+            CALL SetCF
+            JMP Exit
+        AddOp1RegCH:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addch 
+            CLC
+            ADD BYTE PTR ourValRegCX+1, AL
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addch:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addch 
+            CLC
+            ADD BYTE PTR ourValRegCX+1, AL
+            CALL ourSetCF        
+            notthispower2_addch:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegCX+1, AL
+            CALL SetCF
+            JMP Exit
+        AddOp1RegDX:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adddx 
+            CLC
+            ADD ourValRegDX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adddx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adddx  
+            CLC
+            ADD ourValRegDX, AX ;command
+            CALL ourSetCF        
+            notthispower2_adddx:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegDX, AX
+            CALL SetCF
+            JMP Exit
+        AddOp1RegDL:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adddl 
+            CLC
+            ADD BYTE PTR ourValRegDX, AL
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adddl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adddl 
+            CLC
+            ADD BYTE PTR ourValRegDX, AL
+            CALL ourSetCF        
+            notthispower2_adddl:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegDX, AL
+            CALL SetCF
+            JMP Exit
+        AddOp1RegDH:
+            CALL ourGetSrcOp_8Bit
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adddh 
+            CLC
+            ADD BYTE PTR ourValRegDX+1, AL
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adddh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adddh
+            CLC
+            ADD BYTE PTR ourValRegDX+1, AL
+            CALL ourSetCF        
+            notthispower2_adddh:
+            CALL GetSrcOp_8Bit
+            CLC
+            ADD BYTE PTR ValRegDX+1, AL
+            CALL SetCF
+            JMP Exit
+        AddOp1RegBP:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addbp 
+            CLC
+            ADD ourValRegBP, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addbp  
+            CLC
+            ADD ourValRegBP, AX ;command
+            CALL ourSetCF        
+            notthispower2_addbp:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegBP, AX
+            CALL SetCF
+            JMP Exit
+        AddOp1RegSP:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addsp 
+            CLC
+            ADD ourValRegSP, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addsp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addsp  
+            CLC
+            ADD ourValRegSP, AX ;command
+            CALL ourSetCF        
+            notthispower2_addsp:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegSP, AX
+            CALL SetCF
+            JMP Exit
+        AddOp1RegSI:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addsi 
+            CLC
+            ADD ourValRegSI, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_addsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addsi 
+            CLC
+            ADD ourValRegSI, AX ;command
+            CALL ourSetCF        
+            notthispower2_addsi:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegSI, AX
+            CALL SetCF
+            JMP Exit
+        AddOp1RegDI:
+            CALL ourGetSrcOp
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adddi 
+            CLC
+            ADD ourValRegDI, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adddi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adddi  
+            CLC
+            ADD ourValRegDI, AX ;command
+            CALL ourSetCF        
+            notthispower2_adddi:
+            CALL GetSrcOp
+            CLC
+            ADD ValRegDI, AX
+            CALL SetCF
+            JMP Exit
+
+    AddOp1AddReg:
+
+        ; Check Memory-to-Memory operations
+        CMP selectedOp2Type, 1
+        JZ InValidCommand
+        CMP selectedOp2Type, 2
+        jz InValidCommand
+
+        CMP selectedOp1AddReg, 3
+        JZ AddOp1AddRegBX
+        CMP selectedOp1AddReg, 15
+        JZ AddOp1AddRegBP
+        CMP selectedOp1AddReg, 17
+        JZ AddOp1AddRegSI
+        CMP selectedOp1AddReg, 18
+        JZ AddOp1AddRegDI
+        JMP InValidCommand
+
+        AddOp1AddRegBX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addaddbx 
+            ExecAddAddReg ourValRegBx, ourValMem ;command      
+            jmp Exit
+            notthispower1_addaddbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addaddbx   
+            ExecAddAddReg ourValRegBx, ourValMem ;command       
+            notthispower2_addaddbx:
+            ExecAddAddReg ValRegBx, ValMem
+        AddOp1AddRegBP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addaddbp 
+            ExecAddAddReg ourValRegBP, ourValMem ;command      
+            jmp Exit
+            notthispower1_addaddbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addaddbp   
+            ExecAddAddReg ourValRegBP, ourValMem ;command       
+            notthispower2_addaddbp:
+            ExecAddAddReg ValRegBP, ValMem
+        AddOp1AddRegSI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addaddsi 
+            ExecAddAddReg ourValRegSI, ourValMem ;command      
+            jmp Exit
+            notthispower1_addaddsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addaddsi   
+            ExecAddAddReg ourValRegSI, ourValMem ;command       
+            notthispower2_addaddsi:
+            ExecAddAddReg ValRegSI, ValMem
+        AddOp1AddRegDI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_addadddi 
+            ExecAddAddReg ourValRegDI, ourValMem ;command      
+            jmp Exit
+            notthispower1_addadddi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_addadddi   
+            ExecAddAddReg ourValRegDI, ourValMem ;command       
+            notthispower2_addadddi:
+            ExecAddAddReg ValRegDI, ValMem
+
+    AddOp1Mem:
+        
+            mov si,0
+            SearchForMemadd:
+            mov cx,si 
+            cmp selectedOp2Mem,cl
+            JNE Nextadd
+            cmp selectedPUPType,1 ; our command
+            jne notthispower1_addmem
+            ExecAddMem ourValMem[si] ; command
+            jmp Exit
+            notthispower1_addmem:  
+            cmp selectedPUPType,2 ;his/her and our command 
+            jne notthispower2_addmem 
+            ExecAddMem ourValMem[si] ;command
+            notthispower2_addmem: 
+            ExecAddMem ValMem[si]
+            JMP Exit 
+            Nextadd:
+            inc si 
+            jmp SearchForMemadd
+
+    
+    JMP Exit
+    RET
+ENDP
+ADC_Comm_PROC PROC FAR
+
+    CALL Op1Menu
+    mov DX, CommaCursorLoc
+    CALL SetCursor
+    mov dl, ','
+    CALL DisplayChar
+    CALL Op2Menu
+
+    CALL CheckForbidCharProc
+    call  PowerUpeMenu ; to choose power up
+
+    CMP selectedOp1Type, 0
+    JZ AdcOp1Reg
+    CMP selectedOp1Type, 1
+    JZ AdcOp1Addreg
+    CMP selectedOp1Type, 2
+    JZ AdcOp1Mem
+    JMP InValidCommand
+
+    AdcOp1Reg:
+        CMP selectedOp1Reg, 0
+        JZ AdcOp1RegAX
+        CMP selectedOp1Reg, 1
+        JZ AdcOp1RegAL
+        CMP selectedOp1Reg, 2
+        JZ AdcOp1RegAH
+        CMP selectedOp1Reg, 3
+        JZ AdcOp1RegBX
+        CMP selectedOp1Reg, 4
+        JZ AdcOp1RegBL
+        CMP selectedOp1Reg, 5
+        JZ AdcOp1RegBH
+        CMP selectedOp1Reg, 6
+        JZ AdcOp1RegCX
+        CMP selectedOp1Reg, 7
+        JZ AdcOp1RegCL
+        CMP selectedOp1Reg, 8
+        JZ AdcOp1RegCH
+        CMP selectedOp1Reg, 9
+        JZ AdcOp1RegDX
+        CMP selectedOp1Reg, 10
+        JZ AdcOp1RegDL
+        CMP selectedOp1Reg, 11
+        JZ AdcOp1RegDH
+
+        CMP selectedOp1Reg, 15
+        JZ AdcOp1RegBP
+        CMP selectedOp1Reg, 16
+        JZ AdcOp1RegSP
+        CMP selectedOp1Reg, 17
+        JZ AdcOp1RegSI
+        CMP selectedOp1Reg, 18
+        JZ AdcOp1RegDI
+        
+
+        JMP InValidCommand
+
+        AdcOp1RegAX:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcax 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegAX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcax:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcax  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegAX, AX ;command
+            CALL ourSetCF        
+            notthispower2_adcax:
+            CALL GetSrcOp 
+            CLC
+            CALL GetCF
+            ADC ValRegAX, AX
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegAL:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcal 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegAX, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcal:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcal  
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegAX, AL ;command
+            CALL ourSetCF        
+            notthispower2_adcal:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegAX, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegAH:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcah 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegAX+1, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcah:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcah  
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegAX+1, AL ;command
+            CALL ourSetCF        
+            notthispower2_adcah:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegAX+1, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegBX:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcbx 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegBX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcbx  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegBX, AX ;command
+            CALL ourSetCF        
+            notthispower2_adcbx:
+            CALL GetSrcOp
+            CLC
+            CALL GetCF
+            ADC ValRegBX, AX
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegBL:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcbl 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegBX, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcbl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcbl  
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegBX, AL ;command
+            CALL ourSetCF        
+            notthispower2_adcbl:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegBX, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegBH:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcbh 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegBX+1, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcbh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcbh  
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegBX+1, AL ;command
+            CALL ourSetCF        
+            notthispower2_adcbh:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegBX+1, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegCX:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adccx 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegCX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adccx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adccx  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegCX, AX ;command
+            CALL ourSetCF        
+            notthispower2_adccx:
+            CALL GetSrcOp
+            CLC
+            CALL GetCF
+            ADC ValRegCX, AX
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegCL:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adccl 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegCX, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adccl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adccl  
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegCX, AL ;command
+            CALL ourSetCF        
+            notthispower2_adccl:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegCX, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegCH:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcch 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegCX+1, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcch:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcch 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegCX+1, AL ;command
+            CALL ourSetCF        
+            notthispower2_adcch:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegCX+1, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegDX:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcdx 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegDX, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcdx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcdx  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegDX, AX ;command
+            CALL ourSetCF        
+            notthispower2_adcdx:
+            CALL GetSrcOp
+            CLC
+            CALL GetCF
+            ADC ValRegDX, AX
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegDL:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcdl 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegDX, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcdl:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcdl  
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegDX, AL ;command
+            CALL ourSetCF        
+            notthispower2_adcdl:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegDX, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegDH:
+            CALL ourGetSrcOp_8Bit 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcdh 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegDX+1, AL ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcdh:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcdh 
+            CLC
+            CALL ourGetCF
+            ADC BYTE PTR ourValRegDX+1, AL ;command
+            CALL ourSetCF        
+            notthispower2_adcdh:
+            CALL GetSrcOp_8Bit
+            CLC
+            CALL GetCF
+            ADC BYTE PTR ValRegDX+1, AL
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegBP:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcbp 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegBP, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcbp  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegBP, AX ;command
+            CALL ourSetCF        
+            notthispower2_adcbp:
+            CALL GetSrcOp
+            CLC
+            CALL GetCF
+            ADC ValRegBP, AX
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegSP:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcsp 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegSP, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcsp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcsp  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegSP, AX ;command
+            CALL ourSetCF        
+            notthispower2_adcsp:
+            CALL GetSrcOp
+            CLC
+            CALL GetCF
+            ADC ValRegSP, AX
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegSI:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcsi 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegSI, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcsi  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegSI, AX ;command
+            CALL ourSetCF        
+            notthispower2_adcsi:
+            CALL GetSrcOp
+            CLC
+            CALL GetCF
+            ADC ValRegSI, AX
+            CALL SetCF
+            JMP Exit
+        AdcOp1RegDI:
+            CALL ourGetSrcOp 
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcdi 
+            CLC
+            CALL ourGetCF
+            ADC ourValRegDI, AX ;command
+            CALL ourSetCF      
+            jmp Exit
+            notthispower1_adcdi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcdi  
+            CLC
+            CALL ourGetCF
+            ADC ourValRegDI, AX ;command
+            CALL ourSetCF        
+            notthispower2_adcdi:
+            CALL GetSrcOp
+            CLC
+            CALL GetCF
+            ADC ValRegDI, AX
+            CALL SetCF
+            JMP Exit
+
+    AdcOp1AddReg:
+
+        ; Check Memory-to-Memory operations
+        CMP selectedOp2Type, 1
+        JZ InValidCommand
+        CMP selectedOp2Type, 2
+        jz InValidCommand
+
+        CMP selectedOp1AddReg, 3
+        JZ AdcOp1AddRegBX
+        CMP selectedOp1AddReg, 15
+        JZ AdcOp1AddRegBP
+        CMP selectedOp1AddReg, 17
+        JZ AdcOp1AddRegSI
+        CMP selectedOp1AddReg, 18
+        JZ AdcOp1AddRegDI
+        JMP InValidCommand
+
+        AdcOp1AddregBX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcaddbx 
+            EexecAdcAddReg ourValRegBX, ourValMem     
+            jmp Exit
+            notthispower1_adcaddbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcaddbx 
+            EexecAdcAddReg ourValRegBX, ourValMem        
+            notthispower2_adcaddbx:
+            EexecAdcAddReg ValRegBX, ValMem
+        AdcOp1AddregBP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcaddbp 
+            EexecAdcAddReg ourValRegBP, ourValMem     
+            jmp Exit
+            notthispower1_adcaddbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcaddbp 
+            EexecAdcAddReg ourValRegBP, ourValMem        
+            notthispower2_adcaddbp:
+            EexecAdcAddReg ValRegBP, ValMem
+        AdcOp1AddregSI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcaddsi 
+            EexecAdcAddReg ourValRegSI, ourValMem     
+            jmp Exit
+            notthispower1_adcaddsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcaddsi
+            EexecAdcAddReg ourValRegSI, ourValMem        
+            notthispower2_adcaddsi:
+            EexecAdcAddReg ValRegSI, ValMem
+        AdcOp1AddregDI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_adcadddi 
+            EexecAdcAddReg ourValRegDI, ourValMem     
+            jmp Exit
+            notthispower1_adcadddi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_adcadddi
+            EexecAdcAddReg ourValRegDI, ourValMem        
+            notthispower2_adcadddi:
+            EexecAdcAddReg ValRegDI, ValMem
+    AdcOp1Mem:
+
+            mov si,0
+            SearchForMemadc:
+            mov cx,si 
+            cmp selectedOp2Mem,cl
+            JNE Nextadc
+            cmp selectedPUPType,1 ; our command
+            jne notthispower1_adcmem
+            ExecAdcMem ourValMem[si] ; command
+            jmp Exit
+            notthispower1_adcmem:  
+            cmp selectedPUPType,2 ;his/her and our command 
+            jne notthispower2_adcmem 
+            ExecAdcMem ourValMem[si] ;command
+            notthispower2_adcmem: 
+            ExecAdcMem ValMem[si]
+            JMP Exit 
+            Nextadc:
+            inc si 
+            jmp SearchForMemadc
+
+    
+    JMP Exit
+    RET
+ENDP
+PUSH_Comm_PROC PROC FAR
+    
+    CALL Op1Menu
+
+    call  PowerUpeMenu ; to choose power up
+    CALL CheckForbidCharProc
+
+    ; Todo - CHECK VALIDATIONS
+    CMP selectedOp1Size, 8
+    JZ InValidCommand
+    CMP selectedOp1Type, 0
+    JZ PushOpReg
+    CMP selectedOp1Type, 1
+    JZ PushOpAddReg
+    CMP selectedOp1Type, 2
+    JZ PushOpMem
+    CMP selectedOp1Type, 3
+    JZ PushOpVal
+    
+
+    ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
+    ; Reg as operands
+    PushOpReg:
+        
+        CMP selectedOp1Reg, 0
+        JZ PushOpRegAX
+        CMP selectedOp1Reg, 3
+        JZ PushOpRegBX
+        CMP selectedOp1Reg, 6
+        JZ PushOpRegCX
+        CMP selectedOp1Reg, 9
+        JZ PushOpRegDX
+        CMP selectedOp1Reg, 15
+        JZ PushOpRegBP
+        CMP selectedOp1Reg, 16
+        JZ PushOpRegSP
+        CMP selectedOp1Reg, 17
+        JZ PushOpRegSI
+        CMP selectedOp1Reg, 18
+        JZ PushOpRegDI
+        JMP InValidCommand
+
+
+        
+        PushOpRegAX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushax  
+            ourExecPush ourValRegAX      
+            jmp Exit
+            notthispower1_pushax:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushax  
+            ourExecPush ourValRegAX        
+            notthispower2_pushax:
+            ExecPush ValRegAX
+            JMP Exit
+        PushOpRegBX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushbx  
+            ourExecPush ourValRegBX      
+            jmp Exit
+            notthispower1_pushbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushbx  
+            ourExecPush ourValRegBX        
+            notthispower2_pushbx:
+            ExecPush ValRegBX
+            JMP Exit
+        PushOpRegCX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushcx  
+            ourExecPush ourValRegCX      
+            jmp Exit
+            notthispower1_pushcx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushcx  
+            ourExecPush ourValRegCX        
+            notthispower2_pushcx:
+            ExecPush ValRegCX
+            JMP Exit
+        PushOpRegDX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushdx  
+            ourExecPush ourValRegDX      
+            jmp Exit
+            notthispower1_pushdx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushdx  
+            ourExecPush ourValRegDX        
+            notthispower2_pushdx:
+            ExecPush ValRegDX
+            JMP Exit
+        PushOpRegBP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushbp  
+            ourExecPush ourValRegBP      
+            jmp Exit
+            notthispower1_pushbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushbp  
+            ourExecPush ourValRegBP       
+            notthispower2_pushbp:
+            ExecPush ValRegBP
+            JMP Exit
+        PushOpRegSP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushsp  
+            ourExecPush ourValRegSP      
+            jmp Exit
+            notthispower1_pushsp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushsp  
+            ourExecPush ourValRegSP        
+            notthispower2_pushsp:
+            ExecPush ValRegSP
+            JMP Exit
+        PushOpRegSI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushsi  
+            ourExecPush ourValRegSI      
+            jmp Exit
+            notthispower1_pushsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushsi  
+            ourExecPush ourValRegSI        
+            notthispower2_pushsi:
+            ExecPush ValRegSI
+            JMP Exit
+        PushOpRegDI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushdi  
+            ourExecPush ourValRegDI      
+            jmp Exit
+            notthispower1_pushdi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushdi  
+            ourExecPush ourValRegDI        
+            notthispower2_pushdi:
+            ExecPush ValRegDI
+            JMP Exit
+
+    ; Mem as operand
+    PushOpMem:
+            mov si,0
+            SearchForMempush:
+            mov cx,si 
+            cmp selectedOp2Mem,cl
+            JNE Nextpush
+            cmp selectedPUPType,1 ; our command
+            jne notthispower1_pushmem
+            ourExecPushMem ourValMem[si] ; command
+            jmp Exit
+            notthispower1_pushmem:  
+            cmp selectedPUPType,2 ;his/her and our command 
+            jne notthispower2_pushmem 
+            ourExecPushMem ourValMem[si] ;command
+            notthispower2_pushmem: 
+            ExecPushMem ValMem[si]
+            JMP Exit 
+            Nextpush:
+            inc si 
+            jmp SearchForMempush
+
+    
+    PushOpAddReg:
+        
+        CMP selectedOp1AddReg, 3
+        JZ PushOpAddRegBX
+        CMP selectedOp1AddReg, 15
+        JZ PushOpAddRegBP
+        CMP selectedOp1AddReg, 17
+        JZ PushOpAddRegSI
+        CMP selectedOp1AddReg, 18
+        JZ PushOpAddRegDI
+        JMP InValidCommand
+
+        PushOpAddRegBX:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushaddbx  
+            mov dx, ourValRegBX
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegBX
+            ourExecPushMem ourValMem[SI]      
+            jmp Exit
+            notthispower1_pushaddbx:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushaddbx  
+            mov dx, ourValRegBX
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegBX
+            ourExecPushMem ourValMem[SI]       
+            notthispower2_pushaddbx:
+
+            mov dx, ValRegBX
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ValRegBX
+            ExecPushMem ValMem[SI]
+            JMP Exit
+        PushOpAddRegBP:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushaddbp  
+            mov dx, ourValRegBP
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegBP
+            ourExecPushMem ourValMem[SI]      
+            jmp Exit
+            notthispower1_pushaddbp:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushaddbp  
+            mov dx, ourValRegBP
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegBP
+            ourExecPushMem ourValMem[SI]       
+            notthispower2_pushaddbp:
+
+            mov dx, ValRegBP
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ValRegBP
+            ExecPushMem ValMem[SI]
+            JMP Exit
+
+        PushOpAddRegSI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushaddsi  
+            mov dx, ourValRegSI
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegSI
+            ourExecPushMem ourValMem[SI]      
+            jmp Exit
+            notthispower1_pushaddsi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushaddsi  
+            mov dx, ourValRegSI
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegSI
+            ourExecPushMem ourValMem[SI]       
+            notthispower2_pushaddsi:
+
+            mov dx, ValRegSI
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ValRegSI
+            ExecPushMem ValMem[SI]
+            JMP Exit
+        
+        PushOpAddRegDI:
+            cmp selectedPUPType,1 ;command on your own processor  
+            jne notthispower1_pushadddi  
+            mov dx, ourValRegDI
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegDI
+            ourExecPushMem ourValMem[SI]      
+            jmp Exit
+            notthispower1_pushadddi:
+            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+            jne notthispower2_pushadddi  
+            mov dx, ourValRegDI
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ourValRegDI
+            ourExecPushMem ourValMem[SI]       
+            notthispower2_pushadddi:
+
+            mov dx, ValRegDI
+            CALL CheckAddress
+            cmp bl, 1               ; Value is greater than 16
+            JZ InValidCommand
+            mov SI, ValRegDI
+            ExecPushMem ValMem[SI]
+            JMP Exit
+
+
+    ; Value as operand
+    PushOpVal:
+        CMP Op1Valid, 0
+        jz InValidCommand
+        cmp selectedPUPType,1 ;command on your own processor  
+        jne notthispower1_pushval  
+        ourExecPush Op1Val      
+        jmp Exit
+        notthispower1_pushval:
+        cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+        jne notthispower2_pushval  
+        ourExecPush Op1Val       
+        notthispower2_pushval:
+        ExecPush Op1Val
+        JMP Exit
+    
+    JMP Exit
+    RET
+ENDP
+ExitPROC PROC FAR
+    ; Return to dos
+    mov ah,4ch
+    int 21h
+    
+ENDP
 ClearScreen PROC far
     ; Change to text mode (clear screen)
     mov ah,0
@@ -21277,6 +21295,7 @@ CheckOp2Size PROC
         RET
         Op2Val_16Bit:
         mov selectedOp2Size, 16
+        ret
 ENDP
 ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
 
