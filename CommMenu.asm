@@ -448,8 +448,8 @@ ENDM
     ; Power Up Variables
     UsedBeforeOrNot db 1    ;Chance to use forbiden power up
     PwrUpDataLineIndex db 0
-    PwrUpStuckVal db 1
-    PwrUpStuckEnabled db 1
+    PwrUpStuckVal db 0
+    PwrUpStuckEnabled db 0
 
 
     ; Keys Scan Codes
@@ -11443,6 +11443,7 @@ CommMenu proc far
         InValidCommand:
             mov dx, offset error
             CALL DisplayString
+            jmp Exit
             ; TODO - BEEP SOUND WHEN INVALID COMMAND ENTERED
 
         
@@ -13839,19 +13840,24 @@ LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
             mov cl,PwrUpDataLineIndex
             ROL BX, cl
             AND AX, BX
+            mov PwrUpStuckEnabled,0
             JMP Return_LineStuckPwrUp
         PwrupOne:
             MOV BX, 1
             mov cl,PwrUpDataLineIndex
             ROL BX,cl
             OR AX, BX
-
-        Return_LineStuckPwrUp:
-            POP CX
-            POP BX
-            RET
+            mov PwrUpStuckEnabled,0
+            jmp Return_LineStuckPwrUp
     NoTStuck:
-        RET
+        cmp selectedPUPType,4
+        jne Return_LineStuckPwrUp
+        ;TODO Take 1 input from the user as the value to be stuck 0 or 1, and 1 input for the index of the value stuck
+        mov PwrUpStuckEnabled,1
+    Return_LineStuckPwrUp:
+    POP CX
+    POP BX
+    RET
 ENDP
 Op2TypeMenu PROC
 
