@@ -119,7 +119,7 @@ ExecAndReg MACRO ValReg, CF
     CALL GetSrcOp
     AND ValReg, AX
     MOV CF, 0
-    CALL ExitPROC
+    JMP Exit
 ENDM
 ExecAndReg_8Bit MACRO ValReg, CF
     CALL GetSrcOp_8Bit
@@ -209,14 +209,14 @@ ExecAndAddReg MACRO ValReg, Mem, CF
     MOV SI, ValReg
     And WORD PTR Mem[SI], AX
     MOV CF, 0
-    CALL ExitPROC
+    JMP Exit
 
     AndOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
         MOV SI, ValReg
         And Mem[SI], AL
         MOV CF, 0
-    CALL ExitPROC
+    JMP Exit
 ENDM
 ExecMovAddReg MACRO ValReg, Mem
     Local MOVOp1AddReg_Op2_8Bit 
@@ -789,103 +789,103 @@ ENDM
 		Char_Send    DB   ? 
 		Char_Recieve DB   ? 
 		Exit_Chat    DB   0
-;===============================================================================================================
+; ===============================================================================================================
 .CODE
-MAIN PROC FAR
-    MOV AX,@DATA                     ; LOAD THE DATA VARIABLES
-    MOV DS,AX     
-    MOV ES,AX
+    MAIN PROC FAR
+        MOV AX,@DATA                     ; LOAD THE DATA VARIABLES
+        MOV DS,AX     
+        MOV ES,AX
 
-    JMP TestSkip
+        JMP TestSkip
 
 
-    MAIN_MENU: 
-	;---------------------------------------------------------------------------------------------------------------------------------------
-    MOV AH,0                         ; CHOOSING VIDEO MODE "TEXT MODE"
-    MOV AL,3                         ; 80 X 25 CHARS
-    INT 10H   
-    ;----------------------------------------------Taking PLAYERS' NAMES--------------------------------------------------------------------
-	Call configuration               ; This procedure is used for initializing the UART (baud rate: The baud rate is the rate
-                                     ; at which information is transferred in a communication channel, parity, data bits, stop bits,…)
-	MOV DL, 1                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
-	MOV DH, 1
-	CALL MOVECURSOR                  
-	MOV DX,OFFSET BORDER1
-	CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
-	MOV DL, 0                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
-	MOV DH, 22
-	CALL MOVECURSOR
-	MOV DX,OFFSET BORDER2
-	CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
-	MOV BP, OFFSET  NAMEP1           ; SAVE THE NAME OF THE FIRST PLAYER IN NAMEP1
-	CALL FIRSTSCREEN                 ; CALL THE FIRST SCREEN OF THE PROJECT       
-	MOV DX, NAMELENGTH             
-	MOV NAMEP1LEN, DX     
-	MOV NAMELENGTH,0
-	MOV DH , InitialPoints
-	MOV InitialPointsP1, DH
-	CALL CLEARSCREEN                 
-	MOV DL, 1
-	MOV DH, 1
-	CALL MOVECURSOR
-	MOV DX,OFFSET BORDER1
-	CALL PRINTMESSAGE
-	MOV DL, 0
-	MOV DH, 22
-	CALL MOVECURSOR
-	MOV DX,OFFSET BORDER2
-	CALL PRINTMESSAGE
-	MOV BP, OFFSET   NAMEP2         ; SAVE THE NAEM OF THE SECOND PLAYER IN NAEMP2
-	CALL FIRSTSCREEN
-	MOV DX, NAMELENGTH
-	MOV NAMEP2LEN, DX
-	MOV NAMELENGTH,0
-	MOV BH , InitialPoints
-	MOV InitialPointsP2, BH
-	CALL CLEARSCREEN
-    ;---------------------------------------------------------------------------------------------------------------------------------------	
-BACK_TO_MAIN_SCREEN:
-	MOV Exit_Chat , 0
-	MOV firs_half , 0400h
-	MOV sec_half , 0f00h
-	CALL MAINSCREEN                              ; CALLING THE MAIN SCREEN MENU 
-	MOV AH,1                                     ; GET KEY PRESSED WITHOUT WAITING 
-	INT 16H
-	JZ BACK_TO_MAIN_SCREEN                       ; JUMP TO MAIN SCREEN IF THERE IS NO KEY PRESSED 
-	MOV AH,0									 ; CONSUME THE ENTERED KEY FROM THE KEYBOARD BUFFER
-	INT 16H
-	CMP AX,1C0DH                                 ; CHECK IF THE ENTERED KEY IS THE ENTER KEY 
-	JE  NEXTSCREEN                               ; JUMP IF THE ENTERED KEY IS PRESSED 
-	CALL CHECKCHOICE                             ; CALL CHECKCHOICE TO NAVIGATE THE CHOICES 
-	JMP BACK_TO_MAIN_SCREEN
-NEXTSCREEN: 
-    CMP  CHOSEN,1
-    JNE CHECK_CHAT
-GAME_AGAIN:
-	CALL GAME  
-	MOV BH , InitialPointsP1
-	MOV BL , InitialPointsP2
-	CMP BL, BH
-	JB TAKE_PLAYER2POINTS
-	MOV Player1_Points, BH
-	MOV Player2_Points, BH
-	JMP NEXT_FORWARD
-TAKE_PLAYER2POINTS:
-;	MOV Player1_Points, BL
-;	MOV Player2_Points, BL
-NEXT_FORWARD:	                                  ; CALL GAME FUNCTION 
-	JMP BACK_TO_MAIN_SCREEN
-CHECK_CHAT:  CMP CHOSEN,2
-			 JNE EXITP_ROGRAM
-			 CALL CHATMODE
-			 JMP BACK_TO_MAIN_SCREEN
-EXITP_ROGRAM:   MOV AH,0                        ; NORMAL TERMINATION OF THE GAME 
-				MOV AL,12H 
-				INT 10H
-				MOV BL,2
-				MOV AH,4CH
-				INT 21H	
-MAIN    ENDP
+        MAIN_MENU: 
+        ;---------------------------------------------------------------------------------------------------------------------------------------
+        MOV AH,0                         ; CHOOSING VIDEO MODE "TEXT MODE"
+        MOV AL,3                         ; 80 X 25 CHARS
+        INT 10H   
+        ;----------------------------------------------Taking PLAYERS' NAMES--------------------------------------------------------------------
+        Call configuration               ; This procedure is used for initializing the UART (baud rate: The baud rate is the rate
+                                        ; at which information is transferred in a communication channel, parity, data bits, stop bits,…)
+        MOV DL, 1                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
+        MOV DH, 1
+        CALL MOVECURSOR                  
+        MOV DX,OFFSET BORDER1
+        CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
+        MOV DL, 0                        ; INITIALIZING THE COORDIANATES OF THE CURSOR 
+        MOV DH, 22
+        CALL MOVECURSOR
+        MOV DX,OFFSET BORDER2
+        CALL PRINTMESSAGE                ; DRAW THE BORDERS OF THE SCREEN
+        MOV BP, OFFSET  NAMEP1           ; SAVE THE NAME OF THE FIRST PLAYER IN NAMEP1
+        CALL FIRSTSCREEN                 ; CALL THE FIRST SCREEN OF THE PROJECT       
+        MOV DX, NAMELENGTH             
+        MOV NAMEP1LEN, DX     
+        MOV NAMELENGTH,0
+        MOV DH , InitialPoints
+        MOV InitialPointsP1, DH
+        CALL CLEARSCREEN                 
+        MOV DL, 1
+        MOV DH, 1
+        CALL MOVECURSOR
+        MOV DX,OFFSET BORDER1
+        CALL PRINTMESSAGE
+        MOV DL, 0
+        MOV DH, 22
+        CALL MOVECURSOR
+        MOV DX,OFFSET BORDER2
+        CALL PRINTMESSAGE
+        MOV BP, OFFSET   NAMEP2         ; SAVE THE NAEM OF THE SECOND PLAYER IN NAEMP2
+        CALL FIRSTSCREEN
+        MOV DX, NAMELENGTH
+        MOV NAMEP2LEN, DX
+        MOV NAMELENGTH,0
+        MOV BH , InitialPoints
+        MOV InitialPointsP2, BH
+        CALL CLEARSCREEN
+        ;---------------------------------------------------------------------------------------------------------------------------------------	
+        BACK_TO_MAIN_SCREEN:
+        MOV Exit_Chat , 0
+        MOV firs_half , 0400h
+        MOV sec_half , 0f00h
+        CALL MAINSCREEN                              ; CALLING THE MAIN SCREEN MENU 
+        MOV AH,1                                     ; GET KEY PRESSED WITHOUT WAITING 
+        INT 16H
+        JZ BACK_TO_MAIN_SCREEN                       ; JUMP TO MAIN SCREEN IF THERE IS NO KEY PRESSED 
+        MOV AH,0									 ; CONSUME THE ENTERED KEY FROM THE KEYBOARD BUFFER
+        INT 16H
+        CMP AX,1C0DH                                 ; CHECK IF THE ENTERED KEY IS THE ENTER KEY 
+        JE  NEXTSCREEN                               ; JUMP IF THE ENTERED KEY IS PRESSED 
+        CALL CHECKCHOICE                             ; CALL CHECKCHOICE TO NAVIGATE THE CHOICES 
+        JMP BACK_TO_MAIN_SCREEN
+        NEXTSCREEN: 
+        CMP  CHOSEN,1
+        JNE CHECK_CHAT
+        GAME_AGAIN:
+        CALL GAME  
+        MOV BH , InitialPointsP1
+        MOV BL , InitialPointsP2
+        CMP BL, BH
+        JB TAKE_PLAYER2POINTS
+        MOV Player1_Points, BH
+        MOV Player2_Points, BH
+        JMP NEXT_FORWARD
+        TAKE_PLAYER2POINTS:
+        ;	MOV Player1_Points, BL
+        ;	MOV Player2_Points, BL
+        NEXT_FORWARD:	                                  ; CALL GAME FUNCTION 
+            JMP BACK_TO_MAIN_SCREEN
+        CHECK_CHAT:  CMP CHOSEN,2
+                    JNE EXITP_ROGRAM
+                    CALL CHATMODE
+                    JMP BACK_TO_MAIN_SCREEN
+        EXITP_ROGRAM:   MOV AH,0                        ; NORMAL TERMINATION OF THE GAME 
+                        MOV AL,12H 
+                        INT 10H
+                        MOV BL,2
+                        MOV AH,4CH
+                        INT 21H	
+    MAIN    ENDP
 
 	;-----------------------------------------------------------MOVE CURSOR FUNCTION-------------------------------------------------------------	
 MOVECURSOR    PROC   NEAR
@@ -1486,29 +1486,7 @@ GETFORBIDDEN    ENDP
 
 
 ;------------------------------------------------------------DRAW SOLID RECTANGLE IN THE SCREEN----------------------------------------------	
-DrawRect PROC NEAR 
-	PUSH SI          ; SAVE THE REGISTERS IN THE STACK FOR FURTHER CALCULATION 
-	PUSH DI          ; CX HOLDS THE X0 "INITIAL X COORDINATES" , SI HOLDS THE XF " THE FINAL X COORDINATES"
-	PUSH CX          ; DX HOLDS THE Y0 "INITIAL Y COORDINATES" , DI HOLDS THE YF " THE FINAL Y COORDINATES"
-	PUSH DX          ; AL HOLDS THE COLOR
-	MOV AH,0Ch 
-	LOOP_1: int 10h  ; two loops one for the width and another one inside it for the hight
-	mov BX,CX
-	LOOP_2:
-	INC CX
-	INT 10H
-	CMP CX,SI        
-	JNE LOOP_2
-	MOV CX,BX
-	INC DX
-	CMP DX,DI 
-	JNE LOOP_1
-	POP DX
-	POP CX
-	POP DI
-	POP SI
-	RET
-DrawRect ENDP	 
+
 ;--------------------------------------------------------------------------------------------------------------------------------------------
 CLEAR_SCREEN PROC FAR 
     MOV AH, 0H 
