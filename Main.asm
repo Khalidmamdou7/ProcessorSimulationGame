@@ -1,13 +1,15 @@
 ;================================================= MACROS ======================================================= ;
 ;; ------------------------------------------------ GUI MACROS --------------------------------------------------;;
 PrintChar MACRO chara
-	;draw X in the cursor position
-	mov ah,0ah
-	mov al,chara
-	mov bh,0h
-	mov bl,0fh
-	mov cx,1
-	int 10H
+    PUSHA
+        ;draw X in the cursor position
+        mov ah,0ah
+        mov al,chara
+        mov bh,0h
+        mov bl,0fh
+        mov cx,1
+        int 10H
+    POPA
 ENDM PrintChar
 PrintChar_black MACRO chara
 	;draw X in the cursor position
@@ -19,13 +21,15 @@ PrintChar_black MACRO chara
     int 10H
 ENDM PrintChar_black
 Set MACRO Yposition, Xposition
-    mov cx,0
-    ; set cursor position
-    mov ah,2h
-    mov bh,0h
-    mov dh,Yposition
-    mov dl,Xposition
-    int 10h
+    PUSHA
+        mov cx,0
+        ; set cursor position
+        mov ah,2h
+        mov bh,0h
+        mov dh,Yposition
+        mov dl,Xposition
+        int 10h
+    POPA
 ENDM Set
 draw_obj MACRO colr
 	;draw X in the cursor position
@@ -305,16 +309,15 @@ ENDM
     ;---------------------------------------RIGHT PROCESSOR----------------------------------------------:
 
         ; positions of X axis of the AX register in right processor
-        p2_AX_X1 EQU 107
+        p2_AX_X1 db 107
         p2_AX_X2 EQU 108
         p2_AX_X3 EQU 109
         p2_AX_X4 EQU 110
         
         p2_AX_Y EQU 4 ; the Y axis of the AX register of the left processor 
 
-
         ; positions of X axis of the BX register in right processor
-        p2_BX_X1 EQU 107
+        p2_BX_X1 db 107
         p2_BX_X2 EQU 108
         p2_BX_X3 EQU 109
         p2_BX_X4 EQU 110
@@ -323,7 +326,7 @@ ENDM
 
 
         ; positions of X axis of the DX register in right processor
-        p2_CX_X1 EQU 107
+        p2_CX_X1 db 107
         p2_CX_X2 EQU 108
         p2_CX_X3 EQU 109
         p2_CX_X4 EQU 110
@@ -332,7 +335,7 @@ ENDM
 
 
         ; positions of X axis of the DX register in right processor
-        p2_DX_X1 EQU 107
+        p2_DX_X1 db 107
         p2_DX_X2 EQU 108
         p2_DX_X3 EQU 109
         p2_DX_X4 EQU 110
@@ -341,7 +344,7 @@ ENDM
 
 
         ; positions of X axis of SP register in right processor 
-        p2_SP_X1 equ 113
+        p2_SP_X1 db 113
         p2_SP_X2 equ 114
         p2_SP_X3 equ 115
         p2_SP_X4 equ 116
@@ -350,7 +353,7 @@ ENDM
 
 
         ; positions of X axis of BP register in right processor 
-        p2_BP_X1 equ 113
+        p2_BP_X1 db 113
         p2_BP_X2 equ 114
         p2_BP_X3 equ 115
         p2_BP_X4 equ 116
@@ -358,7 +361,7 @@ ENDM
         p2_BP_Y equ 6 ; the Y position of BP register in the left processor 
 
         ; positions of X axis of SI register in right processor 
-        p2_SI_X1 equ 113
+        p2_SI_X1 db 113
         p2_SI_X2 equ 114
         p2_SI_X3 equ 115
         p2_SI_X4 equ 116
@@ -367,7 +370,7 @@ ENDM
 
 
         ; positions of X axis of DI register in right processor 
-        p2_DI_X1 equ 113
+        p2_DI_X1 db 113
         p2_DI_X2 equ 114
         p2_DI_X3 equ 115
         p2_DI_X4 equ 116
@@ -594,7 +597,7 @@ ENDM
         Op1CursorLoc EQU 1506H
         CommaCursorLoc EQU 150BH
         Op2CursorLoc EQU 150CH
-        PUPCursorLoc EQU 1511H
+        PUPCursorLoc EQU 1500H
         ForbidPUPCursor EQU 1516H
 	
     ; --------------------------------------------- Commands Variables -------------------------------------------;
@@ -736,7 +739,7 @@ ENDM
                 ValRegBP dw 'BP'
                 ValRegSP dw 'SP'
                 ValRegSI dw 'SI'
-                ValRegDI dw 'DI'
+                ValRegDI dw 5677H
 
                 ValMem db 16 dup('M'), '$'
                 ValStack db 16 dup('S'), '$'
@@ -1497,19 +1500,69 @@ DisplayGUIValues PROC FAR
     ; Draw the Zeros in all their places/////////////////////////////////
 		;Draw them for the left processor and its memory
 
+
+    mov ax, ValRegAX
+    mov bx, ax
+
+    mov cx,a
+    div cx
+    
+    SET p2_AX_Y p2_AX_X1
+    add AL,30h
+    PrintChar AL
+
+    
+    mov ah,0
+    mov cx,a
+    mul cx
+
+    sub bx,ax     
+
+    mov cx,b   
+    mov ax,bx
+    div cx      
+
+    mov cl,ah
+       
+    SET p2_AX_Y p2_AX_X1+1
+    add AL,30h
+    PrintChar AL
+       
+
+    mov dl,c
+    mov al,bl
+    mov ah,0
+
+    div dl 
+    
+    SET p2_AX_Y p2_AX_X1+2
+    add AL,30h
+    PrintChar AL  
+
+    mov cl,c 
+    mov al,bl
+    mov ah,0
+    div cl
+    mov al,ah
+    
+    SET p2_AX_Y p2_AX_X1+3
+    add AL,30h
+    PrintChar AL
+
+
         ; DI 
-		Set 10 49           ; LEFT-MOST
-		PrintChar '1'
-		Set 10 50
-		PrintChar '2'
-		Set 10 51
-		PrintChar '3'
-		Set 10 52
-		PrintChar '4'
+		;Set 10 49           ; LEFT-MOST
+		;PrintChar '1'
+		;Set 10 50
+		;PrintChar '2'
+		;Set 10 51
+		;PrintChar '3'
+		;Set 10 52
+		;PrintChar '4'
 
         ; DX
 		Set 10 47
-		PrintChar '5'       ; RIGHT-MOST
+		PrintChar '3'       ; RIGHT-MOST
 		Set 10 46
 		PrintChar '6'
 		Set 10 45
@@ -1707,14 +1760,14 @@ DisplayGUIValues PROC FAR
 		PrintChar 'J' 
 
         ; AX
-		Set 4 110
-		PrintChar 'K'
-		Set 4 109
-		PrintChar 'L'
-		Set 4 108
-		PrintChar 'M'
-		Set 4 107
-		PrintChar 'N'
+		;Set 4 110
+		;PrintChar 'K'
+		;Set 4 109
+		;PrintChar 'L'
+		;Set 4 108
+		;PrintChar 'M'
+		;Set 4 107
+		;PrintChar 'N'
 
         ; Right Mem[0]
 		Set 10 113
@@ -1980,11 +2033,16 @@ MoveShooterRight PROC FAR
         RET
 ENDP
 PlayerTwoRound PROC FAR
+
     lea dx, PlayerTwoWaitRound
     CALL ShowMsg
 
     CheckKey_P2Round:
         CALL WaitKeyPress
+    
+    Push ax
+        CALL ClearBuffer
+    pop ax
     
     cmp ah, EnterScanCode
     jz CONT_P2Round
@@ -2030,7 +2088,7 @@ PlayMode PROC FAR
         Set 21 0
         lea dx, InstructionMsg
         CALL DisplayString
-        CALL PowerUpeMenu
+        CALL PowerUpMenu
         CALL ExecutePwrUp
         CALL CommMenu
         CALL PlayerTwoRound
@@ -2510,9 +2568,6 @@ DrawGuiLayout ENDP
 ; ================================================ COMMANDS PROCEDURE ===================================;
 CommMenu proc far
     
-    
-    ; CALL ClearScreen
-
     Start:
     
     CALL MnemonicMenu
@@ -2565,7 +2620,7 @@ CommMenu proc far
     ; Commands (operations) Labels
     NOP_Comm:
         CALL CheckForbidCharProc         
-        call  PowerUpeMenu ; to choose power up
+
         cmp selectedPUPType,1 ;command on your own processor  
         jne notthispower1_nop  
         NOP      
@@ -2580,7 +2635,7 @@ CommMenu proc far
     
     CLC_Comm:
         CALL CheckForbidCharProc
-        call  PowerUpeMenu ; to choose power up
+         
         cmp selectedPUPType,1 ;command on your own processor  
         jne notthispower1_clc   
         MOV ourValCF, 0      ;command
@@ -2606,7 +2661,7 @@ CommMenu proc far
         CALL Op1Menu
         CALL CheckForbidCharProc
 
-        call  PowerUpeMenu ; to choose power up
+         
 
         ; Todo - CHECK VALIDATIONS
         CMP selectedOp1Type, 0
@@ -2897,7 +2952,7 @@ CommMenu proc far
         CALL Op1Menu
         CALL CheckForbidCharProc
         
-        call  PowerUpeMenu ; to choose power up
+         
 
         CMP selectedOp1Type, 0
         JZ IncOpReg
@@ -3326,7 +3381,7 @@ CommMenu proc far
         CALL Op1Menu
         CALL CheckForbidCharProc
         
-        call  PowerUpeMenu ; to choose power up
+         
 
         CMP selectedOp1Type, 0
         JZ decOpReg
@@ -3752,7 +3807,7 @@ CommMenu proc far
     MUL_Comm:
         CALL Op1Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type, 0
@@ -4330,7 +4385,7 @@ CommMenu proc far
     DIV_Comm:
         CALL Op1Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type, 0
@@ -4908,7 +4963,7 @@ CommMenu proc far
     IMul_Comm:
         CALL Op1Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type, 0
@@ -5486,7 +5541,7 @@ CommMenu proc far
     IDiv_Comm:
         CALL Op1Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type, 0
@@ -6069,7 +6124,7 @@ CommMenu proc far
         CALL DisplayChar
         CALL Op2Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type,0
@@ -7251,7 +7306,7 @@ CommMenu proc far
         CALL DisplayChar
         CALL Op2Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type,0
@@ -8433,7 +8488,7 @@ CommMenu proc far
         CALL DisplayChar
         CALL Op2Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type,0
@@ -9699,7 +9754,7 @@ CommMenu proc far
         CALL DisplayChar
         CALL Op2Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type,0
@@ -10965,7 +11020,7 @@ CommMenu proc far
         CALL DisplayChar
         CALL Op2Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type,0
@@ -12147,7 +12202,7 @@ CommMenu proc far
         CALL DisplayChar
         CALL Op2Menu
 
-        call  PowerUpeMenu ; to choose power up
+         
         CALL CheckForbidCharProc
 
         cmp selectedOp1Type,0
@@ -13330,8 +13385,13 @@ CommMenu proc far
         lea dx, ExecutionFailed
         CALL ShowMsg
 
+        ; 5ra m4 48ala m3rf4 leh
         CheckKey_Invalid:
             CALL WaitKeyPress
+
+        Push ax
+            CALL ClearBuffer
+        pop ax
         
         cmp ah, EnterScanCode
         jz CONT_INVALID
@@ -13359,20 +13419,17 @@ CommMenu proc far
             Call Terminate
         CONT_INVALID:
             RET
-        
-
-        
-
     Exit:
 
-            
-
-        ; ----
         lea dx, ExecutedSuccesfully
         CALL ShowMsg
 
         CheckKey_Exit:
             CALL WaitKeyPress
+        
+        Push ax
+            CALL ClearBuffer
+        pop ax
         
         cmp ah, EnterScanCode
         jz CONT__Exit
@@ -13414,7 +13471,7 @@ AND_Comm_PROC PROC FAR
     CALL DisplayChar
     CALL Op2Menu
 
-    call  PowerUpeMenu ; to choose power up
+     
     CALL CheckForbidCharProc
 
     CMP selectedOp1Type, 0
@@ -13733,7 +13790,6 @@ MOV_Comm_PROC PROC FAR
     CALL DisplayChar
     CALL Op2Menu
 
-    CALL PowerUpeMenu ; to choose power up
     CALL CheckForbidCharProc
 
     CMP selectedOp1Type, 0
@@ -14106,7 +14162,7 @@ ADD_Comm_PROC PROC FAR
 
     CALL CheckForbidCharProc
 
-    call  PowerUpeMenu ; to choose power up
+     
 
     CMP selectedOp1Type, 0
     JZ AddOp1Reg
@@ -14574,7 +14630,7 @@ ADC_Comm_PROC PROC FAR
     CALL Op2Menu
 
     CALL CheckForbidCharProc
-    call  PowerUpeMenu ; to choose power up
+     
 
     CMP selectedOp1Type, 0
     JZ AdcOp1Reg
@@ -15083,7 +15139,7 @@ PUSH_Comm_PROC PROC FAR
     
     CALL Op1Menu
 
-    call  PowerUpeMenu ; to choose power up
+     
     CALL CheckForbidCharProc
 
     ; Todo - CHECK VALIDATIONS
@@ -15461,9 +15517,7 @@ MnemonicMenu PROC
 
     Push ax
     PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
+        CALL ClearBuffer
         ; Reset Cursor
         mov ah,2
         mov dx, MenmonicCursorLoc
@@ -15680,16 +15734,11 @@ Op1TypeMenu PROC
     int 21h
 
     CheckKeyOp1Type:
-        ; Clear buffer
-        mov ah,07
-        int 21h
         CALL WaitKeyPress
 
     Push ax
     PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
+        CALL ClearBuffer
         ; Reset Cursor
         mov ah,2
         mov dx, Op1CursorLoc
@@ -15763,7 +15812,7 @@ Op1TypeMenu PROC
         
     ret
 Op1TypeMenu ENDP
-PowerUpeMenu PROC
+PowerUpMenu PROC
     ; Reset Cursor
         mov ah,2
         mov dx, PUPCursorLoc
@@ -15774,16 +15823,11 @@ PowerUpeMenu PROC
     int 21h
 
     CheckKeyOp1Type2:
-        ; Clear buffer
-        mov ah,07
-        int 21h
         CALL WaitKeyPress
 
     Push ax
     PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
+        CALL ClearBuffer
         ; Reset Cursor
         mov ah,2
         mov dx, PUPCursorLoc
@@ -15798,7 +15842,30 @@ PowerUpeMenu PROC
     jz CommDown_2
     cmp ah, EnterScanCode
     jz Selected_2
-    JMP CheckKeyOp1Type
+    
+    cmp ah, RightScanCode
+    jz MoveRight_PowerUpMenu
+    cmp ah, LeftScanCode
+    jz MoveLeft_PowerUpMenu
+    cmp ah, 57
+    jz DrawBullet_PowerUpMenu
+    cmp ah, EscScanCode
+    jz Exit_PowerUpMenu
+
+    JMP CheckKeyOp1Type2
+
+    DrawBullet_PowerUpMenu:
+        Call DrawBullet
+        JMP CheckKeyOp1Type2
+    MoveLeft_PowerUpMenu:
+        CALL MoveShooterLeft
+        JMP CheckKeyOp1Type2
+    MoveRight_PowerUpMenu:
+        CALL MoveShooterRight
+        JMP CheckKeyOp1Type2
+    Exit_PowerUpMenu:
+        Call Terminate
+
 
 
     CommUp_2:
@@ -15834,51 +15901,50 @@ PowerUpeMenu PROC
         mov selectedPUPType, al
         
     ret
-PowerUpeMenu ENDP
+PowerUpMenu ENDP
 ExecutePwrUp PROC FAR
-    ForPwrUp:
-                cmp selectedPUPType,3 ;Changing the forbidden character only once 
-                jne notthispower3  ;-8 points 
-                
-                cmp UsedBeforeOrNot,1
-                jne notthispower3
-                dec UsedBeforeOrNot
+    cmp selectedPUPType,3 ;Changing the forbidden character only once 
+    jne notthispower3  ;-8 points 
+    
+    cmp UsedBeforeOrNot,1
+    jne notthispower3
+    dec UsedBeforeOrNot
 
-                ; Reset Cursor
-                mov ah,2
-                mov dx, ForbidPUPCursor
-                int 10h
+    ; Reset Cursor
+    mov ah,2
+    mov dx, ForbidPUPCursor
+    int 10h
 
-                mov ah,1 ; set forbidchar
-                int 21h
-                mov Player1_ForbidChar,al 
+    mov ah,1 ; set forbidchar
+    int 21h
+    mov Player1_ForbidChar,al 
 
-                sub Player1_Points,8
-                    notthispower3:
-                    cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
-                    jne notthispower5
-                    mov ValRegAX,0
-                    mov ValRegBX,0
-                    mov ValRegCX,0
-                    mov ValRegDX,0 
-                
-                    mov ValRegBP,0
-                    mov ValRegSP,0
-                    mov ValRegSI,0
-                    mov ValRegDI,0
-                
-                    mov ourValRegAX,0
-                    mov ourValRegBX,0
-                    mov ourValRegCX,0
-                    mov ourValRegDX,0
-                
-                    mov ourValRegBP,0
-                    mov ourValRegSP,0
-                    mov ourValRegSI,0
-                    mov ourValRegDI,0
+    sub Player1_Points,8
+        notthispower3:
+        cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
+        jne notthispower5
+        mov ValRegAX,0
+        mov ValRegBX,0
+        mov ValRegCX,0
+        mov ValRegDX,0 
+    
+        mov ValRegBP,0
+        mov ValRegSP,0
+        mov ValRegSI,0
+        mov ValRegDI,0
+    
+        mov ourValRegAX,0
+        mov ourValRegBX,0
+        mov ourValRegCX,0
+        mov ourValRegDX,0
+    
+        mov ourValRegBP,0
+        mov ourValRegSP,0
+        mov ourValRegSI,0
+        mov ourValRegDI,0
 
-                    sub Player1_Points,30
-                    notthispower5:
+        sub Player1_Points,30
+        notthispower5:
 
     RET
 ENDP
@@ -15952,16 +16018,11 @@ Op2TypeMenu PROC
     int 21h
 
     CheckKey_Op2Type:
-        ; Clear buffer
-        mov ah,07
-        int 21h
         CALL WaitKeyPress
 
     Push ax
     PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
+        CALL ClearBuffer
         ; Reset Cursor
         mov ah,2
         mov dx, Op2CursorLoc
@@ -16067,17 +16128,12 @@ Op1Menu PROC
         int 21h
 
         CheckKeyRegType:
-            ; Clear buffer
-            mov ah,07
-            int 21h
             CALL WaitKeyPress
 
 
         Push ax
         PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
+            CALL ClearBuffer
             ; Reset Cursor
             mov ah,2
             mov dx, Op1CursorLoc
@@ -16158,17 +16214,12 @@ Op1Menu PROC
         int 21h
 
         CheckKey_AddReg:
-            ; Clear buffer
-            mov ah,07
-            int 21h
             CALL WaitKeyPress
 
 
         Push ax
         PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
+            CALL ClearBuffer
             ; Reset Cursor
             mov ah,2
             mov dx, Op1CursorLoc
@@ -16251,17 +16302,12 @@ Op1Menu PROC
         int 21h
 
         CheckKeyMemType:
-            ; Clear buffer
-            mov ah,07
-            int 21h
             CALL WaitKeyPress
 
 
         Push ax
         PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
+            CALL ClearBuffer
             ; Reset Cursor
             mov ah,2
             mov dx, Op1CursorLoc
@@ -16343,9 +16389,7 @@ Op1Menu PROC
         mov dx, Op1CursorLoc
         CALL SetCursor
 
-        ; Clear buffer
-        mov ah,07
-        int 21h
+        CALL ClearBuffer
         
 
         ; Take value as a String from User
@@ -16601,17 +16645,12 @@ Op2Menu PROC
         int 21h
 
         CheckKey_RegType_Op2Menu:
-            ; Clear buffer
-            mov ah,07
-            int 21h
             CALL WaitKeyPress
 
 
         Push ax
         PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
+            CALL ClearBuffer
             ; Reset Cursor
             mov ah,2
             mov dx, Op2CursorLoc
@@ -16692,17 +16731,12 @@ Op2Menu PROC
         int 21h
 
         CheckKey_AddReg_Op2Menu:
-            ; Clear buffer
-            mov ah,07
-            int 21h
             CALL WaitKeyPress
 
 
         Push ax
         PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
+            CALL ClearBuffer
             ; Reset Cursor
             mov ah,2
             mov dx, Op2CursorLoc
@@ -16786,17 +16820,12 @@ Op2Menu PROC
         int 21h
 
         CheckKey_MemType_Op2Menu:
-            ; Clear buffer
-            mov ah,07
-            int 21h
             CALL WaitKeyPress
 
 
         Push ax
         PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
+            CALL ClearBuffer
             ; Reset Cursor
             mov ah,2
             mov dx, Op2CursorLoc
@@ -16878,9 +16907,7 @@ Op2Menu PROC
         ; Reset Cursor
         mov dx, Op2CursorLoc
         CALL SetCursor
-        ; Clear buffer
-            mov ah,07
-            int 21h
+        CALL ClearBuffer
 
         ; Take value as a String from User
         mov ah,0Ah                   
@@ -18005,5 +18032,18 @@ GetCF PROC
 
     RET
 ENDP
-
+ClearBuffer PROC     ;A Procedure to Clear Buffer
+    push ax
+    clr:
+        mov ah,1
+        int 16h
+    jz exit_CLF
+        mov ah,0
+        int 16h
+        jmp clr
+    exit_CLF:
+    pop ax
+    RET
+    ;Buffer Cleared
+ENDP
 END   MAIN
