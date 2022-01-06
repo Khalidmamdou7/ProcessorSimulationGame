@@ -711,7 +711,14 @@ CommMenu proc far
             CALL DisplayString
             mov dl, ValCF
             add dl, '0'
+            CALL DisplayChar
+
+            LEA DX, mesReg
+            CALL DisplayString
+            mov dl, Op2Valid
+            add dl, '0'
             CALL DisplayChar  
+
             ;JMP Start
             ; Return to dos
             mov ah,4ch
@@ -14775,8 +14782,7 @@ Op2Menu PROC
         jmp numloop_Op2Menu
 
         InValidVal_Op2Menu:
-            MOV Op2Valid, 0
-            JMP RETURN_Op2Menu   
+            JMP InValidCommand   
 
     InvalidOp2Type:
         ; TODO
