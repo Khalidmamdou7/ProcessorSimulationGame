@@ -119,7 +119,6 @@ SrcOpAddReg MACRO p1_Reg, p2_Reg
         JMP RETURN_GetSrcOp
 
         p2_ValidAddress:
-            
             MOV SI, p2_Reg
             MOV AX, WORD PTR p2_ValMem[SI]
             JMP RETURN_GetSrcOp
@@ -932,18 +931,24 @@ CommMenu ENDP
 
                 p1_AndSrc_16_16BIT:
                     CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
                     AND [DI], AX
                     CALL SetCF
                     JMP And_p2
                 
                 p1_AndSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
                     AND [DI], AL
                     CALL SetCF
                     JMP And_p2
             
             p1_AndDst_8BIT:    
                 CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AndCom
                 AND BYTE PTR [DI], AL
                 CALL SetCF
                 JMP And_p2
@@ -972,18 +977,24 @@ CommMenu ENDP
 
                 p2_AndSrc_16_16BIT:
                     CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
                     AND [DI], AX
                     CALL SetCF
                     JMP Return_AndCom
                 
                 p2_AndSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
                     AND [DI], AL
                     CALL SetCF
                     JMP Return_AndCom
             
             p2_AndDst_8BIT:    
                 CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AndCom
                 AND BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Return_AndCom
@@ -1032,16 +1043,22 @@ CommMenu ENDP
 
                 p1_MovSrc_16_16BIT:
                     CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
                     Mov [DI], AX
                     JMP Mov_p2
                 
                 p1_MovSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
                     Mov [DI], AL
                     JMP Mov_p2
             
             p1_MovDst_8BIT:    
                 CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                    JZ Return_MovCom
                 Mov BYTE PTR [DI], AL
                 JMP Mov_p2
 
@@ -1070,16 +1087,22 @@ CommMenu ENDP
 
                 p2_MovSrc_16_16BIT:
                     CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
                     Mov [DI], AX
                     JMP Return_MovCom
                 
                 p2_MovSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
                     Mov [DI], AL
                     JMP Return_MovCom
             
             p2_MovDst_8BIT:    
                 CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_MovCom
                 Mov BYTE PTR [DI], AL
                 JMP Return_MovCom
 
@@ -1167,18 +1190,24 @@ CommMenu ENDP
 
                 p2_AddSrc_16_16BIT:
                     CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
                     Add [DI], AX
                     CALL SetCF
                     JMP Return_AddCom
                 
                 p2_AddSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
                     Add [DI], AL
                     CALL SetCF
                     JMP Return_AddCom
             
             p2_AddDst_8BIT:    
                 CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                    JZ Return_AddCom
                 Add BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Return_AddCom
@@ -1300,7 +1329,7 @@ CommMenu ENDP
         
         RET
     ENDP
-
+    
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
         MnemonicMenu PROC
