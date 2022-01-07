@@ -2875,12 +2875,12 @@ CommMenu ENDP
                 p1_SetCF:
                     MOV BL, 0
                     ADC BL, 0
-                    MOV BL, p1_ValCF
+                    MOV p1_ValCF, BL 
                     JMP Return_SetCF
                 p2_SetCF:
                     MOV BL, 0
                     ADC BL, 0
-                    MOV BL, p1_ValCF
+                    MOV p2_ValCF, BL
 
             Return_SetCF:
                 POP BX
