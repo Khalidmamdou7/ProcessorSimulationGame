@@ -610,7 +610,7 @@ ENDM
     
     ; Game Variables
     Player1Points dw 0
-    ForbidChar db 'N'
+    ForbidChar db 'l'
     isInvalidCommand db 0    ; 1 if Invalid
     p1_CpuEnabled db 0      ; 1 if command will run on it
     p2_CpuEnabled db 1      ; ..
@@ -739,9 +739,8 @@ CommMenu proc far
             CALL POP_Comm_PROC
             JMP Exit
         INC_Comm:
-            
-
-        
+            CALL INC_Comm_PROC
+            JMP Exit
         DEC_Comm:
 
         MUL_Comm:
@@ -1441,7 +1440,44 @@ CommMenu ENDP
             RET
 
     ENDP
+    INC_Comm_PROC PROC FAR
+        CALL Op1Menu
 
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_IncCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Inc_p1
+        JMP Inc_p2
+        Inc_p1:
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Inc_p2
+
+            INC [DI]
+            
+            JMP Inc_p2
+
+        Inc_p2:
+            MOV p1_CpuEnabled, 0
+            MOV isInvalidCommand, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_IncCom
+
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Return_IncCom
+
+            
+            INC [DI]
+
+        Return_IncCom:
+            RET
+
+    ENDP
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
         MnemonicMenu PROC
