@@ -46,6 +46,7 @@ SrcOpReg_8bit MACRO p1_Reg, p2_Reg
         mov AL, BYTE PTR p1_Reg
         JMP RETURN_GetSrcOp_8Bit
     p2_SrcValReg:
+        
         mov AL, BYTE PTR p2_Reg
         JMP RETURN_GetSrcOp_8Bit
 
@@ -2598,10 +2599,6 @@ CommMenu ENDP
         GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
             ; Saving values of DI
                 PUSH DI
-            MOV AL, selectedOp1Size
-            CMP AL, selectedOp2Size
-            MOV isInValidCommand, 1
-            JMP RETURN_GetSrcOp_8Bit
 
             CMP selectedOp2Type, 0
             JZ SrcOp2Reg_8Bit
@@ -2610,6 +2607,7 @@ CommMenu ENDP
             CMP selectedOp2Type, 2
             JZ SrcOp2Mem_8Bit
             CMP selectedOp2Type, 3
+
             MOV isInValidCommand, 1
             JMP RETURN_GetSrcOp_8Bit
 
