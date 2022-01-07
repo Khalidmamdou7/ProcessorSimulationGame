@@ -37,6 +37,25 @@ SrcOpReg MACRO p1_Reg, p2_Reg
         JMP RETURN_GetSrcOp
 
 ENDM
+SrcOpReg_8bit MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcValReg, p2_SrcValReg
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcValReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcValReg
+    JMP RETURN_GetSrcOp_8Bit
+
+    p1_SrcValReg:
+        mov AL, BYTE PTR p1_Reg
+        MOV p1_CpuEnabled, 0
+        JMP RETURN_GetSrcOp_8Bit
+    p2_SrcValReg:
+        mov AL, BYTE PTR p2_Reg
+        MOV p2_CpuEnabled, 0    
+        JMP RETURN_GetSrcOp_8Bit
+
+ENDM
 DstOpAddReg MACRO p1_Reg, p2_Reg
     LOCAL p1_DstValAddReg, p2_DstValAddReg, ValidAddress
 
@@ -52,7 +71,7 @@ DstOpAddReg MACRO p1_Reg, p2_Reg
         CALL CheckAddress
         CMP BL, 1           ; Check Invalid address
         JNZ ValidAddress
-        MOV InvalidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_DstSrc
 
         ValidAddress:
@@ -64,7 +83,7 @@ DstOpAddReg MACRO p1_Reg, p2_Reg
         CALL CheckAddress
         CMP BL, 1           ; Check Invalid address
         JNZ ValidAddress
-        MOV InvalidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_DstSrc
 
         ValidAddress:
@@ -87,7 +106,7 @@ SrcOpAddReg MACRO p1_Reg, p2_Reg
         CALL CheckAddress
         CMP BL, 1           ; Check Invalid address
         JNZ ValidAddress
-        MOV InvalidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_GetSrcOp
 
         ValidAddress:
@@ -100,13 +119,50 @@ SrcOpAddReg MACRO p1_Reg, p2_Reg
         CALL CheckAddress
         CMP BL, 1           ; Check Invalid address
         JNZ ValidAddress
-        MOV InvalidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_GetSrcOp
 
         ValidAddress:
             MOV SI, p2_Reg
             MOV AX, [SI]
             JMP RETURN_GetSrcOp
+
+ENDM
+SrcOpAddReg_8bit MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcOpAddReg, p2_SrcOpAddReg, ValidAddress
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcOpAddReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcOpAddReg
+    JMP RETURN_GetSrcOp_8Bit
+
+    p1_SrcOpAddReg:
+        MOV p1_CpuEnabled, 0
+        MOV DX, p1_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp_8Bit
+
+        ValidAddress:
+            MOV SI, p1_Reg
+            MOV AL, [SI]
+            JMP RETURN_GetSrcOp_8Bit
+    p2_SrcOpAddReg:
+        MOV p2_CpuEnabled, 0
+        MOV DX, p2_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp_8Bit
+
+        ValidAddress:
+            MOV SI, p2_Reg
+            MOV AL, [SI]
+            JMP RETURN_GetSrcOp_8Bit
 
 ENDM
 ExecPush MACRO Op
@@ -553,7 +609,7 @@ ENDM
     ; Game Variables
     Player1Points dw 0
     ForbidChar db 'N'
-    InvalidCommand db 0    ; 1 if Invalid
+    isInvalidCommand db 0    ; 1 if Invalid
     p1_CpuEnabled db 0      ; 1 if command will run on it
     p2_CpuEnabled db 0      ; ..
 
@@ -15217,7 +15273,8 @@ GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
 
     MOV AL, selectedOp1Size
     CMP AL, selectedOp2Size
-    jnz InValidCommand
+    MOV isInValidCommand, 1
+    JMP RETURN_GetSrcOp_8Bit
 
     CMP selectedOp2Type, 0
     JZ SrcOp2Reg_8Bit
@@ -15226,8 +15283,8 @@ GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
     CMP selectedOp2Type, 2
     JZ SrcOp2Mem_8Bit
     CMP selectedOp2Type, 3
-    JZ SrcOp2Val_8Bit
-    JMP InValidCommand
+    MOV isInValidCommand, 1
+    JMP RETURN_GetSrcOp_8Bit
 
     SrcOp2Reg_8Bit:
         CMP selectedOp2Reg, 1
@@ -15250,32 +15307,25 @@ GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
         CMP selectedOp2Reg, 11
         JZ SrcOp2RegDH_8Bit
 
-        JMP InValidCommand
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp_8Bit
 
         SrcOp2RegAL_8Bit:
-            mov al, BYTE PTRp2_ValRegAX
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegAX, p2_ValRegAX
         SrcOp2RegAH_8Bit:
-            mov al, BYTE PTRp2_ValRegAX+1
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegAX+1, p2_ValRegAX+1
         SrcOp2RegBL_8Bit:
-            mov al, BYTE PTRp2_ValRegBX
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegBX, p2_ValRegBX
         SrcOp2RegBH_8Bit:
-            mov al, BYTE PTRp2_ValRegBX+1
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegBX+1, p2_ValRegBX+1
         SrcOp2RegCL_8Bit:
-            mov al, BYTE PTRp2_ValRegCX
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegCX, p2_ValRegCX
         SrcOp2RegCH_8Bit:
-            mov al, BYTE PTRp2_ValRegCX+1
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegCX+1, p2_ValRegCX+1
         SrcOp2RegDL_8Bit:
-            mov al, BYTE PTRp2_ValRegDX
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegDX, p2_ValRegDX
         SrcOp2RegDH_8Bit:
-            mov al, BYTE PTRp2_ValRegDX+1
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpReg_8bit p1_ValRegDX+1, p2_ValRegDX+1
         
 
 
@@ -15290,130 +15340,58 @@ GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
         CMP selectedOp2AddReg, 18
         JZ SrcOp2AddRegDI_8Bit
 
-        JMP InValidCommand
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp_8Bit
 
         SrcOp2AddRegBX_8Bit:
-            MOV DX,p2_ValRegBX
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI,p2_ValRegBX
-            MOV AL, [SI]
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpAddReg_8bit p1_ValRegBX, p2_ValRegBX
         SrcOp2AddRegBP_8Bit:
-            MOV DX,p2_ValRegBP
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI,p2_ValRegBP
-            MOV AL, [SI]
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpAddReg_8bit p1_ValRegBP, p2_ValRegBP
         SrcOp2AddRegSI_8Bit:
-            MOV DX,p2_ValRegSI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI,p2_ValRegSI
-            MOV AL, [SI]
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpAddReg_8bit p1_ValRegSI, p2_ValRegSI
         SrcOp2AddRegDI_8Bit:
-            MOV DX,p2_ValRegDI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI,p2_ValRegDI
-            MOV AL, [SI]
-            JMP RETURN_GetSrcOp_8Bit
+            SrcOpAddReg_8Bit p1_ValRegDI, p2_ValRegDI
 
     SrcOp2Mem_8Bit:
 
-        CMP selectedOp2Mem, 0
-        JZ SrcOp2Mem0_8Bit
-        CMP selectedOp2Mem, 1
-        JZ SrcOp2Mem1_8Bit
-        CMP selectedOp2Mem, 2
-        JZ SrcOp2Mem2_8Bit
-        CMP selectedOp2Mem, 3
-        JZ SrcOp2Mem3_8Bit
-        CMP selectedOp2Mem, 4
-        JZ SrcOp2Mem4_8Bit
-        CMP selectedOp2Mem, 5
-        JZ SrcOp2Mem5_8Bit
-        CMP selectedOp2Mem, 6
-        JZ SrcOp2Mem6_8Bit
-        CMP selectedOp2Mem, 7
-        JZ SrcOp2Mem7_8Bit
-        CMP selectedOp2Mem, 8
-        JZ SrcOp2Mem8_8Bit
-        CMP selectedOp2Mem, 9
-        JZ SrcOp2Mem9_8Bit
-        CMP selectedOp2Mem, 10
-        JZ SrcOp2Mem10_8Bit
-        CMP selectedOp2Mem, 11
-        JZ SrcOp2Mem11_8Bit
-        CMP selectedOp2Mem, 12
-        JZ SrcOp2Mem12_8Bit
-        CMP selectedOp2Mem, 13
-        JZ SrcOp2Mem13_8Bit
-        CMP selectedOp2Mem, 14
-        JZ SrcOp2Mem14_8Bit
-        CMP selectedOp2Mem, 15
-        JZ SrcOp2Mem15_8Bit
-        JMP InValidCommand
-        
-        SrcOp2Mem0_8Bit:
-            MOV AL,p2_ValMem
+        MOV BX, 0
+        SearchForMem_GetSrc_8BIT: 
+            CMP selectedOp2Mem, BL
+            JNE NextMem_GetSrc_8BIT
+
+            CMP p1_CpuEnabled, 1
+            JZ p1_GetSrc_8BIT
+            CMP p2_CpuEnabled, 1
+            JZ p2_GetSrc_8BIT
             JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem1_8Bit:
-            MOV AL,p2_ValMem+1
+
+            p1_GetSrc_8BIT:
+                MOV p1_CpuEnabled, 0
+                MOV AL, p1_ValMem[BX]      ;command
+                JMP RETURN_GetSrcOp_8Bit
+            
+            p2_GetSrc_8BIT:
+                MOV p2_CpuEnabled, 0
+                MOV AL, p2_ValMem[BX]      ;command
+                JMP RETURN_GetSrcOp_8Bit
+
+
+            NextMem_GetSrc_8BIT:
+                INC BX
+                CMP BX, 16
+                JZ EndSearch_GetSrc_8BIT
+        jmp SearchForMem_GetSrc_8BIT
+        EndSearch_GetSrc_8BIT:
+            MOV isInValidCommand, 1
             JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem2_8Bit:
-            MOV AL,p2_ValMem+2
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem3_8Bit:
-            MOV AL,p2_ValMem+3
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem4_8Bit:
-            MOV AL,p2_ValMem+4
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem5_8Bit:
-            MOV AL,p2_ValMem+5
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem6_8Bit:
-            MOV AL,p2_ValMem+6
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem7_8Bit:
-            MOV AL,p2_ValMem+7
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem8_8Bit:
-            MOV AL,p2_ValMem+8
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem9_8Bit:
-            MOV AL,p2_ValMem+9
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem10_8Bit:
-            MOV AL,p2_ValMem+10
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem11_8Bit:
-            MOV AL,p2_ValMem+11
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem12_8Bit:
-            MOV AL,p2_ValMem+12
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem13_8Bit:
-            MOV AL,p2_ValMem+13
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem14_8Bit:
-            MOV AL,p2_ValMem+14
-            JMP RETURN_GetSrcOp_8Bit
-        SrcOp2Mem15_8Bit:
-            MOV AL,p2_ValMem+15
-            JMP RETURN_GetSrcOp_8Bit
+
     SrcOp2Val_8Bit:
-        CMP Op2Valid, 0
-        jz InValidCommand
-        MOV AL, BYTE PTR Op2Val
-        JMP RETURN_GetSrcOp_8Bit
+        CMP Op2Valid, 1
+        JZ ValidVal_GetSrc_8BIT
+        MOV isInValidCommand, 1
+        ValidVal_GetSrc_8BIT:
+            MOV AL, BYTE PTR Op2Val
+            JMP RETURN_GetSrcOp_8Bit
     
     RETURN_GetSrcOp_8Bit:
         CALL LineStuckPwrUp
@@ -15481,7 +15459,9 @@ GetSrcOp PROC    ; Returned Value is saved in AX, CALL TWICE IF Command is execu
     JZ SrcOp2Mem
     CMP selectedOp2Type, 3
     JZ SrcOp2Val
-    JMP InValidCommand
+
+    MOV isInValidCommand, 1
+    JMP RETURN_GetSrcOp
 
     SrcOp2Reg:
 
@@ -15506,7 +15486,7 @@ GetSrcOp PROC    ; Returned Value is saved in AX, CALL TWICE IF Command is execu
         CMP selectedOp2Reg, 18
         JZ SrcOp2RegDI
 
-        MOV InValidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_GetSrcOp
 
         SrcOp2RegAX:
@@ -15539,7 +15519,7 @@ GetSrcOp PROC    ; Returned Value is saved in AX, CALL TWICE IF Command is execu
         CMP selectedOp2AddReg, 18
         JZ SrcOp2AddRegDI
 
-        MOV InValidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_GetSrcOp
 
         SrcOp2AddRegBX:
@@ -15578,16 +15558,16 @@ GetSrcOp PROC    ; Returned Value is saved in AX, CALL TWICE IF Command is execu
             NextMem_GetSrc:
                 INC BX
                 CMP BX, 16
-                JZ EndSearch
+                JZ EndSearch_GetSrc
         jmp SearchForMem_GetSrc
         EndSearch_GetSrc:
-            MOV InvalidCommand, 1
+            MOV isInValidCommand, 1
             JMP RETURN_GetSrcOp
 
     SrcOp2Val:
         CMP Op2Valid, 1
         JZ ValidVal_GetSrc
-        MOV InvalidCommand, 1
+        MOV isInValidCommand, 1
         ValidVal_GetSrc:
             MOV AX, Op2Val
             JMP RETURN_GetSrcOp
@@ -15842,7 +15822,7 @@ GetDst PROC FAR  ; offset of the operand is saved in di, destination is called b
     CMP selectedOp1Type, 2
     JZ DstOp1Mem
 
-    MOV InvalidCommand, 1
+    MOV isInValidCommand, 1
     JMP RETURN_DstSrc
     
     DstOp1Reg:
@@ -15885,7 +15865,7 @@ GetDst PROC FAR  ; offset of the operand is saved in di, destination is called b
         CMP selectedOp1Reg, 18
         JZ DstOp1RegDI
 
-        MOV InvalidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_DstSrc
 
         DstOp1RegAX:
@@ -15937,7 +15917,7 @@ GetDst PROC FAR  ; offset of the operand is saved in di, destination is called b
         CMP selectedOp1AddReg, 18
         JZ DstOp1AddRegDI
 
-        MOV InvalidCommand, 1
+        MOV isInValidCommand, 1
         JMP RETURN_DstSrc
 
         DstOp1AddRegBX:
@@ -15979,7 +15959,7 @@ GetDst PROC FAR  ; offset of the operand is saved in di, destination is called b
                 JZ EndSearch
         jmp SearchForMem_GetDst
         EndSearch_GetDst:
-            MOV InvalidCommand, 1
+            MOV isInValidCommand, 1
             JMP RETURN_DstSrc
 
 
