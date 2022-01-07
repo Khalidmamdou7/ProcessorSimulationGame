@@ -712,7 +712,23 @@ CommMenu proc far
             JMP Exit
         
         CLC_Comm:
-            
+            CALL CheckForbidCharProc
+
+            CMP p1_CpuEnabled, 1
+            JZ CLC_p1
+            JMP CLC_p2
+
+            CLC_p1:
+                CLC
+                CALL SetCf
+
+            CLC_p2:
+                MOV p1_CpuEnabled, 0
+                CMP p2_CpuEnabled, 1
+                JNZ Exit
+                CLC
+                CALL SetCF
+
             JMP Exit
         AND_Comm:
             CALL AND_Comm_PROC
@@ -1266,7 +1282,7 @@ CommMenu ENDP
                     CALL GetSrcOp
                     CMP isInvalidCommand, 1
                     JZ Return_AdcCom
-                    CALL CallCF
+                    CALL GetCF
                     Adc [DI], AX
                     CALL SetCF
                     JMP Adc_p2
@@ -1275,7 +1291,7 @@ CommMenu ENDP
                     CALL GetSrcOp_8Bit
                     CMP isInvalidCommand, 1
                     JZ Return_AdcCom
-                    CALL CallCF
+                    CALL GetCF
                     Adc [DI], AL
                     CALL SetCF
                     JMP Adc_p2
@@ -1284,7 +1300,7 @@ CommMenu ENDP
                 CALL GetSrcOp_8Bit
                 CMP isInvalidCommand, 1
                 JZ Return_AdcCom
-                CALL CallCF
+                CALL GetCF
                 Adc BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Adc_p2
@@ -1316,7 +1332,7 @@ CommMenu ENDP
                     CALL GetSrcOp
                     CMP isInvalidCommand, 1
                     JZ Return_AdcCom
-                    CALL CallCF
+                    CALL GetCF
                     Adc [DI], AX
                     CALL SetCF
                     JMP Return_AdcCom
@@ -1325,7 +1341,7 @@ CommMenu ENDP
                     CALL GetSrcOp_8Bit
                     CMP isInvalidCommand, 1
                     JZ Return_AdcCom
-                    CALL CallCF
+                    CALL GetCF
                     Adc [DI], AL
                     CALL SetCF
                     JMP Return_AdcCom
@@ -1334,7 +1350,7 @@ CommMenu ENDP
                 CALL GetSrcOp_8Bit
                 CMP isInvalidCommand, 1
                 JZ Return_AdcCom
-                CALL CallCF
+                CALL GetCF
                 Adc BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Return_AdcCom
