@@ -734,7 +734,6 @@ CommMenu proc far
         PUSH_Comm:
             CALL PUSH_Comm_PROC
             JMP Exit
-
         POP_Comm:
             CALL POP_Comm_PROC
             JMP Exit
@@ -742,7 +741,8 @@ CommMenu proc far
             CALL INC_Comm_PROC
             JMP Exit
         DEC_Comm:
-
+            CALL DEC_Comm_PROC
+            JMP Exit
         MUL_Comm:
             
         DIV_Comm:
@@ -1478,6 +1478,46 @@ CommMenu ENDP
             RET
 
     ENDP
+    DEC_Comm_PROC PROC FAR
+        
+        CALL Op1Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_DecCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Dec_p1
+        JMP Dec_p2
+        Dec_p1:
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Dec_p2
+
+            DEC [DI]
+            
+            JMP Dec_p2
+
+        Dec_p2:
+            MOV p1_CpuEnabled, 0
+            MOV isInvalidCommand, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_DecCom
+
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Return_DecCom
+
+            
+            DEC [DI]
+
+        Return_DecCom:
+            RET
+
+    ENDP
+
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
         MnemonicMenu PROC
@@ -1485,7 +1525,7 @@ CommMenu ENDP
             ; Display Command
             DisplayComm:
                 mov ah, 9
-                mov dx, offset POPcom
+                mov dx, offset DECcom
                 int 21h
 
             CheckKeyComType:
