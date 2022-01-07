@@ -203,7 +203,7 @@ ExecPop MACRO Op
     lea di,p2_ValStack
     mov ax, [di][bx]
     mov Op, ax
-    SUBp2_ValStackPointer,2
+    SUB p2_ValStackPointer,2
 ENDM
 ourExecPop MACRO Op
     mov bh, 0
@@ -219,7 +219,7 @@ ExecPopMem MACRO Op
     lea di,p2_ValStack
     mov ax, [di][bx]
     mov word ptr Op, ax
-    SUBp2_ValStackPointer,2
+    SUB p2_ValStackPointer,2
 ENDM
 ourExecPopMem MACRO Op
     mov bh, 0
@@ -235,15 +235,15 @@ ENDM
 ExecDEC MACRO Op
     DEC Op
 ENDM
-ExecAndReg MACROp2_ValReg, CF
+ExecAndReg MACRO p2_ValReg, CF
     CALL GetSrcOp
-    ANDp2_ValReg, AX
+    AND p2_ValReg, AX
     MOV CF, 0
     CALL ExitPROC
 ENDM
-ExecAndReg_8Bit MACROp2_ValReg, CF
+ExecAndReg_8Bit MACRO p2_ValReg, CF
     CALL GetSrcOp_8Bit
-    And BYTE PTRp2_ValReg, AL
+    And BYTE PTR p2_ValReg, AL
     MOV CF, 0
     JMP Exit
 ENDM
@@ -315,7 +315,7 @@ ExecAdcMem MACRO Mem
         CALL SetCF
     JMP Exit
 ENDM
-ExecAndAddReg MACROp2_ValReg, Mem, CF
+ExecAndAddReg MACRO p2_ValReg, Mem, CF
     Local AndOp1AddReg_Op2_8Bit
 
     MOV dx,p2_ValReg
@@ -338,7 +338,7 @@ ExecAndAddReg MACROp2_ValReg, Mem, CF
         MOV CF, 0
     CALL ExitPROC
 ENDM
-ExecMovAddReg MACROp2_ValReg, Mem
+ExecMovAddReg MACRO p2_ValReg, Mem
     Local MOVOp1AddReg_Op2_8Bit 
 
     MOV dx,p2_ValReg
@@ -358,7 +358,7 @@ ExecMovAddReg MACROp2_ValReg, Mem
         MOV Mem[SI], AL
     JMP Exit
 ENDM
-ExecAddAddReg MACROp2_ValReg, Mem
+ExecAddAddReg MACRO p2_ValReg, Mem
     LOCAL AddOp1AddReg_Op2_8Bit
 
     MOV dx,p2_ValReg
@@ -382,7 +382,7 @@ ExecAddAddReg MACROp2_ValReg, Mem
         CALL SetCF
     JMP Exit
 ENDM
-EexecAdcAddReg MACROp2_ValReg, Mem
+EexecAdcAddReg MACRO p2_ValReg, Mem
     LOCAL AdcOp1Addreg_Op2_8Bit
 
     MOV dx,p2_ValReg
@@ -721,7 +721,7 @@ CommMenu proc far
             jne notthispower2_clc  
             MOV p1_ValCF, 0       ;coomand
             notthispower2_clc:
-            MOVp2_ValCF, 0  ;command
+            MOV p2_ValCF, 0  ;command
             JMP Exit
         AND_Comm:
             CALL AND_Comm_PROC
@@ -756,16 +756,16 @@ CommMenu proc far
                     notthispower3:
                     cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
                     jne notthispower5
-                    movp2_ValRegAX,0
-                    movp2_ValRegBX,0
-                    movp2_ValRegCX,0
-                    movp2_ValRegDX,0 
-                
-                    movp2_ValRegBP,0
-                    movp2_ValRegSP,0
-                    movp2_ValRegSI,0
-                    movp2_ValRegDI,0
-                
+                    mov p2_ValRegAX,0
+                    mov p2_ValRegBX,0
+                    mov p2_ValRegCX,0
+                    mov p2_ValRegDX,0 
+                 
+                    mov p2_ValRegBP,0
+                    mov p2_ValRegSP,0
+                    mov p2_ValRegSI,0
+                    mov p2_ValRegDI,0
+                 
                     mov p1_ValRegAX,0
                     mov p1_ValRegBX,0
                     mov p1_ValRegCX,0
@@ -821,58 +821,58 @@ CommMenu proc far
 
             LEA DX, mesRegAX
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegAX
+            mov dl,Byte ptr p2_ValRegAX
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegAX+1
+            mov dl, byte ptr p2_ValRegAX+1
             CALL DisplayChar
 
             LEA DX, mesRegBX
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegBX
+            mov dl,Byte ptr p2_ValRegBX
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegBX+1
+            mov dl, byte ptr p2_ValRegBX+1
             CALL DisplayChar 
 
             LEA DX, mesRegCX
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegCX
+            mov dl,Byte ptr p2_ValRegCX
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegCX+1
+            mov dl, byte ptr p2_ValRegCX+1
             CALL DisplayChar 
 
             LEA DX, mesRegDX
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegDX
+            mov dl,Byte ptr p2_ValRegDX
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegDX+1
+            mov dl, byte ptr p2_ValRegDX+1
             CALL DisplayChar 
 
             LEA DX, mesRegSI
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegSI
+            mov dl,Byte ptr p2_ValRegSI
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegSI+1
+            mov dl, byte ptr p2_ValRegSI+1
             CALL DisplayChar 
 
             LEA DX, mesRegDI
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegDI
+            mov dl,Byte ptr p2_ValRegDI
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegDI+1
+            mov dl, byte ptr p2_ValRegDI+1
             CALL DisplayChar 
 
             LEA DX, mesRegBP
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegBP
+            mov dl,Byte ptr p2_ValRegBP
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegBP+1
+            mov dl, byte ptr p2_ValRegBP+1
             CALL DisplayChar 
 
             LEA DX, mesRegSP
             CALL DisplayString
-            mov dl,Byte ptrp2_ValRegSP
+            mov dl,Byte ptr p2_ValRegSP
             CALL DisplayChar
-            mov dl, byte ptrp2_ValRegSP+1
+            mov dl, byte ptr p2_ValRegSP+1
             CALL DisplayChar
             
             LEA DX, mesRegCF
@@ -941,7 +941,7 @@ CommMenu proc far
                     jne notthispower2_popax  
                     ourExecPop p1_ValRegAX        
                     notthispower2_popax:
-                    ExecPopp2_ValRegAX
+                    ExecPop p2_ValRegAX
                     JMP Exit
                 PopOpRegBX:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -953,7 +953,7 @@ CommMenu proc far
                     jne notthispower2_popbx  
                     ourExecPop p1_ValRegBX        
                     notthispower2_popbx:
-                    ExecPopp2_ValRegBX
+                    ExecPop p2_ValRegBX
                     JMP Exit
                 PopOpRegCX:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -965,7 +965,7 @@ CommMenu proc far
                     jne notthispower2_popcx  
                     ourExecPop p1_ValRegCX        
                     notthispower2_popcx:
-                    ExecPopp2_ValRegCX
+                    ExecPop p2_ValRegCX
                     JMP Exit
                 PopOpRegDX:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -977,7 +977,7 @@ CommMenu proc far
                     jne notthispower2_popdx  
                     ourExecPop p1_ValRegDX        
                     notthispower2_popdx:
-                    ExecPopp2_ValRegDX
+                    ExecPop p2_ValRegDX
                     JMP Exit
                 PopOpRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -989,7 +989,7 @@ CommMenu proc far
                     jne notthispower2_popbp  
                     ourExecPop p1_ValRegBP        
                     notthispower2_popbp:
-                    ExecPopp2_ValRegBP
+                    ExecPop p2_ValRegBP
                     JMP Exit
                 PopOpRegSP:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1001,7 +1001,7 @@ CommMenu proc far
                     jne notthispower2_popsp  
                     ourExecPop p1_ValRegSP        
                     notthispower2_popsp:
-                    ExecPopp2_ValRegSP
+                    ExecPop p2_ValRegSP
                     JMP Exit
                 PopOpRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1013,7 +1013,7 @@ CommMenu proc far
                     jne notthispower2_popsi  
                     ourExecPop p1_ValRegSI        
                     notthispower2_popsi:
-                    ExecPopp2_ValRegSI
+                    ExecPop p2_ValRegSI
                     JMP Exit
                 PopOpRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1025,7 +1025,7 @@ CommMenu proc far
                     jne notthispower2_popdi  
                     ourExecPop p1_ValRegDI        
                     notthispower2_popdi:
-                    ExecPopp2_ValRegDI
+                    ExecPop p2_ValRegDI
                     JMP Exit
 
             ; TODO - Mem as operand
@@ -1044,7 +1044,7 @@ CommMenu proc far
                     jne notthispower2_popmem 
                     ourExecPopMem p1_ValMem[si] ;command
                     notthispower2_popmem: 
-                    ExecPopMemp2_ValMem[si]
+                    ExecPopMem p2_ValMem[si]
                     JMP Exit 
                     Nextpop:
                     inc si 
@@ -1089,7 +1089,7 @@ CommMenu proc far
                     cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
                     mov SI,p2_ValRegBX
-                    ExecPopMemp2_ValMem[SI]
+                    ExecPopMem p2_ValMem[SI]
                     JMP Exit
                 PopOpAddRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1117,7 +1117,7 @@ CommMenu proc far
                     cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
                     mov SI,p2_ValRegBP
-                    ExecPopMemp2_ValMem[SI]
+                    ExecPopMem p2_ValMem[SI]
                     JMP Exit
 
                 PopOpAddRegSI:
@@ -1146,7 +1146,7 @@ CommMenu proc far
                     cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
                     mov SI,p2_ValRegSI
-                    ExecPopMemp2_ValMem[SI]
+                    ExecPopMem p2_ValMem[SI]
                     JMP Exit
                 
                 PopOpAddRegDI:
@@ -1175,7 +1175,7 @@ CommMenu proc far
                     cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
                     mov SI,p2_ValRegDI
-                    ExecPopMemp2_ValMem[SI]
+                    ExecPopMem p2_ValMem[SI]
                     JMP Exit
 
 
@@ -1245,7 +1245,7 @@ CommMenu proc far
                     jne notthispower2_incax 
                     ExecINC p1_ValRegAX       
                     notthispower2_incax:
-                    ExecINCp2_ValRegAX
+                    ExecINC p2_ValRegAX
                     JMP Exit
                 IncOpRegAL:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1257,7 +1257,7 @@ CommMenu proc far
                     jne notthispower2_incal 
                     ExecINC p1_ValRegAX       
                     notthispower2_incal:
-                    ExecINCp2_ValRegAX
+                    ExecINC p2_ValRegAX
                     JMP Exit
                 IncOpRegAH:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1269,7 +1269,7 @@ CommMenu proc far
                     jne notthispower2_incah 
                     ExecINC p1_ValRegAX+1       
                     notthispower2_incah:
-                    ExecINCp2_ValRegAX+1
+                    ExecINC p2_ValRegAX+1
                     JMP Exit
                 IncOpRegBX:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1281,7 +1281,7 @@ CommMenu proc far
                     jne notthispower2_incbx 
                     ExecINC p1_ValRegBX       
                     notthispower2_incbx:
-                    ExecINCp2_ValRegBX
+                    ExecINC p2_ValRegBX
                     JMP Exit
                 IncOpRegBL:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1293,7 +1293,7 @@ CommMenu proc far
                     jne notthispower2_incbl 
                     ExecINC p1_ValRegBX       
                     notthispower2_incbl:
-                    ExecINCp2_ValRegBX
+                    ExecINC p2_ValRegBX
                     JMP Exit
                 IncOpRegBH:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1305,7 +1305,7 @@ CommMenu proc far
                     jne notthispower2_incbh 
                     ExecINC p1_ValRegBX+1       
                     notthispower2_incbh:
-                    ExecINCp2_ValRegBX+1
+                    ExecINC p2_ValRegBX+1
                     JMP Exit
                 IncOpRegCX:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1317,7 +1317,7 @@ CommMenu proc far
                     jne notthispower2_inccx 
                     ExecINC p1_ValRegCX       
                     notthispower2_inccx:
-                    ExecINCp2_ValRegCX
+                    ExecINC p2_ValRegCX
                     JMP Exit
                 IncOpRegCL:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1329,7 +1329,7 @@ CommMenu proc far
                     jne notthispower2_inccl 
                     ExecINC p1_ValRegCX       
                     notthispower2_inccl:
-                    ExecINCp2_ValRegCX
+                    ExecINC p2_ValRegCX
                     JMP Exit
                 IncOpRegCH:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1341,7 +1341,7 @@ CommMenu proc far
                     jne notthispower2_incch 
                     ExecINC p1_ValRegCX+1       
                     notthispower2_incch:
-                    ExecINCp2_ValRegCX+1
+                    ExecINC p2_ValRegCX+1
                     JMP Exit
                 IncOpRegDX:  
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1353,7 +1353,7 @@ CommMenu proc far
                     jne notthispower2_incdx 
                     ExecINC p1_ValRegDX       
                     notthispower2_incdx:
-                    ExecINCp2_ValRegDX
+                    ExecINC p2_ValRegDX
                     JMP Exit
                 IncOpRegDL:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1365,7 +1365,7 @@ CommMenu proc far
                     jne notthispower2_incdl 
                     ExecINC p1_ValRegDX       
                     notthispower2_incdl:
-                    ExecINCp2_ValRegDX
+                    ExecINC p2_ValRegDX
                     JMP Exit
                 IncOpRegDH:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1377,7 +1377,7 @@ CommMenu proc far
                     jne notthispower2_incdh 
                     ExecINC p1_ValRegDX+1       
                     notthispower2_incdh:
-                    ExecINCp2_ValRegDX+1
+                    ExecINC p2_ValRegDX+1
                     JMP Exit
                 IncOpRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1389,7 +1389,7 @@ CommMenu proc far
                     jne notthispower2_incbp 
                     ExecINC p1_ValRegBP       
                     notthispower2_incbp:
-                    ExecINCp2_ValRegBP
+                    ExecINC p2_ValRegBP
                     JMP Exit
                 IncOpRegSP:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1401,7 +1401,7 @@ CommMenu proc far
                     jne notthispower2_incsp 
                     ExecINC p1_ValRegSP       
                     notthispower2_incsp:
-                    ExecINCp2_ValRegSP
+                    ExecINC p2_ValRegSP
                     JMP Exit
                 IncOpRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1413,7 +1413,7 @@ CommMenu proc far
                     jne notthispower2_incsi 
                     ExecINC p1_ValRegSI       
                     notthispower2_incsi:
-                    ExecINCp2_ValRegSI
+                    ExecINC p2_ValRegSI
                     JMP Exit
                 IncOpRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
@@ -1425,7 +1425,7 @@ CommMenu proc far
                     jne notthispower2_incdi 
                     ExecINC p1_ValRegDI       
                     notthispower2_incdi:
-                    ExecINCp2_ValRegDI
+                    ExecINC p2_ValRegDI
                     JMP Exit
 
             IncOpAddReg:
