@@ -1150,18 +1150,24 @@ CommMenu ENDP
 
                 p1_AddSrc_16_16BIT:
                     CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
                     Add [DI], AX
                     CALL SetCF
                     JMP Add_p2
                 
                 p1_AddSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
                     Add [DI], AL
                     CALL SetCF
                     JMP Add_p2
             
             p1_AddDst_8BIT:    
                 CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AddCom
                 Add BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Add_p2
@@ -1172,7 +1178,7 @@ CommMenu ENDP
             jnz Return_AddCom
 
             CALL GetDst
-
+            
             CMP selectedOp1Size, 16
             JZ p2_AddDst_16BIT
             CMP selectedOp1Size, 8
@@ -1185,6 +1191,7 @@ CommMenu ENDP
                 CMP selectedOp2Size, 8
                 JZ p2_AddSrc_16_8BIT
 
+                
                 MOV isInValidCommand, 1
                 RET
 
@@ -1207,7 +1214,7 @@ CommMenu ENDP
             p2_AddDst_8BIT:    
                 CALL GetSrcOp_8Bit
                 CMP isInvalidCommand, 1
-                    JZ Return_AddCom
+                JZ Return_AddCom
                 Add BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Return_AddCom
@@ -1257,21 +1264,27 @@ CommMenu ENDP
 
                 p1_AdcSrc_16_16BIT:
                     CALL GetSrcOp
-                    CALL GetCF
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL CallCF
                     Adc [DI], AX
                     CALL SetCF
                     JMP Adc_p2
                 
                 p1_AdcSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
-                    CALL GetCF
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL CallCF
                     Adc [DI], AL
                     CALL SetCF
                     JMP Adc_p2
             
             p1_AdcDst_8BIT:    
                 CALL GetSrcOp_8Bit
-                CALL GetCF
+                CMP isInvalidCommand, 1
+                JZ Return_AdcCom
+                CALL CallCF
                 Adc BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Adc_p2
@@ -1282,7 +1295,7 @@ CommMenu ENDP
             jnz Return_AdcCom
 
             CALL GetDst
-
+            
             CMP selectedOp1Size, 16
             JZ p2_AdcDst_16BIT
             CMP selectedOp1Size, 8
@@ -1295,26 +1308,33 @@ CommMenu ENDP
                 CMP selectedOp2Size, 8
                 JZ p2_AdcSrc_16_8BIT
 
+                
                 MOV isInValidCommand, 1
                 RET
 
                 p2_AdcSrc_16_16BIT:
                     CALL GetSrcOp
-                    CALL GetCF
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL CallCF
                     Adc [DI], AX
                     CALL SetCF
                     JMP Return_AdcCom
                 
                 p2_AdcSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
-                    CALL GetCF
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL CallCF
                     Adc [DI], AL
                     CALL SetCF
                     JMP Return_AdcCom
             
             p2_AdcDst_8BIT:    
                 CALL GetSrcOp_8Bit
-                CALL GetCF
+                CMP isInvalidCommand, 1
+                JZ Return_AdcCom
+                CALL CallCF
                 Adc BYTE PTR [DI], AL
                 CALL SetCF
                 JMP Return_AdcCom
@@ -1329,7 +1349,7 @@ CommMenu ENDP
         
         RET
     ENDP
-    
+
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
         MnemonicMenu PROC
