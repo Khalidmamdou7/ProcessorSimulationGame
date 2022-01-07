@@ -1,67 +1,177 @@
 ; Macros
+DstOpReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_DstValReg, p2_DstValReg
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_DstValReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_DstValReg
+    JMP RETURN_DstSrc
+
+    p1_DstValReg:
+        LEA DI, p1_Reg
+        MOV p1_CpuEnabled, 0
+        JMP RETURN_DstSrc
+    p2_DstValReg:
+        LEA DI, p2_Reg
+        MOV p2_CpuEnabled, 0    
+        JMP RETURN_DstSrc
+
+ENDM
+SrcOpReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcValReg, p2_SrcValReg
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcValReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcValReg
+    JMP RETURN_GetSrcOp
+
+    p1_SrcValReg:
+        mov AX, p1_Reg
+        MOV p1_CpuEnabled, 0
+        JMP RETURN_GetSrcOp
+    p2_SrcValReg:
+        MOV AX, p2_Reg
+        MOV p2_CpuEnabled, 0    
+        JMP RETURN_GetSrcOp
+
+ENDM
+DstOpAddReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_DstValAddReg, p2_DstValAddReg, ValidAddress
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_DstValAddReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_DstValAddReg
+    JMP RETURN_DstSrc
+
+    p1_DstValAddReg:
+        MOV p1_CpuEnabled, 0
+        MOV DX, p1_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ ValidAddress
+        MOV InvalidCommand, 1
+        JMP RETURN_DstSrc
+
+        ValidAddress:
+            MOV DI, p1_Reg
+            JMP RETURN_DstSrc
+    p2_DstValAddReg:
+        MOV p2_CpuEnabled, 0
+        MOV DX, p2_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ ValidAddress
+        MOV InvalidCommand, 1
+        JMP RETURN_DstSrc
+
+        ValidAddress:
+            MOV DI, p2_Reg
+            JMP RETURN_DstSrc
+
+ENDM
+SrcOpAddReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcOpAddReg, p2_SrcOpAddReg, ValidAddress
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcOpAddReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcOpAddReg
+    JMP RETURN_GetSrcOp
+
+    p1_SrcOpAddReg:
+        MOV p1_CpuEnabled, 0
+        MOV DX, p1_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ ValidAddress
+        MOV InvalidCommand, 1
+        JMP RETURN_GetSrcOp
+
+        ValidAddress:
+            MOV SI, p1_Reg
+            MOV AX, [SI]
+            JMP RETURN_GetSrcOp
+    p2_SrcOpAddReg:
+        MOV p2_CpuEnabled, 0
+        MOV DX, p2_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ ValidAddress
+        MOV InvalidCommand, 1
+        JMP RETURN_GetSrcOp
+
+        ValidAddress:
+            MOV SI, p2_Reg
+            MOV AX, [SI]
+            JMP RETURN_GetSrcOp
+
+ENDM
 ExecPush MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
+    mov bl,p2_ValStackPointer
     mov ax, Op
-    lea di, ValStack
+    lea di,p2_ValStack
     mov [di][bx], ax
-    ADD ValStackPointer,2
+    ADDp2_ValStackPointer,2
 ENDM
 ourExecPush MACRO Op
     mov bh, 0
-    mov bl, ourValStackPointer
+    mov bl, p1_ValStackPointer
     mov ax, Op
-    lea di, ourValStack
+    lea di, p1_ValStack
     mov [di][bx], ax
-    ADD ourValStackPointer,2
+    ADD p1_ValStackPointer,2
 ENDM
 ExecPushMem MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
+    mov bl,p2_ValStackPointer
     mov ax, word ptr Op
-    lea di, ValStack
+    lea di,p2_ValStack
     mov [di][bx], ax
-    ADD ValStackPointer,2
+    ADDp2_ValStackPointer,2
 ENDM
 ourExecPushMem MACRO Op
     mov bh, 0
-    mov bl, ourValStackPointer
+    mov bl, p1_ValStackPointer
     mov ax, word ptr Op
-    lea di, ValStack
+    lea di,p2_ValStack
     mov [di][bx], ax
-    ADD ourValStackPointer,2
+    ADD p1_ValStackPointer,2
 ENDM
 ExecPop MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
-    lea di, ValStack
+    mov bl,p2_ValStackPointer
+    lea di,p2_ValStack
     mov ax, [di][bx]
     mov Op, ax
-    SUB ValStackPointer,2
+    SUBp2_ValStackPointer,2
 ENDM
 ourExecPop MACRO Op
     mov bh, 0
-    mov bl, ourValStackPointer
-    lea di, ourValStack
+    mov bl, p1_ValStackPointer
+    lea di, p1_ValStack
     mov ax, [di][bx]
     mov Op, ax
-    SUB ourValStackPointer,2
+    SUB p1_ValStackPointer,2
 ENDM
 ExecPopMem MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
-    lea di, ValStack
+    mov bl,p2_ValStackPointer
+    lea di,p2_ValStack
     mov ax, [di][bx]
     mov word ptr Op, ax
-    SUB ValStackPointer,2
+    SUBp2_ValStackPointer,2
 ENDM
 ourExecPopMem MACRO Op
     mov bh, 0
-    mov bl, ourValStackPointer
-    lea di, ourValStack
+    mov bl, p1_ValStackPointer
+    lea di, p1_ValStack
     mov ax, [di][bx]
     mov word ptr Op, ax
-    SUB ourValStackPointer,2
+    SUB p1_ValStackPointer,2
 ENDM
 ExecINC MACRO Op
     INC Op
@@ -69,15 +179,15 @@ ENDM
 ExecDEC MACRO Op
     DEC Op
 ENDM
-ExecAndReg MACRO ValReg, CF
+ExecAndReg MACROp2_ValReg, CF
     CALL GetSrcOp
-    AND ValReg, AX
+    ANDp2_ValReg, AX
     MOV CF, 0
     CALL ExitPROC
 ENDM
-ExecAndReg_8Bit MACRO ValReg, CF
+ExecAndReg_8Bit MACROp2_ValReg, CF
     CALL GetSrcOp_8Bit
-    And BYTE PTR ValReg, AL
+    And BYTE PTRp2_ValReg, AL
     MOV CF, 0
     JMP Exit
 ENDM
@@ -149,85 +259,85 @@ ExecAdcMem MACRO Mem
         CALL SetCF
     JMP Exit
 ENDM
-ExecAndAddReg MACRO ValReg, Mem, CF
+ExecAndAddReg MACROp2_ValReg, Mem, CF
     Local AndOp1AddReg_Op2_8Bit
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz AndOp1AddReg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     And WORD PTR Mem[SI], AX
     MOV CF, 0
     CALL ExitPROC
 
     AndOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         And Mem[SI], AL
         MOV CF, 0
     CALL ExitPROC
 ENDM
-ExecMovAddReg MACRO ValReg, Mem
+ExecMovAddReg MACROp2_ValReg, Mem
     Local MOVOp1AddReg_Op2_8Bit 
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz MOVOp1AddReg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     MOV WORD PTR Mem[SI], AX
     JMP Exit
     MOVOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         MOV Mem[SI], AL
     JMP Exit
 ENDM
-ExecAddAddReg MACRO ValReg, Mem
+ExecAddAddReg MACROp2_ValReg, Mem
     LOCAL AddOp1AddReg_Op2_8Bit
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz AddOp1AddReg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     CLC
     ADD WORD PTR Mem[SI], AX
     CALL SetCF
     JMP Exit
     AddOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         CLC
         ADD Mem[SI], AL
         CALL SetCF
     JMP Exit
 ENDM
-EexecAdcAddReg MACRO ValReg, Mem
+EexecAdcAddReg MACROp2_ValReg, Mem
     LOCAL AdcOp1Addreg_Op2_8Bit
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz AdcOp1Addreg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     CLC
     CALL GetCF
     ADC WORD PTR Mem[SI], AX
@@ -235,7 +345,7 @@ EexecAdcAddReg MACRO ValReg, Mem
     JMP Exit
     AdcOp1Addreg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         CLC
         CALL GetCF
         ADC Mem[SI], AL
@@ -278,11 +388,11 @@ ENDM
     Reg    db 'REG  ','$'
     AddReg db '[REG]', '$'
     Memory db 'MEM  ','$'
-    Value  db 'VAL  ','$'
+   p2_Value  db 'VAL  ','$'
     RegIndex    EQU 0
     AddRegIndex EQU 1
     MemIndex    EQU 2
-    ValIndex    EQU 3 
+   p2_ValIndex    EQU 3 
     
 
     RegAX db 'AX   ','$' ;0
@@ -305,14 +415,14 @@ ENDM
     RegSI db 'SI   ','$' ;17
     RegDI db 'DI   ','$' ;18
 
-    ValRegAX dw 'AX'
-    ValRegBX dw 'BX'
-    ValRegCX dw 'CX'
-    ValRegDX dw 'DX'
-    ValRegBP dw 'BP'
-    ValRegSP dw 'SP'
-    ValRegSI dw 'SI'
-    ValRegDI dw 'DI'
+   p2_ValRegAX dw 'AX'
+   p2_ValRegBX dw 'BX'
+   p2_ValRegCX dw 'CX'
+   p2_ValRegDX dw 'DX'
+   p2_ValRegBP dw 'BP'
+   p2_ValRegSP dw 'SP'
+   p2_ValRegSI dw 'SI'
+   p2_ValRegDI dw 'DI'
     
     AddRegAX db '[AX] ','$'
     AddRegAL db '[AL] ','$'                
@@ -358,28 +468,28 @@ ENDM
     PUP4 db 'PUp4 ','$'
     PUP5 db 'PUp5 ','$'
 
-    ValMem db 16 dup('M'), '$'
-    ValStack db 16 dup('S'), '$'
-    ValStackPointer db 0
-    ValCF db 1
+   p2_ValMem db 16 dup('M'), '$'
+   p2_ValStack db 16 dup('S'), '$'
+   p2_ValStackPointer db 0
+   p2_ValCF db 1
 
     ;OUR Regisesters
-    ourValRegAX dw 'AX'
-    ourValRegBX dw 'BX'
-    ourValRegCX dw 'CX'
-    ourValRegDX dw 'DX'
-    ourValRegBP dw 'BP'
-    ourValRegSP dw 'SP'
-    ourValRegSI dw 'SI'
-    ourValRegDI dw 'DI' 
-    ourValCF db 0
-    ourValMem db 16 dup('M'), '$'
+    p1_ValRegAX dw 'AX'
+    p1_ValRegBX dw 'BX'
+    p1_ValRegCX dw 'CX'
+    p1_ValRegDX dw 'DX'
+    p1_ValRegBP dw 'BP'
+    p1_ValRegSP dw 'SP'
+    p1_ValRegSI dw 'SI'
+    p1_ValRegDI dw 'DI' 
+    p1_ValCF db 0
+    p1_ValMem db 16 dup('M'), '$'
 
-    ourValStack db 16 dup('S'), '$'
-    ourValStackPointer db 0
+    p1_ValStack db 16 dup('S'), '$'
+    p1_ValStackPointer db 0
     
 
-    ; Operand Value Needed Variables
+    ; Operandp2_Value Needed Variables
     ClearSpace db '     ', '$'
     num db 30,?,30 DUP(?)       
     StrSize db ?
@@ -398,7 +508,7 @@ ENDM
     mesOp1Type db 10,'You have selected Operand 1 of Type #', '$'
     mesReg db 10, 'You have selected Reg #', '$'
     ;mesMem db 10, 'You have selected Mem #', '$'
-    mesVal db 10, 'You Entered value: ', '$'
+    mesVal db 10, 'You Enteredp2_Value: ', '$'
     mesMem db 10, 'Values in memory as Ascii: ', 10, '$'
     mesStack db 10, 'Values in stack as Ascii: ', 10, '$'
     mesStackPointer db 10,  'Value of stack pointer: ', 10 ,  '$'
@@ -443,7 +553,9 @@ ENDM
     ; Game Variables
     Player1Points dw 0
     ForbidChar db 'N'
-    ForbidCommand db 0    ; 1 if forbidden
+    InvalidCommand db 0    ; 1 if Invalid
+    p1_CpuEnabled db 0      ; 1 if command will run on it
+    p2_CpuEnabled db 0      ; ..
 
     ; Power Up Variables
     UsedBeforeOrNot db 1    ;Chance to use forbiden power up
@@ -546,14 +658,14 @@ CommMenu proc far
             call  PowerUpeMenu ; to choose power up
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_clc   
-            MOV ourValCF, 0      ;command
+            MOV p1_ValCF, 0      ;command
             jmp Exit
             notthispower1_clc:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_clc  
-            MOV ourValCF, 0       ;coomand
+            MOV p1_ValCF, 0       ;coomand
             notthispower2_clc:
-            MOV ValCF, 0  ;command
+            MOVp2_ValCF, 0  ;command
             JMP Exit
         AND_Comm:
             CALL AND_Comm_PROC
@@ -588,25 +700,25 @@ CommMenu proc far
                     notthispower3:
                     cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
                     jne notthispower5
-                    mov ValRegAX,0
-                    mov ValRegBX,0
-                    mov ValRegCX,0
-                    mov ValRegDX,0 
+                    movp2_ValRegAX,0
+                    movp2_ValRegBX,0
+                    movp2_ValRegCX,0
+                    movp2_ValRegDX,0 
                 
-                    mov ValRegBP,0
-                    mov ValRegSP,0
-                    mov ValRegSI,0
-                    mov ValRegDI,0
+                    movp2_ValRegBP,0
+                    movp2_ValRegSP,0
+                    movp2_ValRegSI,0
+                    movp2_ValRegDI,0
                 
-                    mov ourValRegAX,0
-                    mov ourValRegBX,0
-                    mov ourValRegCX,0
-                    mov ourValRegDX,0
+                    mov p1_ValRegAX,0
+                    mov p1_ValRegBX,0
+                    mov p1_ValRegCX,0
+                    mov p1_ValRegDX,0
                 
-                    mov ourValRegBP,0
-                    mov ourValRegSP,0
-                    mov ourValRegSI,0
-                    mov ourValRegDI,0
+                    mov p1_ValRegBP,0
+                    mov p1_ValRegSP,0
+                    mov p1_ValRegSI,0
+                    mov p1_ValRegDI,0
 
                     sub Player1Points,30
                     notthispower5:
@@ -632,17 +744,17 @@ CommMenu proc far
 
             lea dx, mesMem
             CAll DisplayString
-            lea dx, ValMem
+            lea dx,p2_ValMem
             CALL DisplayString
 
             lea dx, mesStack
             CAll DisplayString
-            lea dx, ValStack
+            lea dx,p2_ValStack
             Call DisplayString
 
             lea dx, mesStackPointer
             CALL DisplayString
-            mov dl, ValStackPointer
+            mov dl,p2_ValStackPointer
             add dl, '0'
             Call DisplayChar
 
@@ -653,63 +765,63 @@ CommMenu proc far
 
             LEA DX, mesRegAX
             CALL DisplayString
-            mov dl,Byte ptr ValRegAX
+            mov dl,Byte ptrp2_ValRegAX
             CALL DisplayChar
-            mov dl, byte ptr ValRegAX+1
+            mov dl, byte ptrp2_ValRegAX+1
             CALL DisplayChar
 
             LEA DX, mesRegBX
             CALL DisplayString
-            mov dl,Byte ptr ValRegBX
+            mov dl,Byte ptrp2_ValRegBX
             CALL DisplayChar
-            mov dl, byte ptr ValRegBX+1
+            mov dl, byte ptrp2_ValRegBX+1
             CALL DisplayChar 
 
             LEA DX, mesRegCX
             CALL DisplayString
-            mov dl,Byte ptr ValRegCX
+            mov dl,Byte ptrp2_ValRegCX
             CALL DisplayChar
-            mov dl, byte ptr ValRegCX+1
+            mov dl, byte ptrp2_ValRegCX+1
             CALL DisplayChar 
 
             LEA DX, mesRegDX
             CALL DisplayString
-            mov dl,Byte ptr ValRegDX
+            mov dl,Byte ptrp2_ValRegDX
             CALL DisplayChar
-            mov dl, byte ptr ValRegDX+1
+            mov dl, byte ptrp2_ValRegDX+1
             CALL DisplayChar 
 
             LEA DX, mesRegSI
             CALL DisplayString
-            mov dl,Byte ptr ValRegSI
+            mov dl,Byte ptrp2_ValRegSI
             CALL DisplayChar
-            mov dl, byte ptr ValRegSI+1
+            mov dl, byte ptrp2_ValRegSI+1
             CALL DisplayChar 
 
             LEA DX, mesRegDI
             CALL DisplayString
-            mov dl,Byte ptr ValRegDI
+            mov dl,Byte ptrp2_ValRegDI
             CALL DisplayChar
-            mov dl, byte ptr ValRegDI+1
+            mov dl, byte ptrp2_ValRegDI+1
             CALL DisplayChar 
 
             LEA DX, mesRegBP
             CALL DisplayString
-            mov dl,Byte ptr ValRegBP
+            mov dl,Byte ptrp2_ValRegBP
             CALL DisplayChar
-            mov dl, byte ptr ValRegBP+1
+            mov dl, byte ptrp2_ValRegBP+1
             CALL DisplayChar 
 
             LEA DX, mesRegSP
             CALL DisplayString
-            mov dl,Byte ptr ValRegSP
+            mov dl,Byte ptrp2_ValRegSP
             CALL DisplayChar
-            mov dl, byte ptr ValRegSP+1
+            mov dl, byte ptrp2_ValRegSP+1
             CALL DisplayChar
             
             LEA DX, mesRegCF
             CALL DisplayString
-            mov dl, ValCF
+            mov dl,p2_ValCF
             add dl, '0'
             CALL DisplayChar
 
@@ -729,7 +841,7 @@ CommMenu proc far
 
             call  PowerUpeMenu ; to choose power up
 
-            ; Todo - CHECK VALIDATIONS
+            ; Todo - CHECKp2_ValIDATIONS
             CMP selectedOp1Type, 0
             JZ PopOpReg
             CMP selectedOp1Type, 1
@@ -766,98 +878,98 @@ CommMenu proc far
                 PopOpRegAX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popax  
-                    ourExecPop ourValRegAX      
+                    ourExecPop p1_ValRegAX      
                     jmp Exit
                     notthispower1_popax:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popax  
-                    ourExecPop ourValRegAX        
+                    ourExecPop p1_ValRegAX        
                     notthispower2_popax:
-                    ExecPop ValRegAX
+                    ExecPopp2_ValRegAX
                     JMP Exit
                 PopOpRegBX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popbx  
-                    ourExecPop ourValRegBX      
+                    ourExecPop p1_ValRegBX      
                     jmp Exit
                     notthispower1_popbx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popbx  
-                    ourExecPop ourValRegBX        
+                    ourExecPop p1_ValRegBX        
                     notthispower2_popbx:
-                    ExecPop ValRegBX
+                    ExecPopp2_ValRegBX
                     JMP Exit
                 PopOpRegCX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popcx  
-                    ourExecPop ourValRegCX      
+                    ourExecPop p1_ValRegCX      
                     jmp Exit
                     notthispower1_popcx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popcx  
-                    ourExecPop ourValRegCX        
+                    ourExecPop p1_ValRegCX        
                     notthispower2_popcx:
-                    ExecPop ValRegCX
+                    ExecPopp2_ValRegCX
                     JMP Exit
                 PopOpRegDX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popdx  
-                    ourExecPop ourValRegDX      
+                    ourExecPop p1_ValRegDX      
                     jmp Exit
                     notthispower1_popdx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popdx  
-                    ourExecPop ourValRegDX        
+                    ourExecPop p1_ValRegDX        
                     notthispower2_popdx:
-                    ExecPop ValRegDX
+                    ExecPopp2_ValRegDX
                     JMP Exit
                 PopOpRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popbp  
-                    ourExecPop ourValRegBP      
+                    ourExecPop p1_ValRegBP      
                     jmp Exit
                     notthispower1_popbp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popbp  
-                    ourExecPop ourValRegBP        
+                    ourExecPop p1_ValRegBP        
                     notthispower2_popbp:
-                    ExecPop ValRegBP
+                    ExecPopp2_ValRegBP
                     JMP Exit
                 PopOpRegSP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popsp  
-                    ourExecPop ourValRegSP      
+                    ourExecPop p1_ValRegSP      
                     jmp Exit
                     notthispower1_popsp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popsp  
-                    ourExecPop ourValRegSP        
+                    ourExecPop p1_ValRegSP        
                     notthispower2_popsp:
-                    ExecPop ValRegSP
+                    ExecPopp2_ValRegSP
                     JMP Exit
                 PopOpRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popsi  
-                    ourExecPop ourValRegSI     
+                    ourExecPop p1_ValRegSI     
                     jmp Exit
                     notthispower1_popsi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popsi  
-                    ourExecPop ourValRegSI        
+                    ourExecPop p1_ValRegSI        
                     notthispower2_popsi:
-                    ExecPop ValRegSI
+                    ExecPopp2_ValRegSI
                     JMP Exit
                 PopOpRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popdi  
-                    ourExecPop ourValRegDI      
+                    ourExecPop p1_ValRegDI      
                     jmp Exit
                     notthispower1_popdi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popdi  
-                    ourExecPop ourValRegDI        
+                    ourExecPop p1_ValRegDI        
                     notthispower2_popdi:
-                    ExecPop ValRegDI
+                    ExecPopp2_ValRegDI
                     JMP Exit
 
             ; TODO - Mem as operand
@@ -869,14 +981,14 @@ CommMenu proc far
                     JNE Nextpop
                     cmp selectedPUPType,1 ; our command
                     jne notthispower1_popmem
-                    ourExecPopMem ourValMem[si] ; command
+                    ourExecPopMem p1_ValMem[si] ; command
                     jmp Exit
                     notthispower1_popmem:  
                     cmp selectedPUPType,2 ;his/her and our command 
                     jne notthispower2_popmem 
-                    ourExecPopMem ourValMem[si] ;command
+                    ourExecPopMem p1_ValMem[si] ;command
                     notthispower2_popmem: 
-                    ExecPopMem ValMem[si]
+                    ExecPopMemp2_ValMem[si]
                     JMP Exit 
                     Nextpop:
                     inc si 
@@ -898,116 +1010,116 @@ CommMenu proc far
                 PopOpAddRegBX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popaddbx  
-                    mov dx, ourValRegBX
+                    mov dx, p1_ValRegBX
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegBX
-                    ourExecPopMem ourValMem[SI]      
+                    mov SI, p1_ValRegBX
+                    ourExecPopMem p1_ValMem[SI]      
                     jmp Exit
                     notthispower1_popaddbx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popaddbx  
-                    mov dx, ourValRegBX
+                    mov dx, p1_ValRegBX
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegBX
-                    ourExecPopMem ourValMem[SI]       
+                    mov SI, p1_ValRegBX
+                    ourExecPopMem p1_ValMem[SI]       
                     notthispower2_popaddbx:
 
-                    mov dx, ValRegBX
+                    mov dx,p2_ValRegBX
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ValRegBX
-                    ExecPopMem ValMem[SI]
+                    mov SI,p2_ValRegBX
+                    ExecPopMemp2_ValMem[SI]
                     JMP Exit
                 PopOpAddRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popaddbp  
-                    mov dx, ourValRegBP
+                    mov dx, p1_ValRegBP
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegBP
-                    ourExecPopMem ourValMem[SI]      
+                    mov SI, p1_ValRegBP
+                    ourExecPopMem p1_ValMem[SI]      
                     jmp Exit
                     notthispower1_popaddbp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popaddbp  
-                    mov dx, ourValRegBP
+                    mov dx, p1_ValRegBP
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegBP
-                    ourExecPopMem ourValMem[SI]       
+                    mov SI, p1_ValRegBP
+                    ourExecPopMem p1_ValMem[SI]       
                     notthispower2_popaddbp:
 
-                    mov dx, ValRegBP
+                    mov dx,p2_ValRegBP
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ValRegBP
-                    ExecPopMem ValMem[SI]
+                    mov SI,p2_ValRegBP
+                    ExecPopMemp2_ValMem[SI]
                     JMP Exit
 
                 PopOpAddRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popaddsi  
-                    mov dx, ourValRegSI
+                    mov dx, p1_ValRegSI
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegSI
-                    ourExecPopMem ourValMem[SI]      
+                    mov SI, p1_ValRegSI
+                    ourExecPopMem p1_ValMem[SI]      
                     jmp Exit
                     notthispower1_popaddsi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popaddsi  
-                    mov dx, ourValRegSI
+                    mov dx, p1_ValRegSI
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegSI
-                    ourExecPopMem ourValMem[SI]       
+                    mov SI, p1_ValRegSI
+                    ourExecPopMem p1_ValMem[SI]       
                     notthispower2_popaddsi:
 
-                    mov dx, ValRegSI
+                    mov dx,p2_ValRegSI
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ValRegSI
-                    ExecPopMem ValMem[SI]
+                    mov SI,p2_ValRegSI
+                    ExecPopMemp2_ValMem[SI]
                     JMP Exit
                 
                 PopOpAddRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_popadddi  
-                    mov dx, ourValRegDI
+                    mov dx, p1_ValRegDI
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegDI
-                    ourExecPopMem ourValMem[SI]      
+                    mov SI, p1_ValRegDI
+                    ourExecPopMem p1_ValMem[SI]      
                     jmp Exit
                     notthispower1_popadddi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_popadddi  
-                    mov dx, ourValRegDI
+                    mov dx, p1_ValRegDI
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ourValRegDI
-                    ourExecPopMem ourValMem[SI]       
+                    mov SI, p1_ValRegDI
+                    ourExecPopMem p1_ValMem[SI]       
                     notthispower2_popadddi:
 
-                    mov dx, ValRegDI
+                    mov dx,p2_ValRegDI
                     CALL CheckAddress
-                    cmp bl, 1               ; Value is greater than 16
+                    cmp bl, 1               ;p2_Value is greater than 16
                     JZ InValidCommand
-                    mov SI, ValRegDI
-                    ExecPopMem ValMem[SI]
+                    mov SI,p2_ValRegDI
+                    ExecPopMemp2_ValMem[SI]
                     JMP Exit
 
 
@@ -1070,194 +1182,194 @@ CommMenu proc far
                 IncOpRegAX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incax  
-                    ExecINC ourValRegAX      
+                    ExecINC p1_ValRegAX      
                     jmp Exit
                     notthispower1_incax:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incax 
-                    ExecINC ourValRegAX       
+                    ExecINC p1_ValRegAX       
                     notthispower2_incax:
-                    ExecINC ValRegAX
+                    ExecINCp2_ValRegAX
                     JMP Exit
                 IncOpRegAL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incal  
-                    ExecINC ourValRegAX      
+                    ExecINC p1_ValRegAX      
                     jmp Exit
                     notthispower1_incal:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incal 
-                    ExecINC ourValRegAX       
+                    ExecINC p1_ValRegAX       
                     notthispower2_incal:
-                    ExecINC ValRegAX
+                    ExecINCp2_ValRegAX
                     JMP Exit
                 IncOpRegAH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incah  
-                    ExecINC ourValRegAX+1      
+                    ExecINC p1_ValRegAX+1      
                     jmp Exit
                     notthispower1_incah:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incah 
-                    ExecINC ourValRegAX+1       
+                    ExecINC p1_ValRegAX+1       
                     notthispower2_incah:
-                    ExecINC ValRegAX+1
+                    ExecINCp2_ValRegAX+1
                     JMP Exit
                 IncOpRegBX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incbx  
-                    ExecINC ourValRegBX      
+                    ExecINC p1_ValRegBX      
                     jmp Exit
                     notthispower1_incbx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incbx 
-                    ExecINC ourValRegBX       
+                    ExecINC p1_ValRegBX       
                     notthispower2_incbx:
-                    ExecINC ValRegBX
+                    ExecINCp2_ValRegBX
                     JMP Exit
                 IncOpRegBL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incbl  
-                    ExecINC ourValRegBX      
+                    ExecINC p1_ValRegBX      
                     jmp Exit
                     notthispower1_incbl:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incbl 
-                    ExecINC ourValRegBX       
+                    ExecINC p1_ValRegBX       
                     notthispower2_incbl:
-                    ExecINC ValRegBX
+                    ExecINCp2_ValRegBX
                     JMP Exit
                 IncOpRegBH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incbh  
-                    ExecINC ourValRegBX+1      
+                    ExecINC p1_ValRegBX+1      
                     jmp Exit
                     notthispower1_incbh:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incbh 
-                    ExecINC ourValRegBX+1       
+                    ExecINC p1_ValRegBX+1       
                     notthispower2_incbh:
-                    ExecINC ValRegBX+1
+                    ExecINCp2_ValRegBX+1
                     JMP Exit
                 IncOpRegCX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_inccx  
-                    ExecINC ourValRegCX      
+                    ExecINC p1_ValRegCX      
                     jmp Exit
                     notthispower1_inccx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_inccx 
-                    ExecINC ourValRegCX       
+                    ExecINC p1_ValRegCX       
                     notthispower2_inccx:
-                    ExecINC ValRegCX
+                    ExecINCp2_ValRegCX
                     JMP Exit
                 IncOpRegCL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_inccl  
-                    ExecINC ourValRegCX      
+                    ExecINC p1_ValRegCX      
                     jmp Exit
                     notthispower1_inccl:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_inccl 
-                    ExecINC ourValRegCX       
+                    ExecINC p1_ValRegCX       
                     notthispower2_inccl:
-                    ExecINC ValRegCX
+                    ExecINCp2_ValRegCX
                     JMP Exit
                 IncOpRegCH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incch  
-                    ExecINC ourValRegCX+1      
+                    ExecINC p1_ValRegCX+1      
                     jmp Exit
                     notthispower1_incch:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incch 
-                    ExecINC ourValRegCX+1       
+                    ExecINC p1_ValRegCX+1       
                     notthispower2_incch:
-                    ExecINC ValRegCX+1
+                    ExecINCp2_ValRegCX+1
                     JMP Exit
                 IncOpRegDX:  
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incdx  
-                    ExecINC ourValRegDX      
+                    ExecINC p1_ValRegDX      
                     jmp Exit
                     notthispower1_incdx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incdx 
-                    ExecINC ourValRegDX       
+                    ExecINC p1_ValRegDX       
                     notthispower2_incdx:
-                    ExecINC ValRegDX
+                    ExecINCp2_ValRegDX
                     JMP Exit
                 IncOpRegDL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incdl  
-                    ExecINC ourValRegDX      
+                    ExecINC p1_ValRegDX      
                     jmp Exit
                     notthispower1_incdl:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incdl 
-                    ExecINC ourValRegDX       
+                    ExecINC p1_ValRegDX       
                     notthispower2_incdl:
-                    ExecINC ValRegDX
+                    ExecINCp2_ValRegDX
                     JMP Exit
                 IncOpRegDH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incdh  
-                    ExecINC ourValRegDX+1      
+                    ExecINC p1_ValRegDX+1      
                     jmp Exit
                     notthispower1_incdh:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incdh 
-                    ExecINC ourValRegDX+1       
+                    ExecINC p1_ValRegDX+1       
                     notthispower2_incdh:
-                    ExecINC ValRegDX+1
+                    ExecINCp2_ValRegDX+1
                     JMP Exit
                 IncOpRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incbp  
-                    ExecINC ourValRegBP      
+                    ExecINC p1_ValRegBP      
                     jmp Exit
                     notthispower1_incbp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incbp 
-                    ExecINC ourValRegBP       
+                    ExecINC p1_ValRegBP       
                     notthispower2_incbp:
-                    ExecINC ValRegBP
+                    ExecINCp2_ValRegBP
                     JMP Exit
                 IncOpRegSP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incsp  
-                    ExecINC ourValRegSP      
+                    ExecINC p1_ValRegSP      
                     jmp Exit
                     notthispower1_incsp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incsp 
-                    ExecINC ourValRegSP       
+                    ExecINC p1_ValRegSP       
                     notthispower2_incsp:
-                    ExecINC ValRegSP
+                    ExecINCp2_ValRegSP
                     JMP Exit
                 IncOpRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incsi  
-                    ExecINC ourValRegSI      
+                    ExecINC p1_ValRegSI      
                     jmp Exit
                     notthispower1_incsi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incsi 
-                    ExecINC ourValRegSI       
+                    ExecINC p1_ValRegSI       
                     notthispower2_incsi:
-                    ExecINC ValRegSI
+                    ExecINCp2_ValRegSI
                     JMP Exit
                 IncOpRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incdi  
-                    ExecINC ourValRegDI      
+                    ExecINC p1_ValRegDI      
                     jmp Exit
                     notthispower1_incdi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incdi 
-                    ExecINC ourValRegDI       
+                    ExecINC p1_ValRegDI       
                     notthispower2_incdi:
-                    ExecINC ValRegDI
+                    ExecINCp2_ValRegDI
                     JMP Exit
 
             IncOpAddReg:
@@ -1280,142 +1392,142 @@ CommMenu proc far
                     
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incaddbx  
-                    mov dx, ourValRegBX
+                    mov dx, p1_ValRegBX
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBX
-                    ExecINC ourValMem[di]      
+                    mov di, p1_ValRegBX
+                    ExecINC p1_ValMem[di]      
                     jmp Exit
                     notthispower1_incaddbx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incaddbx  
-                    mov dx, ourValRegBX
+                    mov dx, p1_ValRegBX
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBX
-                    ExecINC ourValMem[di]  
+                    mov di, p1_ValRegBX
+                    ExecINC p1_ValMem[di]  
                     notthispower2_incaddbx:
 
-                    mov dx, ValRegBX
+                    mov dx,p2_ValRegBX
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegBX
-                    ExecINC ValMem[di]
+                    mov di,p2_ValRegBX
+                    ExecINCp2_ValMem[di]
                     JMP Exit
                 IncOpAddRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incaddbp  
-                    mov dx, ourValRegBP
+                    mov dx, p1_ValRegBP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBP
-                    ExecINC ourValMem[di]      
+                    mov di, p1_ValRegBP
+                    ExecINC p1_ValMem[di]      
                     jmp Exit
                     notthispower1_incaddbp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incaddbp  
-                    mov dx, ourValRegBP
+                    mov dx, p1_ValRegBP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBP
-                    ExecINC ourValMem[di]  
+                    mov di, p1_ValRegBP
+                    ExecINC p1_ValMem[di]  
                     notthispower2_incaddbp:
 
-                    mov dx, ValRegBP
+                    mov dx,p2_ValRegBP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegBP
-                    ExecINC ValMem[di]
+                    mov di,p2_ValRegBP
+                    ExecINCp2_ValMem[di]
                     JMP Exit
                 IncOpAddRegSP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incaddsp  
-                    mov dx, ourValRegSP
+                    mov dx, p1_ValRegSP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSP
-                    ExecINC ourValMem[di]      
+                    mov di, p1_ValRegSP
+                    ExecINC p1_ValMem[di]      
                     jmp Exit
                     notthispower1_incaddsp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incaddsp  
-                    mov dx, ourValRegSP
+                    mov dx, p1_ValRegSP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSP
-                    ExecINC ourValMem[di]  
+                    mov di, p1_ValRegSP
+                    ExecINC p1_ValMem[di]  
                     notthispower2_incaddsp:
 
-                    mov dx, ValRegSP
+                    mov dx,p2_ValRegSP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegSP
-                    ExecINC ValMem[di]
+                    mov di,p2_ValRegSP
+                    ExecINCp2_ValMem[di]
                     JMP Exit
                 IncOpAddRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incaddsi  
-                    mov dx, ourValRegSI
+                    mov dx, p1_ValRegSI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSI
-                    ExecINC ourValMem[di]      
+                    mov di, p1_ValRegSI
+                    ExecINC p1_ValMem[di]      
                     jmp Exit
                     notthispower1_incaddsi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incaddsi 
-                    mov dx, ourValRegSI
+                    mov dx, p1_ValRegSI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSI
-                    ExecINC ourValMem[di]  
+                    mov di, p1_ValRegSI
+                    ExecINC p1_ValMem[di]  
                     notthispower2_incaddsi:
 
-                    mov dx, ValRegSI
+                    mov dx,p2_ValRegSI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegSI
-                    ExecINC ValMem[di]
+                    mov di,p2_ValRegSI
+                    ExecINCp2_ValMem[di]
                     JMP Exit
                 IncOpAddRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_incadddi  
-                    mov dx, ourValRegDI
+                    mov dx, p1_ValRegDI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegDI
-                    ExecINC ourValMem[di]      
+                    mov di, p1_ValRegDI
+                    ExecINC p1_ValMem[di]      
                     jmp Exit
                     notthispower1_incadddi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_incadddi 
-                    mov dx, ourValRegDI
+                    mov dx, p1_ValRegDI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegDI
-                    ExecINC ourValMem[di]  
+                    mov di, p1_ValRegDI
+                    ExecINC p1_ValMem[di]  
                     notthispower2_incadddi:
 
-                    mov dx, ValRegDI
+                    mov dx,p2_ValRegDI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegDI
-                    ExecINC ValMem[di]
+                    mov di,p2_ValRegDI
+                    ExecINCp2_ValMem[di]
                     JMP Exit
 
             IncOpMem:
@@ -1427,14 +1539,14 @@ CommMenu proc far
                     JNE Nextinc
                     cmp selectedPUPType,1 ; our command
                     jne notthispower1_incmem
-                    ExecINC ourValMem[si] ; command
+                    ExecINC p1_ValMem[si] ; command
                     jmp Exit
                     notthispower1_incmem:  
                     cmp selectedPUPType,2 ;his/her and our command 
                     jne notthispower2_incmem 
-                    ExecINC ourValMem[si] ;command
+                    ExecINC p1_ValMem[si] ;command
                     notthispower2_incmem: 
-                    ExecINC ValMem[si]
+                    ExecINCp2_ValMem[si]
                     JMP Exit 
                     Nextinc:
                     inc si 
@@ -1499,194 +1611,194 @@ CommMenu proc far
                 decOpRegAX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decax  
-                    Execdec ourValRegAX      
+                    Execdec p1_ValRegAX      
                     jmp Exit
                     notthispower1_decax:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decax 
-                    Execdec ourValRegAX       
+                    Execdec p1_ValRegAX       
                     notthispower2_decax:
-                    Execdec ValRegAX
+                    Execdecp2_ValRegAX
                     JMP Exit
                 decOpRegAL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decal  
-                    Execdec ourValRegAX      
+                    Execdec p1_ValRegAX      
                     jmp Exit
                     notthispower1_decal:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decal 
-                    Execdec ourValRegAX       
+                    Execdec p1_ValRegAX       
                     notthispower2_decal:
-                    Execdec ValRegAX
+                    Execdecp2_ValRegAX
                     JMP Exit
                 decOpRegAH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decah  
-                    Execdec ourValRegAX+1      
+                    Execdec p1_ValRegAX+1      
                     jmp Exit
                     notthispower1_decah:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decah 
-                    Execdec ourValRegAX+1       
+                    Execdec p1_ValRegAX+1       
                     notthispower2_decah:
-                    Execdec ValRegAX+1
+                    Execdecp2_ValRegAX+1
                     JMP Exit
                 decOpRegBX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decbx  
-                    Execdec ourValRegBX      
+                    Execdec p1_ValRegBX      
                     jmp Exit
                     notthispower1_decbx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decbx 
-                    Execdec ourValRegBX       
+                    Execdec p1_ValRegBX       
                     notthispower2_decbx:
-                    Execdec ValRegBX
+                    Execdecp2_ValRegBX
                     JMP Exit
                 decOpRegBL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decbl  
-                    Execdec ourValRegBX      
+                    Execdec p1_ValRegBX      
                     jmp Exit
                     notthispower1_decbl:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decbl 
-                    Execdec ourValRegBX       
+                    Execdec p1_ValRegBX       
                     notthispower2_decbl:
-                    Execdec ValRegBX
+                    Execdecp2_ValRegBX
                     JMP Exit
                 decOpRegBH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decbh  
-                    Execdec ourValRegBX+1      
+                    Execdec p1_ValRegBX+1      
                     jmp Exit
                     notthispower1_decbh:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decbh 
-                    Execdec ourValRegBX+1       
+                    Execdec p1_ValRegBX+1       
                     notthispower2_decbh:
-                    Execdec ValRegBX+1
+                    Execdecp2_ValRegBX+1
                     JMP Exit
                 decOpRegCX:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_deccx  
-                    Execdec ourValRegCX      
+                    Execdec p1_ValRegCX      
                     jmp Exit
                     notthispower1_deccx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_deccx 
-                    Execdec ourValRegCX       
+                    Execdec p1_ValRegCX       
                     notthispower2_deccx:
-                    Execdec ValRegCX
+                    Execdecp2_ValRegCX
                     JMP Exit
                 decOpRegCL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_deccl  
-                    Execdec ourValRegCX      
+                    Execdec p1_ValRegCX      
                     jmp Exit
                     notthispower1_deccl:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_deccl 
-                    Execdec ourValRegCX       
+                    Execdec p1_ValRegCX       
                     notthispower2_deccl:
-                    Execdec ValRegCX
+                    Execdecp2_ValRegCX
                     JMP Exit
                 decOpRegCH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decch  
-                    Execdec ourValRegCX+1      
+                    Execdec p1_ValRegCX+1      
                     jmp Exit
                     notthispower1_decch:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decch 
-                    Execdec ourValRegCX+1       
+                    Execdec p1_ValRegCX+1       
                     notthispower2_decch:
-                    Execdec ValRegCX+1
+                    Execdecp2_ValRegCX+1
                     JMP Exit
                 decOpRegDX:  
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decdx  
-                    Execdec ourValRegDX      
+                    Execdec p1_ValRegDX      
                     jmp Exit
                     notthispower1_decdx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decdx 
-                    Execdec ourValRegDX       
+                    Execdec p1_ValRegDX       
                     notthispower2_decdx:
-                    Execdec ValRegDX
+                    Execdecp2_ValRegDX
                     JMP Exit
                 decOpRegDL:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decdl  
-                    Execdec ourValRegDX      
+                    Execdec p1_ValRegDX      
                     jmp Exit
                     notthispower1_decdl:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decdl 
-                    Execdec ourValRegDX       
+                    Execdec p1_ValRegDX       
                     notthispower2_decdl:
-                    Execdec ValRegDX
+                    Execdecp2_ValRegDX
                     JMP Exit
                 decOpRegDH:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decdh  
-                    Execdec ourValRegDX+1      
+                    Execdec p1_ValRegDX+1      
                     jmp Exit
                     notthispower1_decdh:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decdh 
-                    Execdec ourValRegDX+1       
+                    Execdec p1_ValRegDX+1       
                     notthispower2_decdh:
-                    Execdec ValRegDX+1
+                    Execdecp2_ValRegDX+1
                     JMP Exit
                 decOpRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decbp  
-                    Execdec ourValRegBP      
+                    Execdec p1_ValRegBP      
                     jmp Exit
                     notthispower1_decbp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decbp 
-                    Execdec ourValRegBP       
+                    Execdec p1_ValRegBP       
                     notthispower2_decbp:
-                    Execdec ValRegBP
+                    Execdecp2_ValRegBP
                     JMP Exit
                 decOpRegSP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decsp  
-                    Execdec ourValRegSP      
+                    Execdec p1_ValRegSP      
                     jmp Exit
                     notthispower1_decsp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decsp 
-                    Execdec ourValRegSP       
+                    Execdec p1_ValRegSP       
                     notthispower2_decsp:
-                    Execdec ValRegSP
+                    Execdecp2_ValRegSP
                     JMP Exit
                 decOpRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decsi  
-                    Execdec ourValRegSI      
+                    Execdec p1_ValRegSI      
                     jmp Exit
                     notthispower1_decsi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decsi 
-                    Execdec ourValRegSI       
+                    Execdec p1_ValRegSI       
                     notthispower2_decsi:
-                    Execdec ValRegSI
+                    Execdecp2_ValRegSI
                     JMP Exit
                 decOpRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decdi  
-                    Execdec ourValRegDI      
+                    Execdec p1_ValRegDI      
                     jmp Exit
                     notthispower1_decdi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decdi 
-                    Execdec ourValRegDI       
+                    Execdec p1_ValRegDI       
                     notthispower2_decdi:
-                    Execdec ValRegDI
+                    Execdecp2_ValRegDI
                     JMP Exit
 
             decOpAddReg:
@@ -1709,142 +1821,142 @@ CommMenu proc far
                     
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decaddbx  
-                    mov dx, ourValRegBX
+                    mov dx, p1_ValRegBX
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBX
-                    Execdec ourValMem[di]      
+                    mov di, p1_ValRegBX
+                    Execdec p1_ValMem[di]      
                     jmp Exit
                     notthispower1_decaddbx:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decaddbx  
-                    mov dx, ourValRegBX
+                    mov dx, p1_ValRegBX
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBX
-                    Execdec ourValMem[di]  
+                    mov di, p1_ValRegBX
+                    Execdec p1_ValMem[di]  
                     notthispower2_decaddbx:
 
-                    mov dx, ValRegBX
+                    mov dx,p2_ValRegBX
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegBX
-                    Execdec ValMem[di]
+                    mov di,p2_ValRegBX
+                    Execdecp2_ValMem[di]
                     JMP Exit
                 decOpAddRegBP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decaddbp  
-                    mov dx, ourValRegBP
+                    mov dx, p1_ValRegBP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBP
-                    Execdec ourValMem[di]      
+                    mov di, p1_ValRegBP
+                    Execdec p1_ValMem[di]      
                     jmp Exit
                     notthispower1_decaddbp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decaddbp  
-                    mov dx, ourValRegBP
+                    mov dx, p1_ValRegBP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegBP
-                    Execdec ourValMem[di]  
+                    mov di, p1_ValRegBP
+                    Execdec p1_ValMem[di]  
                     notthispower2_decaddbp:
 
-                    mov dx, ValRegBP
+                    mov dx,p2_ValRegBP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegBP
-                    Execdec ValMem[di]
+                    mov di,p2_ValRegBP
+                    Execdecp2_ValMem[di]
                     JMP Exit
                 decOpAddRegSP:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decaddsp  
-                    mov dx, ourValRegSP
+                    mov dx, p1_ValRegSP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSP
-                    Execdec ourValMem[di]      
+                    mov di, p1_ValRegSP
+                    Execdec p1_ValMem[di]      
                     jmp Exit
                     notthispower1_decaddsp:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decaddsp  
-                    mov dx, ourValRegSP
+                    mov dx, p1_ValRegSP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSP
-                    Execdec ourValMem[di]  
+                    mov di, p1_ValRegSP
+                    Execdec p1_ValMem[di]  
                     notthispower2_decaddsp:
 
-                    mov dx, ValRegSP
+                    mov dx,p2_ValRegSP
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegSP
-                    Execdec ValMem[di]
+                    mov di,p2_ValRegSP
+                    Execdecp2_ValMem[di]
                     JMP Exit
                 decOpAddRegSI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decaddsi  
-                    mov dx, ourValRegSI
+                    mov dx, p1_ValRegSI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSI
-                    Execdec ourValMem[di]      
+                    mov di, p1_ValRegSI
+                    Execdec p1_ValMem[di]      
                     jmp Exit
                     notthispower1_decaddsi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decaddsi 
-                    mov dx, ourValRegSI
+                    mov dx, p1_ValRegSI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegSI
-                    Execdec ourValMem[di]  
+                    mov di, p1_ValRegSI
+                    Execdec p1_ValMem[di]  
                     notthispower2_decaddsi:
 
-                    mov dx, ValRegSI
+                    mov dx,p2_ValRegSI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegSI
-                    Execdec ValMem[di]
+                    mov di,p2_ValRegSI
+                    Execdecp2_ValMem[di]
                     JMP Exit
                 decOpAddRegDI:
                     cmp selectedPUPType,1 ;command on your own processor  
                     jne notthispower1_decadddi  
-                    mov dx, ourValRegDI
+                    mov dx, p1_ValRegDI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegDI
-                    Execdec ourValMem[di]      
+                    mov di, p1_ValRegDI
+                    Execdec p1_ValMem[di]      
                     jmp Exit
                     notthispower1_decadddi:
                     cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
                     jne notthispower2_decadddi 
-                    mov dx, ourValRegDI
+                    mov dx, p1_ValRegDI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ourValRegDI
-                    Execdec ourValMem[di]  
+                    mov di, p1_ValRegDI
+                    Execdec p1_ValMem[di]  
                     notthispower2_decadddi:
 
-                    mov dx, ValRegDI
+                    mov dx,p2_ValRegDI
                     CALL CheckAddress
                     cmp bl, 1
                     jz InValidCommand
-                    mov di, ValRegDI
-                    Execdec ValMem[di]
+                    mov di,p2_ValRegDI
+                    Execdecp2_ValMem[di]
                     JMP Exit
 
             decOpMem:
@@ -1856,14 +1968,14 @@ CommMenu proc far
                     JNE Nextdec
                     cmp selectedPUPType,1 ; our command
                     jne notthispower1_decmem
-                    Execdec ourValMem[si] ; command
+                    Execdec p1_ValMem[si] ; command
                     jmp Exit
                     notthispower1_decmem:  
                     cmp selectedPUPType,2 ;his/her and our command 
                     jne notthispower2_decmem 
-                    Execdec ourValMem[si] ;command
+                    Execdec p1_ValMem[si] ;command
                     notthispower2_decmem: 
-                    Execdec ValMem[si]
+                    Execdecp2_ValMem[si]
                     JMP Exit 
                     Nextdec:
                     dec si 
@@ -1922,19 +2034,19 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Ax_his
                     MUL_Ax_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
                     MUL ax
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Ax_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     call LineStuckPwrUp
                     MUL ax
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Ax_our
                     jmp Exit
@@ -1942,15 +2054,15 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Al_his
                     MUL_Al_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     MUL al
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Al_his:
                     mov ax,ValRegAX
                     call LineStuckPwrUp
                     MUL al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Al_our
                     jmp Exit
@@ -1958,16 +2070,16 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Ah_his
                     MUL_Ah_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     MUL ah
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Ah_his:
                     mov ax,ValRegAX
                     mov al,ah
                     call LineStuckPwrUp
                     MUL al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Ah_our
                     jmp Exit
@@ -1975,12 +2087,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Bx_his
                     MUL_Bx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     MUL bx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Bx_his:
                     mov ax,ValRegAX
@@ -1992,8 +2104,8 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     MUL bx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Bx_our
                     jmp Exit
@@ -2001,10 +2113,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Bl_his
                     MUL_Bl_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     MUL bl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Bl_his:
                     mov ax,ValRegAX
@@ -2015,7 +2127,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     MUL bl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Bl_our
                     jmp Exit
@@ -2023,10 +2135,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Bh_his
                     MUL_Bh_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     MUL Bh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Bh_his:
                     mov ax,ValRegAX
@@ -2037,7 +2149,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     MUL Bh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Bh_our
                     jmp Exit
@@ -2045,12 +2157,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Cx_his
                     MUL_Cx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Cx,p1_ValRegCx
                     MUL Cx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Cx_his:
                     mov ax,ValRegAX
@@ -2062,8 +2174,8 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     MUL Cx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Cx_our
                     jmp Exit
@@ -2071,10 +2183,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Cl_his
                     MUL_Cl_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     MUL Cl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Cl_his:
                     mov ax,ValRegAX
@@ -2085,7 +2197,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     MUL Cl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Cl_our
                     jmp Exit
@@ -2093,10 +2205,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Ch_his
                     MUL_Ch_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     MUL Ch
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Ch_his:
                     mov ax,ValRegAX
@@ -2107,7 +2219,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     MUL Ch
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Ch_our
                     jmp Exit
@@ -2118,8 +2230,8 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     MUL dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     jmp Exit
                     MUL_Dx_his:
                     mov ax,ValRegAX
@@ -2130,8 +2242,8 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     MUL dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Dx_our
                     jmp Exit
@@ -2139,10 +2251,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Dl_his
                     MUL_Dl_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     MUL dl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Dl_his:
                     mov ax,ValRegAX
@@ -2153,7 +2265,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     MUL dl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Dl_our
                     jmp Exit
@@ -2161,10 +2273,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Dh_his
                     MUL_Dh_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     MUL Dh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     MUL_Dh_his:
                     mov ax,ValRegAX
@@ -2175,7 +2287,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     MUL Dh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je MUL_Dh_our
                     jmp Exit
@@ -2183,12 +2295,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Bp_his
                     MUL_Bp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     MUL Bp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Bp_his:
                     mov ax,ValRegAX
@@ -2200,8 +2312,8 @@ CommMenu proc far
                     mov bp,ax
                     pop ax
                     MUL Bp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Bp_our
                     jmp Exit
@@ -2209,12 +2321,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Sp_his
                     MUL_Sp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Sp,ourValRegSp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Sp,p1_ValRegSp
                     MUL Sp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Sp_his:
                     mov ax,ValRegAX
@@ -2226,8 +2338,8 @@ CommMenu proc far
                     mov sp,ax
                     pop ax
                     MUL Sp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Sp_our
                     jmp Exit
@@ -2235,12 +2347,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Si_his
                     MUL_Si_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     MUL Si
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Si_his:
                     mov ax,ValRegAX
@@ -2252,8 +2364,8 @@ CommMenu proc far
                     mov si,ax
                     pop ax
                     MUL Si
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Si_our
                     jmp Exit
@@ -2262,12 +2374,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Di_his
                     MUL_Di_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     MUL Di
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Di_his:
                     mov ax,ValRegAX
@@ -2279,8 +2391,8 @@ CommMenu proc far
                     mov di,ax
                     pop ax
                     MUL Di
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Di_our
                     jmp Exit
@@ -2298,14 +2410,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_AddBx_his
                     MUL_AddBx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     cmp bx,15d
                     ja MUL_invalid
-                    MUL ourValMem[bx]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    MUL p1_ValMem[bx]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_AddBx_his:
                     mov ax,ValRegAX
@@ -2319,8 +2431,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     MUL cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_AddBx_our
                     jmp Exit
@@ -2328,14 +2440,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_AddBp_his
                     MUL_AddBp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     cmp Bp,15d
                     ja MUL_invalid
-                    MUL ourValMem[bp]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    MUL p1_ValMem[bp]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_AddBp_his:
                     mov ax,ValRegAX
@@ -2349,8 +2461,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     MUL cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_AddBp_our
                     jmp Exit
@@ -2358,14 +2470,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_AddSi_his
                     MUL_AddSi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     cmp Si,15d
                     ja MUL_invalid
-                    MUL ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    MUL p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_AddSi_his:
                     mov ax,ValRegAX
@@ -2379,8 +2491,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     MUL cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_AddSi_our
                     jmp Exit
@@ -2388,14 +2500,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_AddDi_his
                     MUL_AddDi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     cmp Di,15d
                     ja MUL_invalid
-                    MUL ourValMem[di]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    MUL p1_ValMem[di]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_AddDi_his:
                     mov ax,ValRegAX
@@ -2409,8 +2521,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     MUL cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_AddDi_our
                     jmp Exit
@@ -2422,11 +2534,11 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne MUL_Mem_his
                     MUL_Mem_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    MUL ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    MUL p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     MUL_Mem_his:
                     mov ax,ValRegAX
@@ -2437,8 +2549,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     MUL cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je MUL_Mem_our
                     jmp Exit
@@ -2500,19 +2612,19 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Ax_his
                     DIV_Ax_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
                     DIV ax
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Ax_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     call LineStuckPwrUp
                     DIV ax
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Ax_our
                     jmp Exit
@@ -2520,15 +2632,15 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Al_his
                     DIV_Al_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     DIV al
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Al_his:
                     mov ax,ValRegAX
                     call LineStuckPwrUp
                     DIV al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Al_our
                     jmp Exit
@@ -2536,16 +2648,16 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Ah_his
                     DIV_Ah_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     DIV ah
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Ah_his:
                     mov ax,ValRegAX
                     mov al,ah
                     call LineStuckPwrUp
                     DIV al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Ah_our
                     jmp Exit
@@ -2553,12 +2665,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Bx_his
                     DIV_Bx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     DIV bx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Bx_his:
                     mov ax,ValRegAX
@@ -2570,8 +2682,8 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     DIV bx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Bx_our
                     jmp Exit
@@ -2579,10 +2691,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Bl_his
                     DIV_Bl_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     DIV bl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Bl_his:
                     mov ax,ValRegAX
@@ -2593,7 +2705,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     DIV bl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Bl_our
                     jmp Exit
@@ -2601,10 +2713,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Bh_his
                     DIV_Bh_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     DIV Bh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Bh_his:
                     mov ax,ValRegAX
@@ -2615,7 +2727,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     DIV Bh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Bh_our
                     jmp Exit
@@ -2623,12 +2735,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Cx_his
                     DIV_Cx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Cx,p1_ValRegCx
                     DIV Cx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Cx_his:
                     mov ax,ValRegAX
@@ -2640,8 +2752,8 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     DIV Cx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Cx_our
                     jmp Exit
@@ -2649,10 +2761,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Cl_his
                     DIV_Cl_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     DIV Cl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Cl_his:
                     mov ax,ValRegAX
@@ -2663,7 +2775,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     DIV Cl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Cl_our
                     jmp Exit
@@ -2671,10 +2783,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Ch_his
                     DIV_Ch_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     DIV Ch
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Ch_his:
                     mov ax,ValRegAX
@@ -2685,7 +2797,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     DIV Ch
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Ch_our
                     jmp Exit
@@ -2696,8 +2808,8 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     DIV dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     jmp Exit
                     DIV_Dx_his:
                     mov ax,ValRegAX
@@ -2708,8 +2820,8 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     DIV dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Dx_our
                     jmp Exit
@@ -2717,10 +2829,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Dl_his
                     DIV_Dl_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     DIV dl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Dl_his:
                     mov ax,ValRegAX
@@ -2731,7 +2843,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     DIV dl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Dl_our
                     jmp Exit
@@ -2739,10 +2851,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Dh_his
                     DIV_Dh_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     DIV Dh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     DIV_Dh_his:
                     mov ax,ValRegAX
@@ -2753,7 +2865,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     DIV Dh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je DIV_Dh_our
                     jmp Exit
@@ -2761,12 +2873,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Bp_his
                     DIV_Bp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     DIV Bp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Bp_his:
                     mov ax,ValRegAX
@@ -2778,8 +2890,8 @@ CommMenu proc far
                     mov bp,ax
                     pop ax
                     DIV Bp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Bp_our
                     jmp Exit
@@ -2787,12 +2899,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Sp_his
                     DIV_Sp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Sp,ourValRegSp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Sp,p1_ValRegSp
                     DIV Sp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Sp_his:
                     mov ax,ValRegAX
@@ -2804,8 +2916,8 @@ CommMenu proc far
                     mov sp,ax
                     pop ax
                     DIV Sp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Sp_our
                     jmp Exit
@@ -2813,12 +2925,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Si_his
                     DIV_Si_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     DIV Si
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Si_his:
                     mov ax,ValRegAX
@@ -2830,8 +2942,8 @@ CommMenu proc far
                     mov si,ax
                     pop ax
                     DIV Si
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Si_our
                     jmp Exit
@@ -2840,12 +2952,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Di_his
                     DIV_Di_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     DIV Di
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Di_his:
                     mov ax,ValRegAX
@@ -2857,8 +2969,8 @@ CommMenu proc far
                     mov di,ax
                     pop ax
                     DIV Di
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Di_our
                     jmp Exit
@@ -2876,14 +2988,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_AddBx_his
                     DIV_AddBx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     cmp bx,15d
                     ja DIV_invalid
-                    DIV ourValMem[bx]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    DIV p1_ValMem[bx]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_AddBx_his:
                     mov ax,ValRegAX
@@ -2897,8 +3009,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_AddBx_our
                     jmp Exit
@@ -2906,14 +3018,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_AddBp_his
                     DIV_AddBp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     cmp Bp,15d
                     ja DIV_invalid
-                    DIV ourValMem[bp]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    DIV p1_ValMem[bp]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_AddBp_his:
                     mov ax,ValRegAX
@@ -2927,8 +3039,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_AddBp_our
                     jmp Exit
@@ -2936,14 +3048,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_AddSi_his
                     DIV_AddSi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     cmp Si,15d
                     ja DIV_invalid
-                    DIV ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    DIV p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_AddSi_his:
                     mov ax,ValRegAX
@@ -2957,8 +3069,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_AddSi_our
                     jmp Exit
@@ -2966,14 +3078,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_AddDi_his
                     DIV_AddDi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     cmp Di,15d
                     ja DIV_invalid
-                    DIV ourValMem[di]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    DIV p1_ValMem[di]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_AddDi_his:
                     mov ax,ValRegAX
@@ -2987,8 +3099,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_AddDi_our
                     jmp Exit
@@ -3000,11 +3112,11 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne DIV_Mem_his
                     DIV_Mem_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    DIV ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    DIV p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     DIV_Mem_his:
                     mov ax,ValRegAX
@@ -3015,8 +3127,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     DIV cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je DIV_Mem_our
                     jmp Exit
@@ -3078,19 +3190,19 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Ax_his
                     IMul_Ax_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
                     IMul ax
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Ax_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     call LineStuckPwrUp
                     IMul ax
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Ax_our
                     jmp Exit
@@ -3098,15 +3210,15 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Al_his
                     IMul_Al_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     IMul al
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Al_his:
                     mov ax,ValRegAX
                     call LineStuckPwrUp
                     IMul al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Al_our
                     jmp Exit
@@ -3114,16 +3226,16 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Ah_his
                     IMul_Ah_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     IMul ah
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Ah_his:
                     mov ax,ValRegAX
                     mov al,ah
                     call LineStuckPwrUp
                     IMul al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Ah_our
                     jmp Exit
@@ -3131,12 +3243,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Bx_his
                     IMul_Bx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     IMul bx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Bx_his:
                     mov ax,ValRegAX
@@ -3148,8 +3260,8 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     IMul bx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Bx_our
                     jmp Exit
@@ -3157,10 +3269,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Bl_his
                     IMul_Bl_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     IMul bl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Bl_his:
                     mov ax,ValRegAX
@@ -3171,7 +3283,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     IMul bl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Bl_our
                     jmp Exit
@@ -3179,10 +3291,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Bh_his
                     IMul_Bh_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     IMul Bh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Bh_his:
                     mov ax,ValRegAX
@@ -3193,7 +3305,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     IMul Bh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Bh_our
                     jmp Exit
@@ -3201,12 +3313,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Cx_his
                     IMul_Cx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Cx,p1_ValRegCx
                     IMul Cx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Cx_his:
                     mov ax,ValRegAX
@@ -3218,8 +3330,8 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     IMul Cx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Cx_our
                     jmp Exit
@@ -3227,10 +3339,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Cl_his
                     IMul_Cl_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     IMul Cl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Cl_his:
                     mov ax,ValRegAX
@@ -3241,7 +3353,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     IMul Cl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Cl_our
                     jmp Exit
@@ -3249,10 +3361,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Ch_his
                     IMul_Ch_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     IMul Ch
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Ch_his:
                     mov ax,ValRegAX
@@ -3263,7 +3375,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     IMul Ch
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Ch_our
                     jmp Exit
@@ -3274,8 +3386,8 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     IMul dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     jmp Exit
                     IMul_Dx_his:
                     mov ax,ValRegAX
@@ -3286,8 +3398,8 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     IMul dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Dx_our
                     jmp Exit
@@ -3295,10 +3407,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Dl_his
                     IMul_Dl_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     IMul dl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Dl_his:
                     mov ax,ValRegAX
@@ -3309,7 +3421,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     IMul dl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Dl_our
                     jmp Exit
@@ -3317,10 +3429,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Dh_his
                     IMul_Dh_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     IMul Dh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IMul_Dh_his:
                     mov ax,ValRegAX
@@ -3331,7 +3443,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     IMul Dh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IMul_Dh_our
                     jmp Exit
@@ -3339,12 +3451,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Bp_his
                     IMul_Bp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     IMul Bp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Bp_his:
                     mov ax,ValRegAX
@@ -3356,8 +3468,8 @@ CommMenu proc far
                     mov bp,ax
                     pop ax
                     IMul Bp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Bp_our
                     jmp Exit
@@ -3365,12 +3477,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Sp_his
                     IMul_Sp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Sp,ourValRegSp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Sp,p1_ValRegSp
                     IMul Sp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Sp_his:
                     mov ax,ValRegAX
@@ -3382,8 +3494,8 @@ CommMenu proc far
                     mov sp,ax
                     pop ax
                     IMul Sp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Sp_our
                     jmp Exit
@@ -3391,12 +3503,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Si_his
                     IMul_Si_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     IMul Si
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Si_his:
                     mov ax,ValRegAX
@@ -3408,8 +3520,8 @@ CommMenu proc far
                     mov si,ax
                     pop ax
                     IMul Si
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Si_our
                     jmp Exit
@@ -3418,12 +3530,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Di_his
                     IMul_Di_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     IMul Di
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Di_his:
                     mov ax,ValRegAX
@@ -3435,8 +3547,8 @@ CommMenu proc far
                     mov di,ax
                     pop ax
                     IMul Di
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Di_our
                     jmp Exit
@@ -3454,14 +3566,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_AddBx_his
                     IMul_AddBx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     cmp bx,15d
                     ja IMul_invalid
-                    IMul ourValMem[bx]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IMul p1_ValMem[bx]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_AddBx_his:
                     mov ax,ValRegAX
@@ -3475,8 +3587,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_AddBx_our
                     jmp Exit
@@ -3484,14 +3596,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_AddBp_his
                     IMul_AddBp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     cmp Bp,15d
                     ja IMul_invalid
-                    IMul ourValMem[bp]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IMul p1_ValMem[bp]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_AddBp_his:
                     mov ax,ValRegAX
@@ -3505,8 +3617,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_AddBp_our
                     jmp Exit
@@ -3514,14 +3626,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_AddSi_his
                     IMul_AddSi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     cmp Si,15d
                     ja IMul_invalid
-                    IMul ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IMul p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_AddSi_his:
                     mov ax,ValRegAX
@@ -3535,8 +3647,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_AddSi_our
                     jmp Exit
@@ -3544,14 +3656,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_AddDi_his
                     IMul_AddDi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     cmp Di,15d
                     ja IMul_invalid
-                    IMul ourValMem[di]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IMul p1_ValMem[di]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_AddDi_his:
                     mov ax,ValRegAX
@@ -3565,8 +3677,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_AddDi_our
                     jmp Exit
@@ -3578,11 +3690,11 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IMul_Mem_his
                     IMul_Mem_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IMul ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    IMul p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IMul_Mem_his:
                     mov ax,ValRegAX
@@ -3593,8 +3705,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IMul cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IMul_Mem_our
                     jmp Exit
@@ -3656,19 +3768,19 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Ax_his
                     IDiv_Ax_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
                     IDiv ax
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Ax_his:
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     call LineStuckPwrUp
                     IDiv ax
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Ax_our
                     jmp Exit
@@ -3676,15 +3788,15 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Al_his
                     IDiv_Al_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     IDiv al
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Al_his:
                     mov ax,ValRegAX
                     call LineStuckPwrUp
                     IDiv al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Al_our
                     jmp Exit
@@ -3692,16 +3804,16 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Ah_his
                     IDiv_Ah_our:
-                    mov ax,ourValRegAX
+                    mov ax,p1_ValRegAX
                     IDiv ah
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Ah_his:
                     mov ax,ValRegAX
                     mov al,ah
                     call LineStuckPwrUp
                     IDiv al
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Ah_our
                     jmp Exit
@@ -3709,12 +3821,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Bx_his
                     IDiv_Bx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     IDiv bx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Bx_his:
                     mov ax,ValRegAX
@@ -3726,8 +3838,8 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     IDiv bx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Bx_our
                     jmp Exit
@@ -3735,10 +3847,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Bl_his
                     IDiv_Bl_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     IDiv bl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Bl_his:
                     mov ax,ValRegAX
@@ -3749,7 +3861,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     IDiv bl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Bl_our
                     jmp Exit
@@ -3757,10 +3869,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Bh_his
                     IDiv_Bh_our:
-                    mov ax,ourValRegAX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov bx,p1_ValRegBX
                     IDiv Bh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Bh_his:
                     mov ax,ValRegAX
@@ -3771,7 +3883,7 @@ CommMenu proc far
                     mov bx,ax
                     pop ax
                     IDiv Bh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Bh_our
                     jmp Exit
@@ -3779,12 +3891,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Cx_his
                     IDiv_Cx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Cx,p1_ValRegCx
                     IDiv Cx
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Cx_his:
                     mov ax,ValRegAX
@@ -3796,8 +3908,8 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     IDiv Cx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Cx_our
                     jmp Exit
@@ -3805,10 +3917,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Cl_his
                     IDiv_Cl_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     IDiv Cl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Cl_his:
                     mov ax,ValRegAX
@@ -3819,7 +3931,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     IDiv Cl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Cl_our
                     jmp Exit
@@ -3827,10 +3939,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Ch_his
                     IDiv_Ch_our:
-                    mov ax,ourValRegAX
-                    mov Cx,ourValRegCx
+                    mov ax,p1_ValRegAX
+                    mov Cx,p1_ValRegCx
                     IDiv Ch
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Ch_his:
                     mov ax,ValRegAX
@@ -3841,7 +3953,7 @@ CommMenu proc far
                     mov cx,ax
                     pop ax
                     IDiv Ch
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Ch_our
                     jmp Exit
@@ -3852,8 +3964,8 @@ CommMenu proc far
                     mov ax,ValRegAX
                     mov dx,ValRegDX
                     IDiv dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     jmp Exit
                     IDiv_Dx_his:
                     mov ax,ValRegAX
@@ -3864,8 +3976,8 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     IDiv dx
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Dx_our
                     jmp Exit
@@ -3873,10 +3985,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Dl_his
                     IDiv_Dl_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     IDiv dl
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Dl_his:
                     mov ax,ValRegAX
@@ -3887,7 +3999,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     IDiv dl
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Dl_our
                     jmp Exit
@@ -3895,10 +4007,10 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Dh_his
                     IDiv_Dh_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegBX
                     IDiv Dh
-                    mov ourValRegAX,ax
+                    mov p1_ValRegAX,ax
                     jmp Exit
                     IDiv_Dh_his:
                     mov ax,ValRegAX
@@ -3909,7 +4021,7 @@ CommMenu proc far
                     mov dx,ax
                     pop ax
                     IDiv Dh
-                    mov ValRegAX,ax
+                    movp2_ValRegAX,ax
                     cmp selectedPUPType,2
                     je IDiv_Dh_our
                     jmp Exit
@@ -3917,12 +4029,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Bp_his
                     IDiv_Bp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     IDiv Bp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Bp_his:
                     mov ax,ValRegAX
@@ -3934,8 +4046,8 @@ CommMenu proc far
                     mov bp,ax
                     pop ax
                     IDiv Bp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Bp_our
                     jmp Exit
@@ -3943,12 +4055,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Sp_his
                     IDiv_Sp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Sp,ourValRegSp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Sp,p1_ValRegSp
                     IDiv Sp
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Sp_his:
                     mov ax,ValRegAX
@@ -3960,8 +4072,8 @@ CommMenu proc far
                     mov sp,ax
                     pop ax
                     IDiv Sp
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Sp_our
                     jmp Exit
@@ -3969,12 +4081,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Si_his
                     IDiv_Si_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     IDiv Si
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Si_his:
                     mov ax,ValRegAX
@@ -3986,8 +4098,8 @@ CommMenu proc far
                     mov si,ax
                     pop ax
                     IDiv Si
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Si_our
                     jmp Exit
@@ -3996,12 +4108,12 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Di_his
                     IDiv_Di_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     IDiv Di
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Di_his:
                     mov ax,ValRegAX
@@ -4013,8 +4125,8 @@ CommMenu proc far
                     mov di,ax
                     pop ax
                     IDiv Di
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Di_our
                     jmp Exit
@@ -4032,14 +4144,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_AddBx_his
                     IDiv_AddBx_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov bx,ourValRegBX
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov bx,p1_ValRegBX
                     cmp bx,15d
                     ja IDiv_invalid
-                    IDiv ourValMem[bx]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IDiv p1_ValMem[bx]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_AddBx_his:
                     mov ax,ValRegAX
@@ -4053,8 +4165,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_AddBx_our
                     jmp Exit
@@ -4062,14 +4174,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_AddBp_his
                     IDiv_AddBp_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Bp,ourValRegBp
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Bp,p1_ValRegBp
                     cmp Bp,15d
                     ja IDiv_invalid
-                    IDiv ourValMem[bp]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IDiv p1_ValMem[bp]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_AddBp_his:
                     mov ax,ValRegAX
@@ -4083,8 +4195,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_AddBp_our
                     jmp Exit
@@ -4092,14 +4204,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_AddSi_his
                     IDiv_AddSi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Si,ourValRegSi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Si,p1_ValRegSi
                     cmp Si,15d
                     ja IDiv_invalid
-                    IDiv ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IDiv p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_AddSi_his:
                     mov ax,ValRegAX
@@ -4113,8 +4225,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_AddSi_our
                     jmp Exit
@@ -4122,14 +4234,14 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_AddDi_his
                     IDiv_AddDi_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    mov Di,ourValRegDi
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    mov Di,p1_ValRegDi
                     cmp Di,15d
                     ja IDiv_invalid
-                    IDiv ourValMem[di]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    IDiv p1_ValMem[di]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_AddDi_his:
                     mov ax,ValRegAX
@@ -4143,8 +4255,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_AddDi_our
                     jmp Exit
@@ -4156,11 +4268,11 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne IDiv_Mem_his
                     IDiv_Mem_our:
-                    mov ax,ourValRegAX
-                    mov dx,ourValRegDX
-                    IDiv ourValMem[si]
-                    mov ourValRegAX,ax
-                    mov ourValRegDX,dx
+                    mov ax,p1_ValRegAX
+                    mov dx,p1_ValRegDX
+                    IDiv p1_ValMem[si]
+                    mov p1_ValRegAX,ax
+                    mov p1_ValRegDX,dx
                     jmp Exit
                     IDiv_Mem_his:
                     mov ax,ValRegAX
@@ -4171,8 +4283,8 @@ CommMenu proc far
                     mov cl,al
                     pop ax
                     IDiv cl
-                    mov ValRegAX,ax
-                    mov ValRegDX,dx
+                    movp2_ValRegAX,ax
+                    movp2_ValRegDX,dx
                     cmp selectedPUPType,2
                     je IDiv_Mem_our
                     jmp Exit
@@ -4248,18 +4360,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Ax_Reg_his
                         ROR_Ax_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         ror Ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROR_Ax_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         ror Ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROR_Ax_Reg_our
                         jmp Exit
@@ -4269,11 +4381,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Ax_Val_his
                         ROR_Ax_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         ror ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROR_Ax_Val_his:
                         mov ax,ValRegAX
@@ -4281,7 +4393,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROR_Ax_Val_our
                         jmp Exit
@@ -4297,18 +4409,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Al_Reg_his
                         ROR_Al_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         ror Al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROR_Al_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         ror Al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROR_Al_Reg_our
                         jmp Exit
@@ -4318,11 +4430,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Al_Val_his
                         ROR_Al_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         ror al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROR_Al_Val_his:
                         mov ax,ValRegAX
@@ -4330,7 +4442,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROR_Al_Val_our
                         jmp Exit
@@ -4346,18 +4458,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Ah_Reg_his
                         ROR_Ah_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         ror Ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROR_Ah_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         ror Ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROR_Ah_Reg_our
                         jmp Exit
@@ -4367,11 +4479,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Ah_Val_his
                         ROR_Ah_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         ror ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROR_Ah_Val_his:
                         mov ax,ValRegAX
@@ -4384,7 +4496,7 @@ CommMenu proc far
                             mov al,bl
                         ror ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROR_Ah_Val_our
                         jmp Exit
@@ -4400,18 +4512,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Bx_Reg_his
                         ROR_Bx_Reg_our:
-                        mov Bx,ourValRegBx
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBx
+                        mov cx,p1_ValRegCX
                         ror Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         ROR_Bx_Reg_his:
                         mov Bx,ValRegBx
                         mov cx,ValRegCX
                         ror Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je ROR_Bx_Reg_our
                         jmp Exit
@@ -4421,11 +4533,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Bx_Val_his
                         ROR_Bx_Val_our:
-                        mov Bx,ourValRegBx
+                        mov Bx,p1_ValRegBx
                         mov cx,Op2Val
                         ror Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         ROR_Bx_Val_his:
                         mov Bx,ValRegBx
@@ -4435,7 +4547,7 @@ CommMenu proc far
                         mov bx,ax
                         ror Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je ROR_Bx_Val_our
                         jmp Exit
@@ -4451,18 +4563,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Bl_Reg_his
                         ROR_Bl_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         ror Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROR_Bl_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         ror Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROR_Bl_Reg_our
                         jmp Exit
@@ -4471,11 +4583,11 @@ CommMenu proc far
                         ja ROR_invalid
                         cmp selectedPUPType,1
                         ROR_Bl_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         ror Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROR_Bl_Val_his:
                         mov Bx,ValRegBX
@@ -4485,7 +4597,7 @@ CommMenu proc far
                         mov Bl,al
                         ror Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 ROR_Bh:
                     cmp selectedOp2Type,0
@@ -4499,18 +4611,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Bh_Reg_his
                         ROR_Bh_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         ror Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROR_Bh_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         ror Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROR_Bh_Reg_our
                         jmp Exit
@@ -4519,11 +4631,11 @@ CommMenu proc far
                         ja ROR_invalid
                         cmp selectedPUPType,1
                         ROR_Bh_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         ror Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROR_Bh_Val_his:
                         mov Bx,ValRegBX
@@ -4533,7 +4645,7 @@ CommMenu proc far
                         mov Bh,al
                         ror Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 ROR_Cx:
                     cmp selectedOp2Type,0
@@ -4547,12 +4659,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Cx_Reg_his
                         ROR_Cx_Reg_our:
-                        mov Cx,ourValRegCx
+                        mov Cx,p1_ValRegCx
                         mov ax,cx
                         mov cx,ax
                         ror Cx,cl
                         call ourSetCF
-                        mov ourValRegCx,Cx
+                        mov p1_ValRegCx,Cx
                         jmp Exit
                         ROR_Cx_Reg_his:
                         cmp selectedOp2Reg,7
@@ -4562,7 +4674,7 @@ CommMenu proc far
                         mov cx,ax
                         ror Cx,cl
                         call SetCarryFlag
-                        mov ValRegCx,Cx
+                        movp2_ValRegCx,Cx
                         cmp selectedPUPType,2
                         je ROR_Cx_Reg_our
                         jmp Exit
@@ -4572,11 +4684,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Cx_Val_his
                         ROR_Cx_Val_our:
-                        mov bx,ourValRegCx
+                        mov bx,p1_ValRegCx
                         mov cx,Op2Val
                         ror bx,cl
                         call ourSetCF
-                        mov ourValRegCx,bx
+                        mov p1_ValRegCx,bx
                         jmp Exit
                         ROR_Cx_Val_his:
                         mov bx,ValRegCx
@@ -4586,7 +4698,7 @@ CommMenu proc far
                         mov bx,ax
                         ror bx,cl
                         call SetCarryFlag
-                        mov ValRegCx,bx
+                        movp2_ValRegCx,bx
                         cmp selectedPUPType,2
                         je ROR_Cx_Val_our
                         jmp Exit
@@ -4602,18 +4714,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Cl_Reg_his
                         ROR_Cl_Reg_our:
-                        mov ax,ourValRegCX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegCX
+                        mov cx,p1_ValRegCX
                         ror Al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         ROR_Cl_Reg_his:
                         mov ax,ValRegCX
                         mov cx,ValRegCX
                         ror Al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je ROR_Cl_Reg_our
                         jmp Exit
@@ -4623,11 +4735,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Cl_Val_his
                         ROR_Cl_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         ror al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         ROR_Cl_Val_his:
                         mov ax,ValRegCX
@@ -4635,7 +4747,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je ROR_Cl_Val_our
                         jmp Exit
@@ -4651,16 +4763,16 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Ch_Reg_his
                         ROR_Ch_Reg_our:
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         ror Ch,cl
                         call ourSetCF
-                        mov ourValRegCX,Cx
+                        mov p1_ValRegCX,Cx
                         jmp Exit
                         ROR_Ch_Reg_his:
                         mov cx,ValRegCX
                         ror Ch,cl
                         call SetCarryFlag
-                        mov ValRegCX,Cx
+                        movp2_ValRegCX,Cx
                         cmp selectedPUPType,2
                         je ROR_Ch_Reg_our
                         jmp Exit
@@ -4670,11 +4782,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Ch_Val_his
                         ROR_Ch_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         ror ah,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         ROR_Ch_Val_his:
                         mov ax,ValRegCX
@@ -4687,7 +4799,7 @@ CommMenu proc far
                             mov al,bl
                         ror ah,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je ROR_Ch_Val_our
                         jmp Exit
@@ -4703,18 +4815,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Dx_Reg_his
                         ROR_Dx_Reg_our:
-                        mov Dx,ourValRegDx
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDx
+                        mov cx,p1_ValRegCX
                         ror Dx,cl
                         call ourSetCF
-                        mov ourValRegDx,Dx
+                        mov p1_ValRegDx,Dx
                         jmp Exit
                         ROR_Dx_Reg_his:
                         mov Dx,ValRegDx
                         mov cx,ValRegCX
                         ror Dx,cl
                         call SetCarryFlag
-                        mov ValRegDx,Dx
+                        movp2_ValRegDx,Dx
                         cmp selectedPUPType,2
                         je ROR_Dx_Reg_our
                         jmp Exit
@@ -4724,11 +4836,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Dx_Val_his
                         ROR_Dx_Val_our:
-                        mov ax,ourValRegDx
+                        mov ax,p1_ValRegDx
                         mov cx,Op2Val
                         ror ax,cl
                         call ourSetCF
-                        mov ourValRegDx,ax
+                        mov p1_ValRegDx,ax
                         jmp Exit
                         ROR_Dx_Val_his:
                         mov ax,ValRegDx
@@ -4736,7 +4848,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror ax,cl
                         call SetCarryFlag
-                        mov ValRegDx,ax
+                        movp2_ValRegDx,ax
                         cmp selectedPUPType,2
                         je ROR_Dx_Val_our
                         jmp Exit
@@ -4752,18 +4864,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Dl_Reg_his
                         ROR_Dl_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         ror Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROR_Dl_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         ror Dl,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je ROR_Dl_Reg_our
                         jmp Exit
@@ -4773,11 +4885,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Dl_Val_his
                         ROR_Dl_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         ror Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROR_Dl_Val_his:
                         mov ax,ValRegDX
@@ -4785,7 +4897,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror al,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je ROR_Dl_Val_our
                         jmp Exit
@@ -4801,18 +4913,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Dh_Reg_his
                         ROR_Dh_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         ror dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROR_Dh_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         ror dh,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je ROR_Dh_Reg_our
                         jmp Exit
@@ -4822,11 +4934,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Dh_Val_his
                         ROR_Dh_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         ror dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROR_Dh_Val_his:
                         mov ax,ValRegDX
@@ -4839,7 +4951,7 @@ CommMenu proc far
                             mov al,bl
                         ror ah,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je ROR_Dh_Val_our
                         jmp Exit
@@ -4855,18 +4967,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Bp_Reg_his
                         ROR_Bp_Reg_our:
-                        mov Bp,ourValRegBp
-                        mov cx,ourValRegCX
+                        mov Bp,p1_ValRegBp
+                        mov cx,p1_ValRegCX
                         ror Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROR_Bp_Reg_his:
                         mov Bp,ValRegBp
                         mov cx,ValRegCX
                         ror Bp,cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je ROR_Bp_Reg_our
                         jmp Exit
@@ -4876,11 +4988,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Bp_Val_his
                         ROR_Bp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         mov cx,Op2Val
                         ror Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROR_Bp_Val_his:
                         mov ax,ValRegBp
@@ -4888,7 +5000,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror ax,cl
                         call SetCarryFlag
-                        mov ValRegBp,ax
+                        movp2_ValRegBp,ax
                         cmp selectedPUPType,2
                         je ROR_Bp_Val_our
                         jmp Exit
@@ -4904,18 +5016,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Sp_Reg_his
                         ROR_Sp_Reg_our:
-                        mov Sp,ourValRegSp
-                        mov cx,ourValRegCX
+                        mov Sp,p1_ValRegSp
+                        mov cx,p1_ValRegCX
                         ror Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         ROR_Sp_Reg_his:
                         mov Sp,ValRegSp
                         mov cx,ValRegCX
                         ror Sp,cl
                         call SetCarryFlag
-                        mov ValRegSp,Sp
+                        movp2_ValRegSp,Sp
                         cmp selectedPUPType,2
                         je ROR_Sp_Reg_our
                         jmp Exit
@@ -4925,11 +5037,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Sp_Val_his
                         ROR_Sp_Val_our:
-                        mov Sp,ourValRegSp
+                        mov Sp,p1_ValRegSp
                         mov cx,Op2Val
                         ror Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         ROR_Sp_Val_his:
                         mov ax,ValRegSp
@@ -4937,7 +5049,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror ax,cl
                         call SetCarryFlag
-                        mov ValRegSp,ax
+                        movp2_ValRegSp,ax
                         cmp selectedPUPType,2
                         je ROR_Sp_Val_our
                         jmp Exit
@@ -4953,18 +5065,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Si_Reg_his
                         ROR_Si_Reg_our:
-                        mov Si,ourValRegSi
-                        mov cx,ourValRegCX
+                        mov Si,p1_ValRegSi
+                        mov cx,p1_ValRegCX
                         ror Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROR_Si_Reg_his:
                         mov Si,ValRegSi
                         mov cx,ValRegCX
                         ror Si,cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je ROR_Si_Reg_our
                         jmp Exit
@@ -4974,11 +5086,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Si_Val_his
                         ROR_Si_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         mov cx,Op2Val
                         ror Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROR_Si_Val_his:
                         mov ax,ValRegSi
@@ -4986,7 +5098,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror ax,cl
                         call SetCarryFlag
-                        mov ValRegSi,ax
+                        movp2_ValRegSi,ax
                         cmp selectedPUPType,2
                         je ROR_Si_Val_our
                         jmp Exit
@@ -5002,18 +5114,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Di_Reg_his
                         ROR_Di_Reg_our:
-                        mov Di,ourValRegDi
-                        mov cx,ourValRegCX
+                        mov Di,p1_ValRegDi
+                        mov cx,p1_ValRegCX
                         ror Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROR_Di_Reg_his:
                         mov Di,ValRegDi
                         mov cx,ValRegCX
                         ror Di,cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je ROR_Di_Reg_our
                         jmp Exit
@@ -5023,11 +5135,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_Di_Val_his
                         ROR_Di_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         mov cx,Op2Val
                         ror Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROR_Di_Val_his:
                         mov ax,ValRegDi
@@ -5035,7 +5147,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ror ax,cl
                         call SetCarryFlag
-                        mov ValRegDi,ax
+                        movp2_ValRegDi,ax
                         cmp selectedPUPType,2
                         je ROR_Di_Val_our
                         jmp Exit
@@ -5061,13 +5173,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddBx_Reg_his
                         ROR_AddBx_Reg_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja ROR_invalid
-                        mov cx,ourValRegCX
-                        ror ourValMem[Bx],cl
+                        mov cx,p1_ValRegCX
+                        ror p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROR_AddBx_Reg_his:
                         mov Bx,ValRegBX
@@ -5077,10 +5189,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        ror ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        rorp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROR_AddBx_Reg_our
                         jmp Exit
@@ -5090,13 +5202,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddBx_Val_his
                         ROR_AddBx_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja ROR_invalid
                         mov cx,Op2Val
-                        ror ourValMem[Bx],cl
+                        ror p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROR_AddBx_Val_his:
                         mov Bx,ValRegBX
@@ -5106,10 +5218,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        ror ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        rorp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROR_AddBx_Val_our
                         jmp Exit
@@ -5125,13 +5237,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddBp_Reg_his
                         ROR_AddBp_Reg_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja ROR_invalid
-                        mov cx,ourValRegCX
-                        ror ourValMem[Bp],cl
+                        mov cx,p1_ValRegCX
+                        ror p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROR_AddBp_Reg_his:
                         mov Bp,ValRegBp
@@ -5141,10 +5253,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        ror ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        rorp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je ROR_AddBp_Reg_our
                         jmp Exit
@@ -5154,13 +5266,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddBp_Val_his
                         ROR_AddBp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja ROR_invalid
                         mov cx,Op2Val
-                        ror ourValMem[Bp],cl
+                        ror p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROR_AddBp_Val_his:
                         mov Bp,ValRegBp
@@ -5170,10 +5282,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        ror ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        rorp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je ROR_AddBp_Val_our
                         jmp Exit
@@ -5189,13 +5301,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddSi_Reg_his
                         ROR_AddSi_Reg_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja ROR_invalid
-                        mov cx,ourValRegCX
-                        ror ourValMem[Si],cl
+                        mov cx,p1_ValRegCX
+                        ror p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROR_AddSi_Reg_his:
                         mov Si,ValRegSi
@@ -5205,10 +5317,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        ror ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        rorp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je ROR_AddSi_Reg_our
                         jmp Exit
@@ -5218,13 +5330,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddSi_Val_his
                         ROR_AddSi_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja ROR_invalid
                         mov cx,Op2Val
-                        ror ourValMem[Si],cl
+                        ror p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROR_AddSi_Val_his:
                         mov Si,ValRegSi
@@ -5234,10 +5346,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        ror ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        rorp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je ROR_AddSi_Val_our
                         jmp Exit
@@ -5253,13 +5365,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddDi_Reg_his
                         ROR_AddDi_Reg_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja ROR_invalid
-                        mov cx,ourValRegCX
-                        ror ourValMem[Di],cl
+                        mov cx,p1_ValRegCX
+                        ror p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROR_AddDi_Reg_his:
                         mov Di,ValRegDi
@@ -5269,10 +5381,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        ror ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        rorp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je ROR_AddDi_Reg_our
                         jmp Exit
@@ -5282,13 +5394,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROR_AddDi_Val_his
                         ROR_AddDi_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja ROR_invalid
                         mov cx,Op2Val
-                        ror ourValMem[Di],cl
+                        ror p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROR_AddDi_Val_his:
                         mov Di,ValRegDi
@@ -5298,10 +5410,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        ror ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        rorp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je ROR_AddDi_Val_our
                         jmp Exit
@@ -5321,8 +5433,8 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne ROR_Mem_Reg_his
                     ROR_Mem_Reg_our:
-                    mov cx,ourValRegCX
-                    Ror ourValMem[si],cl
+                    mov cx,p1_ValRegCX
+                    Ror p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     ROR_Mem_Reg_his:
@@ -5330,8 +5442,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    Ror ValMem[si],cl
+                        movp2_ValMem[si],al
+                    Rorp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je ROR_Mem_Reg_our
@@ -5343,7 +5455,7 @@ CommMenu proc far
                     jne ROR_Mem_Val_his
                     ROR_Mem_Val_our:
                     mov cx,Op2Val
-                    ror ourValMem[si],cl
+                    ror p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     ROR_Mem_Val_his:
@@ -5351,8 +5463,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    ror ValMem[si],cl
+                        movp2_ValMem[si],al
+                    rorp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je ROR_Mem_Val_our
@@ -5430,18 +5542,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Ax_Reg_his
                         ROL_Ax_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         ROL Ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROL_Ax_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         ROL Ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROL_Ax_Reg_our
                         jmp Exit
@@ -5451,11 +5563,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Ax_Val_his
                         ROL_Ax_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         ROL ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROL_Ax_Val_his:
                         mov ax,ValRegAX
@@ -5463,7 +5575,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROL_Ax_Val_our
                         jmp Exit
@@ -5479,18 +5591,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Al_Reg_his
                         ROL_Al_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         ROL Al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROL_Al_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         ROL Al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROL_Al_Reg_our
                         jmp Exit
@@ -5500,11 +5612,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Al_Val_his
                         ROL_Al_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         ROL al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROL_Al_Val_his:
                         mov ax,ValRegAX
@@ -5512,7 +5624,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROL_Al_Val_our
                         jmp Exit
@@ -5528,18 +5640,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Ah_Reg_his
                         ROL_Ah_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         ROL Ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROL_Ah_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         ROL Ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROL_Ah_Reg_our
                         jmp Exit
@@ -5549,11 +5661,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Ah_Val_his
                         ROL_Ah_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         ROL ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         ROL_Ah_Val_his:
                         mov ax,ValRegAX
@@ -5566,7 +5678,7 @@ CommMenu proc far
                             mov al,bl
                         ROL ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je ROL_Ah_Val_our
                         jmp Exit
@@ -5582,18 +5694,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Bx_Reg_his
                         ROL_Bx_Reg_our:
-                        mov Bx,ourValRegBx
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBx
+                        mov cx,p1_ValRegCX
                         ROL Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         ROL_Bx_Reg_his:
                         mov Bx,ValRegBx
                         mov cx,ValRegCX
                         ROL Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je ROL_Bx_Reg_our
                         jmp Exit
@@ -5603,11 +5715,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Bx_Val_his
                         ROL_Bx_Val_our:
-                        mov Bx,ourValRegBx
+                        mov Bx,p1_ValRegBx
                         mov cx,Op2Val
                         ROL Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         ROL_Bx_Val_his:
                         mov Bx,ValRegBx
@@ -5617,7 +5729,7 @@ CommMenu proc far
                         mov bx,ax
                         ROL Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je ROL_Bx_Val_our
                         jmp Exit
@@ -5633,18 +5745,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Bl_Reg_his
                         ROL_Bl_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         ROL Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROL_Bl_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         ROL Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROL_Bl_Reg_our
                         jmp Exit
@@ -5653,11 +5765,11 @@ CommMenu proc far
                         ja ROL_invalid
                         cmp selectedPUPType,1
                         ROL_Bl_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         ROL Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROL_Bl_Val_his:
                         mov Bx,ValRegBX
@@ -5667,7 +5779,7 @@ CommMenu proc far
                         mov Bl,al
                         ROL Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 ROL_Bh:
                     cmp selectedOp2Type,0
@@ -5681,18 +5793,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Bh_Reg_his
                         ROL_Bh_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         ROL Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROL_Bh_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         ROL Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROL_Bh_Reg_our
                         jmp Exit
@@ -5701,11 +5813,11 @@ CommMenu proc far
                         ja ROL_invalid
                         cmp selectedPUPType,1
                         ROL_Bh_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         ROL Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROL_Bh_Val_his:
                         mov Bx,ValRegBX
@@ -5715,7 +5827,7 @@ CommMenu proc far
                         mov Bh,al
                         ROL Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 ROL_Cx:
                     cmp selectedOp2Type,0
@@ -5729,12 +5841,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Cx_Reg_his
                         ROL_Cx_Reg_our:
-                        mov Cx,ourValRegCx
+                        mov Cx,p1_ValRegCx
                         mov ax,cx
                         mov cx,ax
                         ROL Cx,cl
                         call ourSetCF
-                        mov ourValRegCx,Cx
+                        mov p1_ValRegCx,Cx
                         jmp Exit
                         ROL_Cx_Reg_his:
                         cmp selectedOp2Reg,7
@@ -5744,7 +5856,7 @@ CommMenu proc far
                         mov cx,ax
                         ROL Cx,cl
                         call SetCarryFlag
-                        mov ValRegCx,Cx
+                        movp2_ValRegCx,Cx
                         cmp selectedPUPType,2
                         je ROL_Cx_Reg_our
                         jmp Exit
@@ -5754,11 +5866,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Cx_Val_his
                         ROL_Cx_Val_our:
-                        mov bx,ourValRegCx
+                        mov bx,p1_ValRegCx
                         mov cx,Op2Val
                         ROL bx,cl
                         call ourSetCF
-                        mov ourValRegCx,bx
+                        mov p1_ValRegCx,bx
                         jmp Exit
                         ROL_Cx_Val_his:
                         mov bx,ValRegCx
@@ -5768,7 +5880,7 @@ CommMenu proc far
                         mov bx,ax
                         ROL bx,cl
                         call SetCarryFlag
-                        mov ValRegCx,bx
+                        movp2_ValRegCx,bx
                         cmp selectedPUPType,2
                         je ROL_Cx_Val_our
                         jmp Exit
@@ -5784,18 +5896,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Cl_Reg_his
                         ROL_Cl_Reg_our:
-                        mov ax,ourValRegCX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegCX
+                        mov cx,p1_ValRegCX
                         ROL Al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         ROL_Cl_Reg_his:
                         mov ax,ValRegCX
                         mov cx,ValRegCX
                         ROL Al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je ROL_Cl_Reg_our
                         jmp Exit
@@ -5805,11 +5917,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Cl_Val_his
                         ROL_Cl_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         ROL al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         ROL_Cl_Val_his:
                         mov ax,ValRegCX
@@ -5817,7 +5929,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je ROL_Cl_Val_our
                         jmp Exit
@@ -5833,16 +5945,16 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Ch_Reg_his
                         ROL_Ch_Reg_our:
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         ROL Ch,cl
                         call ourSetCF
-                        mov ourValRegCX,Cx
+                        mov p1_ValRegCX,Cx
                         jmp Exit
                         ROL_Ch_Reg_his:
                         mov cx,ValRegCX
                         ROL Ch,cl
                         call SetCarryFlag
-                        mov ValRegCX,Cx
+                        movp2_ValRegCX,Cx
                         cmp selectedPUPType,2
                         je ROL_Ch_Reg_our
                         jmp Exit
@@ -5852,11 +5964,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Ch_Val_his
                         ROL_Ch_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         ROL ah,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         ROL_Ch_Val_his:
                         mov ax,ValRegCX
@@ -5869,7 +5981,7 @@ CommMenu proc far
                             mov al,bl
                         ROL ah,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je ROL_Ch_Val_our
                         jmp Exit
@@ -5885,18 +5997,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Dx_Reg_his
                         ROL_Dx_Reg_our:
-                        mov Dx,ourValRegDx
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDx
+                        mov cx,p1_ValRegCX
                         ROL Dx,cl
                         call ourSetCF
-                        mov ourValRegDx,Dx
+                        mov p1_ValRegDx,Dx
                         jmp Exit
                         ROL_Dx_Reg_his:
                         mov Dx,ValRegDx
                         mov cx,ValRegCX
                         ROL Dx,cl
                         call SetCarryFlag
-                        mov ValRegDx,Dx
+                        movp2_ValRegDx,Dx
                         cmp selectedPUPType,2
                         je ROL_Dx_Reg_our
                         jmp Exit
@@ -5906,11 +6018,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Dx_Val_his
                         ROL_Dx_Val_our:
-                        mov ax,ourValRegDx
+                        mov ax,p1_ValRegDx
                         mov cx,Op2Val
                         ROL ax,cl
                         call ourSetCF
-                        mov ourValRegDx,ax
+                        mov p1_ValRegDx,ax
                         jmp Exit
                         ROL_Dx_Val_his:
                         mov ax,ValRegDx
@@ -5918,7 +6030,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL ax,cl
                         call SetCarryFlag
-                        mov ValRegDx,ax
+                        movp2_ValRegDx,ax
                         cmp selectedPUPType,2
                         je ROL_Dx_Val_our
                         jmp Exit
@@ -5934,18 +6046,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Dl_Reg_his
                         ROL_Dl_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         ROL Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROL_Dl_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         ROL Dl,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je ROL_Dl_Reg_our
                         jmp Exit
@@ -5955,11 +6067,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Dl_Val_his
                         ROL_Dl_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         ROL Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROL_Dl_Val_his:
                         mov ax,ValRegDX
@@ -5967,7 +6079,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL al,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je ROL_Dl_Val_our
                         jmp Exit
@@ -5983,18 +6095,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Dh_Reg_his
                         ROL_Dh_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         ROL dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROL_Dh_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         ROL dh,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je ROL_Dh_Reg_our
                         jmp Exit
@@ -6004,11 +6116,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Dh_Val_his
                         ROL_Dh_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         ROL dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         ROL_Dh_Val_his:
                         mov ax,ValRegDX
@@ -6021,7 +6133,7 @@ CommMenu proc far
                             mov al,bl
                         ROL ah,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je ROL_Dh_Val_our
                         jmp Exit
@@ -6037,18 +6149,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Bp_Reg_his
                         ROL_Bp_Reg_our:
-                        mov Bp,ourValRegBp
-                        mov cx,ourValRegCX
+                        mov Bp,p1_ValRegBp
+                        mov cx,p1_ValRegCX
                         ROL Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROL_Bp_Reg_his:
                         mov Bp,ValRegBp
                         mov cx,ValRegCX
                         ROL Bp,cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je ROL_Bp_Reg_our
                         jmp Exit
@@ -6058,11 +6170,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Bp_Val_his
                         ROL_Bp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         mov cx,Op2Val
                         ROL Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROL_Bp_Val_his:
                         mov ax,ValRegBp
@@ -6070,7 +6182,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL ax,cl
                         call SetCarryFlag
-                        mov ValRegBp,ax
+                        movp2_ValRegBp,ax
                         cmp selectedPUPType,2
                         je ROL_Bp_Val_our
                         jmp Exit
@@ -6086,18 +6198,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Sp_Reg_his
                         ROL_Sp_Reg_our:
-                        mov Sp,ourValRegSp
-                        mov cx,ourValRegCX
+                        mov Sp,p1_ValRegSp
+                        mov cx,p1_ValRegCX
                         ROL Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         ROL_Sp_Reg_his:
                         mov Sp,ValRegSp
                         mov cx,ValRegCX
                         ROL Sp,cl
                         call SetCarryFlag
-                        mov ValRegSp,Sp
+                        movp2_ValRegSp,Sp
                         cmp selectedPUPType,2
                         je ROL_Sp_Reg_our
                         jmp Exit
@@ -6107,11 +6219,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Sp_Val_his
                         ROL_Sp_Val_our:
-                        mov Sp,ourValRegSp
+                        mov Sp,p1_ValRegSp
                         mov cx,Op2Val
                         ROL Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         ROL_Sp_Val_his:
                         mov ax,ValRegSp
@@ -6119,7 +6231,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL ax,cl
                         call SetCarryFlag
-                        mov ValRegSp,ax
+                        movp2_ValRegSp,ax
                         cmp selectedPUPType,2
                         je ROL_Sp_Val_our
                         jmp Exit
@@ -6135,18 +6247,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Si_Reg_his
                         ROL_Si_Reg_our:
-                        mov Si,ourValRegSi
-                        mov cx,ourValRegCX
+                        mov Si,p1_ValRegSi
+                        mov cx,p1_ValRegCX
                         ROL Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROL_Si_Reg_his:
                         mov Si,ValRegSi
                         mov cx,ValRegCX
                         ROL Si,cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je ROL_Si_Reg_our
                         jmp Exit
@@ -6156,11 +6268,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Si_Val_his
                         ROL_Si_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         mov cx,Op2Val
                         ROL Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROL_Si_Val_his:
                         mov ax,ValRegSi
@@ -6168,7 +6280,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL ax,cl
                         call SetCarryFlag
-                        mov ValRegSi,ax
+                        movp2_ValRegSi,ax
                         cmp selectedPUPType,2
                         je ROL_Si_Val_our
                         jmp Exit
@@ -6184,18 +6296,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Di_Reg_his
                         ROL_Di_Reg_our:
-                        mov Di,ourValRegDi
-                        mov cx,ourValRegCX
+                        mov Di,p1_ValRegDi
+                        mov cx,p1_ValRegCX
                         ROL Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROL_Di_Reg_his:
                         mov Di,ValRegDi
                         mov cx,ValRegCX
                         ROL Di,cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je ROL_Di_Reg_our
                         jmp Exit
@@ -6205,11 +6317,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_Di_Val_his
                         ROL_Di_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         mov cx,Op2Val
                         ROL Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROL_Di_Val_his:
                         mov ax,ValRegDi
@@ -6217,7 +6329,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         ROL ax,cl
                         call SetCarryFlag
-                        mov ValRegDi,ax
+                        movp2_ValRegDi,ax
                         cmp selectedPUPType,2
                         je ROL_Di_Val_our
                         jmp Exit
@@ -6243,13 +6355,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddBx_Reg_his
                         ROL_AddBx_Reg_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja ROL_invalid
-                        mov cx,ourValRegCX
-                        ROL ourValMem[Bx],cl
+                        mov cx,p1_ValRegCX
+                        ROL p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROL_AddBx_Reg_his:
                         mov Bx,ValRegBX
@@ -6259,10 +6371,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        ROL ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        ROLp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROL_AddBx_Reg_our
                         jmp Exit
@@ -6272,13 +6384,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddBx_Val_his
                         ROL_AddBx_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja ROL_invalid
                         mov cx,Op2Val
-                        ROL ourValMem[Bx],cl
+                        ROL p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         ROL_AddBx_Val_his:
                         mov Bx,ValRegBX
@@ -6288,10 +6400,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        ROL ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        ROLp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je ROL_AddBx_Val_our
                         jmp Exit
@@ -6307,13 +6419,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddBp_Reg_his
                         ROL_AddBp_Reg_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja ROL_invalid
-                        mov cx,ourValRegCX
-                        ROL ourValMem[Bp],cl
+                        mov cx,p1_ValRegCX
+                        ROL p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROL_AddBp_Reg_his:
                         mov Bp,ValRegBp
@@ -6323,10 +6435,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        ROL ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        ROLp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je ROL_AddBp_Reg_our
                         jmp Exit
@@ -6336,13 +6448,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddBp_Val_his
                         ROL_AddBp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja ROL_invalid
                         mov cx,Op2Val
-                        ROL ourValMem[Bp],cl
+                        ROL p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         ROL_AddBp_Val_his:
                         mov Bp,ValRegBp
@@ -6352,10 +6464,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        ROL ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        ROLp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je ROL_AddBp_Val_our
                         jmp Exit
@@ -6371,13 +6483,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddSi_Reg_his
                         ROL_AddSi_Reg_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja ROL_invalid
-                        mov cx,ourValRegCX
-                        ROL ourValMem[Si],cl
+                        mov cx,p1_ValRegCX
+                        ROL p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROL_AddSi_Reg_his:
                         mov Si,ValRegSi
@@ -6387,10 +6499,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        ROL ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        ROLp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je ROL_AddSi_Reg_our
                         jmp Exit
@@ -6400,13 +6512,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddSi_Val_his
                         ROL_AddSi_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja ROL_invalid
                         mov cx,Op2Val
-                        ROL ourValMem[Si],cl
+                        ROL p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         ROL_AddSi_Val_his:
                         mov Si,ValRegSi
@@ -6416,10 +6528,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        ROL ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        ROLp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je ROL_AddSi_Val_our
                         jmp Exit
@@ -6435,13 +6547,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddDi_Reg_his
                         ROL_AddDi_Reg_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja ROL_invalid
-                        mov cx,ourValRegCX
-                        ROL ourValMem[Di],cl
+                        mov cx,p1_ValRegCX
+                        ROL p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROL_AddDi_Reg_his:
                         mov Di,ValRegDi
@@ -6451,10 +6563,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        ROL ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        ROLp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je ROL_AddDi_Reg_our
                         jmp Exit
@@ -6464,13 +6576,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne ROL_AddDi_Val_his
                         ROL_AddDi_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja ROL_invalid
                         mov cx,Op2Val
-                        ROL ourValMem[Di],cl
+                        ROL p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         ROL_AddDi_Val_his:
                         mov Di,ValRegDi
@@ -6480,10 +6592,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        ROL ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        ROLp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je ROL_AddDi_Val_our
                         jmp Exit
@@ -6503,8 +6615,8 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne ROL_Mem_Reg_his
                     ROL_Mem_Reg_our:
-                    mov cx,ourValRegCX
-                    ROL ourValMem[si],cl
+                    mov cx,p1_ValRegCX
+                    ROL p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     ROL_Mem_Reg_his:
@@ -6512,8 +6624,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    ROL ValMem[si],cl
+                        movp2_ValMem[si],al
+                    ROLp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je ROL_Mem_Reg_our
@@ -6525,7 +6637,7 @@ CommMenu proc far
                     jne ROL_Mem_Val_his
                     ROL_Mem_Val_our:
                     mov cx,Op2Val
-                    ROL ourValMem[si],cl
+                    ROL p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     ROL_Mem_Val_his:
@@ -6533,8 +6645,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    ROL ValMem[si],cl
+                        movp2_ValMem[si],al
+                    ROLp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je ROL_Mem_Val_our
@@ -6612,12 +6724,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Ax_Reg_his
                         RCR_Ax_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCR_Ax_Reg_his:
                         mov ax,ValRegAX
@@ -6625,7 +6737,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCR_Ax_Reg_our
                         jmp Exit
@@ -6635,12 +6747,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Ax_Val_his
                         RCR_Ax_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCR_Ax_Val_his:
                         mov ax,ValRegAX
@@ -6649,7 +6761,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCR_Ax_Val_our
                         jmp Exit
@@ -6665,12 +6777,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Al_Reg_his
                         RCR_Al_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCR_Al_Reg_his:
                         mov ax,ValRegAX
@@ -6678,7 +6790,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCR_Al_Reg_our
                         jmp Exit
@@ -6688,12 +6800,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Al_Val_his
                         RCR_Al_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCR_Al_Val_his:
                         mov ax,ValRegAX
@@ -6702,7 +6814,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCR_Al_Val_our
                         jmp Exit
@@ -6718,12 +6830,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Ah_Reg_his
                         RCR_Ah_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCR_Ah_Reg_his:
                         mov ax,ValRegAX
@@ -6731,7 +6843,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCR_Ah_Reg_our
                         jmp Exit
@@ -6741,12 +6853,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Ah_Val_his
                         RCR_Ah_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCR_Ah_Val_his:
                         mov ax,ValRegAX
@@ -6760,7 +6872,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCR_Ah_Val_our
                         jmp Exit
@@ -6776,12 +6888,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Bx_Reg_his
                         RCR_Bx_Reg_our:
-                        mov Bx,ourValRegBx
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBx
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         RCR_Bx_Reg_his:
                         mov Bx,ValRegBx
@@ -6789,7 +6901,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je RCR_Bx_Reg_our
                         jmp Exit
@@ -6799,12 +6911,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Bx_Val_his
                         RCR_Bx_Val_our:
-                        mov Bx,ourValRegBx
+                        mov Bx,p1_ValRegBx
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         RCR_Bx_Val_his:
                         mov Bx,ValRegBx
@@ -6815,7 +6927,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je RCR_Bx_Val_our
                         jmp Exit
@@ -6831,12 +6943,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Bl_Reg_his
                         RCR_Bl_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCR_Bl_Reg_his:
                         mov Bx,ValRegBX
@@ -6844,7 +6956,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCR_Bl_Reg_our
                         jmp Exit
@@ -6853,12 +6965,12 @@ CommMenu proc far
                         ja RCR_invalid
                         cmp selectedPUPType,1
                         RCR_Bl_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCR_Bl_Val_his:
                         mov Bx,ValRegBX
@@ -6869,7 +6981,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 RCR_Bh:
                     cmp selectedOp2Type,0
@@ -6883,12 +6995,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Bh_Reg_his
                         RCR_Bh_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCR_Bh_Reg_his:
                         mov Bx,ValRegBX
@@ -6896,7 +7008,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCR_Bh_Reg_our
                         jmp Exit
@@ -6905,12 +7017,12 @@ CommMenu proc far
                         ja RCR_invalid
                         cmp selectedPUPType,1
                         RCR_Bh_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCR_Bh_Val_his:
                         mov Bx,ValRegBX
@@ -6921,7 +7033,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 RCR_Cx:
                     cmp selectedOp2Type,0
@@ -6935,13 +7047,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Cx_Reg_his
                         RCR_Cx_Reg_our:
-                        mov Cx,ourValRegCx
+                        mov Cx,p1_ValRegCx
                         mov ax,cx
                         mov cx,ax
                         call ourGetCF
                         RCR Cx,cl
                         call ourSetCF
-                        mov ourValRegCx,Cx
+                        mov p1_ValRegCx,Cx
                         jmp Exit
                         RCR_Cx_Reg_his:
                         cmp selectedOp2Reg,7
@@ -6952,7 +7064,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Cx,cl
                         call SetCarryFlag
-                        mov ValRegCx,Cx
+                        movp2_ValRegCx,Cx
                         cmp selectedPUPType,2
                         je RCR_Cx_Reg_our
                         jmp Exit
@@ -6962,12 +7074,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Cx_Val_his
                         RCR_Cx_Val_our:
-                        mov bx,ourValRegCx
+                        mov bx,p1_ValRegCx
                         mov cx,Op2Val
                         call ourGetCF
                         RCR bx,cl
                         call ourSetCF
-                        mov ourValRegCx,bx
+                        mov p1_ValRegCx,bx
                         jmp Exit
                         RCR_Cx_Val_his:
                         mov bx,ValRegCx
@@ -6978,7 +7090,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR bx,cl
                         call SetCarryFlag
-                        mov ValRegCx,bx
+                        movp2_ValRegCx,bx
                         cmp selectedPUPType,2
                         je RCR_Cx_Val_our
                         jmp Exit
@@ -6994,12 +7106,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Cl_Reg_his
                         RCR_Cl_Reg_our:
-                        mov ax,ourValRegCX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         RCR_Cl_Reg_his:
                         mov ax,ValRegCX
@@ -7007,7 +7119,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je RCR_Cl_Reg_our
                         jmp Exit
@@ -7017,12 +7129,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Cl_Val_his
                         RCR_Cl_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         RCR_Cl_Val_his:
                         mov ax,ValRegCX
@@ -7031,7 +7143,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je RCR_Cl_Val_our
                         jmp Exit
@@ -7047,18 +7159,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Ch_Reg_his
                         RCR_Ch_Reg_our:
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Ch,cl
                         call ourSetCF
-                        mov ourValRegCX,Cx
+                        mov p1_ValRegCX,Cx
                         jmp Exit
                         RCR_Ch_Reg_his:
                         mov cx,ValRegCX
                         call GetCarryFlag
                         RCR Ch,cl
                         call SetCarryFlag
-                        mov ValRegCX,Cx
+                        movp2_ValRegCX,Cx
                         cmp selectedPUPType,2
                         je RCR_Ch_Reg_our
                         jmp Exit
@@ -7068,12 +7180,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Ch_Val_his
                         RCR_Ch_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR ah,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         RCR_Ch_Val_his:
                         mov ax,ValRegCX
@@ -7087,7 +7199,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ah,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je RCR_Ch_Val_our
                         jmp Exit
@@ -7103,12 +7215,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Dx_Reg_his
                         RCR_Dx_Reg_our:
-                        mov Dx,ourValRegDx
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDx
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Dx,cl
                         call ourSetCF
-                        mov ourValRegDx,Dx
+                        mov p1_ValRegDx,Dx
                         jmp Exit
                         RCR_Dx_Reg_his:
                         mov Dx,ValRegDx
@@ -7116,7 +7228,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Dx,cl
                         call SetCarryFlag
-                        mov ValRegDx,Dx
+                        movp2_ValRegDx,Dx
                         cmp selectedPUPType,2
                         je RCR_Dx_Reg_our
                         jmp Exit
@@ -7126,12 +7238,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Dx_Val_his
                         RCR_Dx_Val_our:
-                        mov ax,ourValRegDx
+                        mov ax,p1_ValRegDx
                         mov cx,Op2Val
                         call ourGetCF
                         RCR ax,cl
                         call ourSetCF
-                        mov ourValRegDx,ax
+                        mov p1_ValRegDx,ax
                         jmp Exit
                         RCR_Dx_Val_his:
                         mov ax,ValRegDx
@@ -7140,7 +7252,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ax,cl
                         call SetCarryFlag
-                        mov ValRegDx,ax
+                        movp2_ValRegDx,ax
                         cmp selectedPUPType,2
                         je RCR_Dx_Val_our
                         jmp Exit
@@ -7156,12 +7268,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Dl_Reg_his
                         RCR_Dl_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCR_Dl_Reg_his:
                         mov Dx,ValRegDX
@@ -7169,7 +7281,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Dl,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je RCR_Dl_Reg_our
                         jmp Exit
@@ -7179,12 +7291,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Dl_Val_his
                         RCR_Dl_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCR_Dl_Val_his:
                         mov ax,ValRegDX
@@ -7193,7 +7305,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR al,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je RCR_Dl_Val_our
                         jmp Exit
@@ -7209,12 +7321,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Dh_Reg_his
                         RCR_Dh_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCR_Dh_Reg_his:
                         mov Dx,ValRegDX
@@ -7222,7 +7334,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR dh,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je RCR_Dh_Reg_our
                         jmp Exit
@@ -7232,12 +7344,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Dh_Val_his
                         RCR_Dh_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         call ourGetCF
                         RCR dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCR_Dh_Val_his:
                         mov ax,ValRegDX
@@ -7251,7 +7363,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ah,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je RCR_Dh_Val_our
                         jmp Exit
@@ -7267,12 +7379,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Bp_Reg_his
                         RCR_Bp_Reg_our:
-                        mov Bp,ourValRegBp
-                        mov cx,ourValRegCX
+                        mov Bp,p1_ValRegBp
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCR_Bp_Reg_his:
                         mov Bp,ValRegBp
@@ -7280,7 +7392,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Bp,cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je RCR_Bp_Reg_our
                         jmp Exit
@@ -7290,12 +7402,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Bp_Val_his
                         RCR_Bp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCR_Bp_Val_his:
                         mov ax,ValRegBp
@@ -7304,7 +7416,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ax,cl
                         call SetCarryFlag
-                        mov ValRegBp,ax
+                        movp2_ValRegBp,ax
                         cmp selectedPUPType,2
                         je RCR_Bp_Val_our
                         jmp Exit
@@ -7320,12 +7432,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Sp_Reg_his
                         RCR_Sp_Reg_our:
-                        mov Sp,ourValRegSp
-                        mov cx,ourValRegCX
+                        mov Sp,p1_ValRegSp
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         RCR_Sp_Reg_his:
                         mov Sp,ValRegSp
@@ -7333,7 +7445,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Sp,cl
                         call SetCarryFlag
-                        mov ValRegSp,Sp
+                        movp2_ValRegSp,Sp
                         cmp selectedPUPType,2
                         je RCR_Sp_Reg_our
                         jmp Exit
@@ -7343,12 +7455,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Sp_Val_his
                         RCR_Sp_Val_our:
-                        mov Sp,ourValRegSp
+                        mov Sp,p1_ValRegSp
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         RCR_Sp_Val_his:
                         mov ax,ValRegSp
@@ -7357,7 +7469,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ax,cl
                         call SetCarryFlag
-                        mov ValRegSp,ax
+                        movp2_ValRegSp,ax
                         cmp selectedPUPType,2
                         je RCR_Sp_Val_our
                         jmp Exit
@@ -7373,12 +7485,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Si_Reg_his
                         RCR_Si_Reg_our:
-                        mov Si,ourValRegSi
-                        mov cx,ourValRegCX
+                        mov Si,p1_ValRegSi
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCR_Si_Reg_his:
                         mov Si,ValRegSi
@@ -7386,7 +7498,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Si,cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je RCR_Si_Reg_our
                         jmp Exit
@@ -7396,12 +7508,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Si_Val_his
                         RCR_Si_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCR_Si_Val_his:
                         mov ax,ValRegSi
@@ -7410,7 +7522,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ax,cl
                         call SetCarryFlag
-                        mov ValRegSi,ax
+                        movp2_ValRegSi,ax
                         cmp selectedPUPType,2
                         je RCR_Si_Val_our
                         jmp Exit
@@ -7426,12 +7538,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Di_Reg_his
                         RCR_Di_Reg_our:
-                        mov Di,ourValRegDi
-                        mov cx,ourValRegCX
+                        mov Di,p1_ValRegDi
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCR Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCR_Di_Reg_his:
                         mov Di,ValRegDi
@@ -7439,7 +7551,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR Di,cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je RCR_Di_Reg_our
                         jmp Exit
@@ -7449,12 +7561,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_Di_Val_his
                         RCR_Di_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         mov cx,Op2Val
                         call ourGetCF
                         RCR Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCR_Di_Val_his:
                         mov ax,ValRegDi
@@ -7463,7 +7575,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCR ax,cl
                         call SetCarryFlag
-                        mov ValRegDi,ax
+                        movp2_ValRegDi,ax
                         cmp selectedPUPType,2
                         je RCR_Di_Val_our
                         jmp Exit
@@ -7489,14 +7601,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddBx_Reg_his
                         RCR_AddBx_Reg_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja RCR_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCR ourValMem[Bx],cl
+                        RCR p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCR_AddBx_Reg_his:
                         mov Bx,ValRegBX
@@ -7506,11 +7618,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
+                            movp2_ValMem[Bx],al
                         call GetCarryFlag
-                        RCR ValMem[Bx],cl
+                        RCRp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCR_AddBx_Reg_our
                         jmp Exit
@@ -7520,14 +7632,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddBx_Val_his
                         RCR_AddBx_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja RCR_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCR ourValMem[Bx],cl
+                        RCR p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCR_AddBx_Val_his:
                         mov Bx,ValRegBX
@@ -7537,11 +7649,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
+                            movp2_ValMem[Bx],al
                         call GetCarryFlag
-                        RCR ValMem[Bx],cl
+                        RCRp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCR_AddBx_Val_our
                         jmp Exit
@@ -7557,14 +7669,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddBp_Reg_his
                         RCR_AddBp_Reg_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja RCR_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCR ourValMem[Bp],cl
+                        RCR p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCR_AddBp_Reg_his:
                         mov Bp,ValRegBp
@@ -7574,11 +7686,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
+                            movp2_ValMem[Bp],al
                         call GetCarryFlag
-                        RCR ValMem[Bp],cl
+                        RCRp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je RCR_AddBp_Reg_our
                         jmp Exit
@@ -7588,14 +7700,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddBp_Val_his
                         RCR_AddBp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja RCR_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCR ourValMem[Bp],cl
+                        RCR p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCR_AddBp_Val_his:
                         mov Bp,ValRegBp
@@ -7605,11 +7717,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
+                            movp2_ValMem[Bp],al
                         call GetCarryFlag
-                        RCR ValMem[Bp],cl
+                        RCRp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je RCR_AddBp_Val_our
                         jmp Exit
@@ -7625,14 +7737,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddSi_Reg_his
                         RCR_AddSi_Reg_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja RCR_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCR ourValMem[Si],cl
+                        RCR p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCR_AddSi_Reg_his:
                         mov Si,ValRegSi
@@ -7642,11 +7754,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
+                            movp2_ValMem[Si],al
                         call GetCarryFlag
-                        RCR ValMem[Si],cl
+                        RCRp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je RCR_AddSi_Reg_our
                         jmp Exit
@@ -7656,14 +7768,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddSi_Val_his
                         RCR_AddSi_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja RCR_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCR ourValMem[Si],cl
+                        RCR p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCR_AddSi_Val_his:
                         mov Si,ValRegSi
@@ -7673,11 +7785,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
+                            movp2_ValMem[Si],al
                         call GetCarryFlag
-                        RCR ValMem[Si],cl
+                        RCRp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je RCR_AddSi_Val_our
                         jmp Exit
@@ -7693,14 +7805,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddDi_Reg_his
                         RCR_AddDi_Reg_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja RCR_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCR ourValMem[Di],cl
+                        RCR p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCR_AddDi_Reg_his:
                         mov Di,ValRegDi
@@ -7710,11 +7822,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
+                            movp2_ValMem[Di],al
                         call GetCarryFlag
-                        RCR ValMem[Di],cl
+                        RCRp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je RCR_AddDi_Reg_our
                         jmp Exit
@@ -7724,14 +7836,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCR_AddDi_Val_his
                         RCR_AddDi_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja RCR_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCR ourValMem[Di],cl
+                        RCR p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCR_AddDi_Val_his:
                         mov Di,ValRegDi
@@ -7741,11 +7853,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
+                            movp2_ValMem[Di],al
                         call GetCarryFlag
-                        RCR ValMem[Di],cl
+                        RCRp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je RCR_AddDi_Val_our
                         jmp Exit
@@ -7765,9 +7877,9 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne RCR_Mem_Reg_his
                     RCR_Mem_Reg_our:
-                    mov cx,ourValRegCX
+                    mov cx,p1_ValRegCX
                     call ourGetCF
-                    RCR ourValMem[si],cl
+                    RCR p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     RCR_Mem_Reg_his:
@@ -7775,9 +7887,9 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
+                        movp2_ValMem[si],al
                     call GetCarryFlag
-                    RCR ValMem[si],cl
+                    RCRp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je RCR_Mem_Reg_our
@@ -7790,7 +7902,7 @@ CommMenu proc far
                     RCR_Mem_Val_our:
                     mov cx,Op2Val
                     call ourGetCF
-                    RCR ourValMem[si],cl
+                    RCR p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     RCR_Mem_Val_his:
@@ -7798,9 +7910,9 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
+                        movp2_ValMem[si],al
                     call GetCarryFlag
-                    RCR ValMem[si],cl
+                    RCRp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je RCR_Mem_Val_our
@@ -7878,12 +7990,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Ax_Reg_his
                         RCL_Ax_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCL_Ax_Reg_his:
                         mov ax,ValRegAX
@@ -7891,7 +8003,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCL_Ax_Reg_our
                         jmp Exit
@@ -7901,12 +8013,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Ax_Val_his
                         RCL_Ax_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCL_Ax_Val_his:
                         mov ax,ValRegAX
@@ -7915,7 +8027,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCL_Ax_Val_our
                         jmp Exit
@@ -7931,12 +8043,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Al_Reg_his
                         RCL_Al_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCL_Al_Reg_his:
                         mov ax,ValRegAX
@@ -7944,7 +8056,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCL_Al_Reg_our
                         jmp Exit
@@ -7954,12 +8066,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Al_Val_his
                         RCL_Al_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCL_Al_Val_his:
                         mov ax,ValRegAX
@@ -7968,7 +8080,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCL_Al_Val_our
                         jmp Exit
@@ -7984,12 +8096,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Ah_Reg_his
                         RCL_Ah_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCL_Ah_Reg_his:
                         mov ax,ValRegAX
@@ -7997,7 +8109,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCL_Ah_Reg_our
                         jmp Exit
@@ -8007,12 +8119,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Ah_Val_his
                         RCL_Ah_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         RCL_Ah_Val_his:
                         mov ax,ValRegAX
@@ -8026,7 +8138,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je RCL_Ah_Val_our
                         jmp Exit
@@ -8042,12 +8154,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Bx_Reg_his
                         RCL_Bx_Reg_our:
-                        mov Bx,ourValRegBx
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBx
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         RCL_Bx_Reg_his:
                         mov Bx,ValRegBx
@@ -8055,7 +8167,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je RCL_Bx_Reg_our
                         jmp Exit
@@ -8065,12 +8177,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Bx_Val_his
                         RCL_Bx_Val_our:
-                        mov Bx,ourValRegBx
+                        mov Bx,p1_ValRegBx
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         RCL_Bx_Val_his:
                         mov Bx,ValRegBx
@@ -8081,7 +8193,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je RCL_Bx_Val_our
                         jmp Exit
@@ -8097,12 +8209,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Bl_Reg_his
                         RCL_Bl_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCL_Bl_Reg_his:
                         mov Bx,ValRegBX
@@ -8110,7 +8222,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCL_Bl_Reg_our
                         jmp Exit
@@ -8119,12 +8231,12 @@ CommMenu proc far
                         ja RCL_invalid
                         cmp selectedPUPType,1
                         RCL_Bl_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCL_Bl_Val_his:
                         mov Bx,ValRegBX
@@ -8135,7 +8247,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 RCL_Bh:
                     cmp selectedOp2Type,0
@@ -8149,12 +8261,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Bh_Reg_his
                         RCL_Bh_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCL_Bh_Reg_his:
                         mov Bx,ValRegBX
@@ -8162,7 +8274,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCL_Bh_Reg_our
                         jmp Exit
@@ -8171,12 +8283,12 @@ CommMenu proc far
                         ja RCL_invalid
                         cmp selectedPUPType,1
                         RCL_Bh_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCL_Bh_Val_his:
                         mov Bx,ValRegBX
@@ -8187,7 +8299,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 RCL_Cx:
                     cmp selectedOp2Type,0
@@ -8201,13 +8313,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Cx_Reg_his
                         RCL_Cx_Reg_our:
-                        mov Cx,ourValRegCx
+                        mov Cx,p1_ValRegCx
                         mov ax,cx
                         mov cx,ax
                         call ourGetCF
                         RCL Cx,cl
                         call ourSetCF
-                        mov ourValRegCx,Cx
+                        mov p1_ValRegCx,Cx
                         jmp Exit
                         RCL_Cx_Reg_his:
                         cmp selectedOp2Reg,7
@@ -8218,7 +8330,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Cx,cl
                         call SetCarryFlag
-                        mov ValRegCx,Cx
+                        movp2_ValRegCx,Cx
                         cmp selectedPUPType,2
                         je RCL_Cx_Reg_our
                         jmp Exit
@@ -8228,12 +8340,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Cx_Val_his
                         RCL_Cx_Val_our:
-                        mov bx,ourValRegCx
+                        mov bx,p1_ValRegCx
                         mov cx,Op2Val
                         call ourGetCF
                         RCL bx,cl
                         call ourSetCF
-                        mov ourValRegCx,bx
+                        mov p1_ValRegCx,bx
                         jmp Exit
                         RCL_Cx_Val_his:
                         mov bx,ValRegCx
@@ -8244,7 +8356,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL bx,cl
                         call SetCarryFlag
-                        mov ValRegCx,bx
+                        movp2_ValRegCx,bx
                         cmp selectedPUPType,2
                         je RCL_Cx_Val_our
                         jmp Exit
@@ -8260,12 +8372,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Cl_Reg_his
                         RCL_Cl_Reg_our:
-                        mov ax,ourValRegCX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         RCL_Cl_Reg_his:
                         mov ax,ValRegCX
@@ -8273,7 +8385,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je RCL_Cl_Reg_our
                         jmp Exit
@@ -8283,12 +8395,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Cl_Val_his
                         RCL_Cl_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         RCL_Cl_Val_his:
                         mov ax,ValRegCX
@@ -8297,7 +8409,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je RCL_Cl_Val_our
                         jmp Exit
@@ -8313,18 +8425,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Ch_Reg_his
                         RCL_Ch_Reg_our:
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Ch,cl
                         call ourSetCF
-                        mov ourValRegCX,Cx
+                        mov p1_ValRegCX,Cx
                         jmp Exit
                         RCL_Ch_Reg_his:
                         mov cx,ValRegCX
                         call GetCarryFlag
                         RCL Ch,cl
                         call SetCarryFlag
-                        mov ValRegCX,Cx
+                        movp2_ValRegCX,Cx
                         cmp selectedPUPType,2
                         je RCL_Ch_Reg_our
                         jmp Exit
@@ -8334,12 +8446,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Ch_Val_his
                         RCL_Ch_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL ah,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         RCL_Ch_Val_his:
                         mov ax,ValRegCX
@@ -8353,7 +8465,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ah,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je RCL_Ch_Val_our
                         jmp Exit
@@ -8369,12 +8481,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Dx_Reg_his
                         RCL_Dx_Reg_our:
-                        mov Dx,ourValRegDx
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDx
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Dx,cl
                         call ourSetCF
-                        mov ourValRegDx,Dx
+                        mov p1_ValRegDx,Dx
                         jmp Exit
                         RCL_Dx_Reg_his:
                         mov Dx,ValRegDx
@@ -8382,7 +8494,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Dx,cl
                         call SetCarryFlag
-                        mov ValRegDx,Dx
+                        movp2_ValRegDx,Dx
                         cmp selectedPUPType,2
                         je RCL_Dx_Reg_our
                         jmp Exit
@@ -8392,12 +8504,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Dx_Val_his
                         RCL_Dx_Val_our:
-                        mov ax,ourValRegDx
+                        mov ax,p1_ValRegDx
                         mov cx,Op2Val
                         call ourGetCF
                         RCL ax,cl
                         call ourSetCF
-                        mov ourValRegDx,ax
+                        mov p1_ValRegDx,ax
                         jmp Exit
                         RCL_Dx_Val_his:
                         mov ax,ValRegDx
@@ -8406,7 +8518,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ax,cl
                         call SetCarryFlag
-                        mov ValRegDx,ax
+                        movp2_ValRegDx,ax
                         cmp selectedPUPType,2
                         je RCL_Dx_Val_our
                         jmp Exit
@@ -8422,12 +8534,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Dl_Reg_his
                         RCL_Dl_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCL_Dl_Reg_his:
                         mov Dx,ValRegDX
@@ -8435,7 +8547,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Dl,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je RCL_Dl_Reg_our
                         jmp Exit
@@ -8445,12 +8557,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Dl_Val_his
                         RCL_Dl_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCL_Dl_Val_his:
                         mov ax,ValRegDX
@@ -8459,7 +8571,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL al,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je RCL_Dl_Val_our
                         jmp Exit
@@ -8475,12 +8587,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Dh_Reg_his
                         RCL_Dh_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCL_Dh_Reg_his:
                         mov Dx,ValRegDX
@@ -8488,7 +8600,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL dh,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je RCL_Dh_Reg_our
                         jmp Exit
@@ -8498,12 +8610,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Dh_Val_his
                         RCL_Dh_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         call ourGetCF
                         RCL dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         RCL_Dh_Val_his:
                         mov ax,ValRegDX
@@ -8517,7 +8629,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ah,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je RCL_Dh_Val_our
                         jmp Exit
@@ -8533,12 +8645,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Bp_Reg_his
                         RCL_Bp_Reg_our:
-                        mov Bp,ourValRegBp
-                        mov cx,ourValRegCX
+                        mov Bp,p1_ValRegBp
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCL_Bp_Reg_his:
                         mov Bp,ValRegBp
@@ -8546,7 +8658,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Bp,cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je RCL_Bp_Reg_our
                         jmp Exit
@@ -8556,12 +8668,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Bp_Val_his
                         RCL_Bp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCL_Bp_Val_his:
                         mov ax,ValRegBp
@@ -8570,7 +8682,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ax,cl
                         call SetCarryFlag
-                        mov ValRegBp,ax
+                        movp2_ValRegBp,ax
                         cmp selectedPUPType,2
                         je RCL_Bp_Val_our
                         jmp Exit
@@ -8586,12 +8698,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Sp_Reg_his
                         RCL_Sp_Reg_our:
-                        mov Sp,ourValRegSp
-                        mov cx,ourValRegCX
+                        mov Sp,p1_ValRegSp
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         RCL_Sp_Reg_his:
                         mov Sp,ValRegSp
@@ -8599,7 +8711,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Sp,cl
                         call SetCarryFlag
-                        mov ValRegSp,Sp
+                        movp2_ValRegSp,Sp
                         cmp selectedPUPType,2
                         je RCL_Sp_Reg_our
                         jmp Exit
@@ -8609,12 +8721,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Sp_Val_his
                         RCL_Sp_Val_our:
-                        mov Sp,ourValRegSp
+                        mov Sp,p1_ValRegSp
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         RCL_Sp_Val_his:
                         mov ax,ValRegSp
@@ -8623,7 +8735,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ax,cl
                         call SetCarryFlag
-                        mov ValRegSp,ax
+                        movp2_ValRegSp,ax
                         cmp selectedPUPType,2
                         je RCL_Sp_Val_our
                         jmp Exit
@@ -8639,12 +8751,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Si_Reg_his
                         RCL_Si_Reg_our:
-                        mov Si,ourValRegSi
-                        mov cx,ourValRegCX
+                        mov Si,p1_ValRegSi
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCL_Si_Reg_his:
                         mov Si,ValRegSi
@@ -8652,7 +8764,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Si,cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je RCL_Si_Reg_our
                         jmp Exit
@@ -8662,12 +8774,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Si_Val_his
                         RCL_Si_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCL_Si_Val_his:
                         mov ax,ValRegSi
@@ -8676,7 +8788,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ax,cl
                         call SetCarryFlag
-                        mov ValRegSi,ax
+                        movp2_ValRegSi,ax
                         cmp selectedPUPType,2
                         je RCL_Si_Val_our
                         jmp Exit
@@ -8692,12 +8804,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Di_Reg_his
                         RCL_Di_Reg_our:
-                        mov Di,ourValRegDi
-                        mov cx,ourValRegCX
+                        mov Di,p1_ValRegDi
+                        mov cx,p1_ValRegCX
                         call ourGetCF
                         RCL Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCL_Di_Reg_his:
                         mov Di,ValRegDi
@@ -8705,7 +8817,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL Di,cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je RCL_Di_Reg_our
                         jmp Exit
@@ -8715,12 +8827,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_Di_Val_his
                         RCL_Di_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         mov cx,Op2Val
                         call ourGetCF
                         RCL Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCL_Di_Val_his:
                         mov ax,ValRegDi
@@ -8729,7 +8841,7 @@ CommMenu proc far
                         call GetCarryFlag
                         RCL ax,cl
                         call SetCarryFlag
-                        mov ValRegDi,ax
+                        movp2_ValRegDi,ax
                         cmp selectedPUPType,2
                         je RCL_Di_Val_our
                         jmp Exit
@@ -8755,14 +8867,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddBx_Reg_his
                         RCL_AddBx_Reg_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja RCL_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCL ourValMem[Bx],cl
+                        RCL p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCL_AddBx_Reg_his:
                         mov Bx,ValRegBX
@@ -8772,11 +8884,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
+                            movp2_ValMem[Bx],al
                         call GetCarryFlag
-                        RCL ValMem[Bx],cl
+                        RCLp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCL_AddBx_Reg_our
                         jmp Exit
@@ -8786,14 +8898,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddBx_Val_his
                         RCL_AddBx_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja RCL_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCL ourValMem[Bx],cl
+                        RCL p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         RCL_AddBx_Val_his:
                         mov Bx,ValRegBX
@@ -8803,11 +8915,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
+                            movp2_ValMem[Bx],al
                         call GetCarryFlag
-                        RCL ValMem[Bx],cl
+                        RCLp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je RCL_AddBx_Val_our
                         jmp Exit
@@ -8823,14 +8935,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddBp_Reg_his
                         RCL_AddBp_Reg_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja RCL_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCL ourValMem[Bp],cl
+                        RCL p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCL_AddBp_Reg_his:
                         mov Bp,ValRegBp
@@ -8840,11 +8952,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
+                            movp2_ValMem[Bp],al
                         call GetCarryFlag
-                        RCL ValMem[Bp],cl
+                        RCLp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je RCL_AddBp_Reg_our
                         jmp Exit
@@ -8854,14 +8966,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddBp_Val_his
                         RCL_AddBp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja RCL_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCL ourValMem[Bp],cl
+                        RCL p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         RCL_AddBp_Val_his:
                         mov Bp,ValRegBp
@@ -8871,11 +8983,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
+                            movp2_ValMem[Bp],al
                         call GetCarryFlag
-                        RCL ValMem[Bp],cl
+                        RCLp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je RCL_AddBp_Val_our
                         jmp Exit
@@ -8891,14 +9003,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddSi_Reg_his
                         RCL_AddSi_Reg_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja RCL_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCL ourValMem[Si],cl
+                        RCL p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCL_AddSi_Reg_his:
                         mov Si,ValRegSi
@@ -8908,11 +9020,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
+                            movp2_ValMem[Si],al
                         call GetCarryFlag
-                        RCL ValMem[Si],cl
+                        RCLp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je RCL_AddSi_Reg_our
                         jmp Exit
@@ -8922,14 +9034,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddSi_Val_his
                         RCL_AddSi_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja RCL_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCL ourValMem[Si],cl
+                        RCL p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         RCL_AddSi_Val_his:
                         mov Si,ValRegSi
@@ -8939,11 +9051,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
+                            movp2_ValMem[Si],al
                         call GetCarryFlag
-                        RCL ValMem[Si],cl
+                        RCLp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je RCL_AddSi_Val_our
                         jmp Exit
@@ -8959,14 +9071,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddDi_Reg_his
                         RCL_AddDi_Reg_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja RCL_invalid
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         call ourGetCF
-                        RCL ourValMem[Di],cl
+                        RCL p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCL_AddDi_Reg_his:
                         mov Di,ValRegDi
@@ -8976,11 +9088,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
+                            movp2_ValMem[Di],al
                         call GetCarryFlag
-                        RCL ValMem[Di],cl
+                        RCLp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je RCL_AddDi_Reg_our
                         jmp Exit
@@ -8990,14 +9102,14 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne RCL_AddDi_Val_his
                         RCL_AddDi_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja RCL_invalid
                         mov cx,Op2Val
                         call ourGetCF
-                        RCL ourValMem[Di],cl
+                        RCL p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         RCL_AddDi_Val_his:
                         mov Di,ValRegDi
@@ -9007,11 +9119,11 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
+                            movp2_ValMem[Di],al
                         call GetCarryFlag
-                        RCL ValMem[Di],cl
+                        RCLp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je RCL_AddDi_Val_our
                         jmp Exit
@@ -9031,9 +9143,9 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne RCL_Mem_Reg_his
                     RCL_Mem_Reg_our:
-                    mov cx,ourValRegCX
+                    mov cx,p1_ValRegCX
                     call ourGetCF
-                    RCL ourValMem[si],cl
+                    RCL p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     RCL_Mem_Reg_his:
@@ -9041,9 +9153,9 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
+                        movp2_ValMem[si],al
                     call GetCarryFlag
-                    RCL ValMem[si],cl
+                    RCLp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je RCL_Mem_Reg_our
@@ -9056,7 +9168,7 @@ CommMenu proc far
                     RCL_Mem_Val_our:
                     mov cx,Op2Val
                     call ourGetCF
-                    RCL ourValMem[si],cl
+                    RCL p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     RCL_Mem_Val_his:
@@ -9064,9 +9176,9 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
+                        movp2_ValMem[si],al
                     call GetCarryFlag
-                    RCL ValMem[si],cl
+                    RCLp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je RCL_Mem_Val_our
@@ -9144,18 +9256,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Ax_Reg_his
                         SHL_Ax_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         SHL Ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHL_Ax_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         SHL Ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHL_Ax_Reg_our
                         jmp Exit
@@ -9165,11 +9277,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Ax_Val_his
                         SHL_Ax_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         SHL ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHL_Ax_Val_his:
                         mov ax,ValRegAX
@@ -9177,7 +9289,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHL_Ax_Val_our
                         jmp Exit
@@ -9193,18 +9305,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Al_Reg_his
                         SHL_Al_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         SHL Al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHL_Al_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         SHL Al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHL_Al_Reg_our
                         jmp Exit
@@ -9214,11 +9326,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Al_Val_his
                         SHL_Al_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         SHL al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHL_Al_Val_his:
                         mov ax,ValRegAX
@@ -9226,7 +9338,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHL_Al_Val_our
                         jmp Exit
@@ -9242,18 +9354,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Ah_Reg_his
                         SHL_Ah_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         SHL Ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHL_Ah_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         SHL Ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHL_Ah_Reg_our
                         jmp Exit
@@ -9263,11 +9375,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Ah_Val_his
                         SHL_Ah_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         SHL ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHL_Ah_Val_his:
                         mov ax,ValRegAX
@@ -9280,7 +9392,7 @@ CommMenu proc far
                             mov al,bl
                         SHL ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHL_Ah_Val_our
                         jmp Exit
@@ -9296,18 +9408,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Bx_Reg_his
                         SHL_Bx_Reg_our:
-                        mov Bx,ourValRegBx
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBx
+                        mov cx,p1_ValRegCX
                         SHL Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         SHL_Bx_Reg_his:
                         mov Bx,ValRegBx
                         mov cx,ValRegCX
                         SHL Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je SHL_Bx_Reg_our
                         jmp Exit
@@ -9317,11 +9429,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Bx_Val_his
                         SHL_Bx_Val_our:
-                        mov Bx,ourValRegBx
+                        mov Bx,p1_ValRegBx
                         mov cx,Op2Val
                         SHL Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         SHL_Bx_Val_his:
                         mov Bx,ValRegBx
@@ -9331,7 +9443,7 @@ CommMenu proc far
                         mov bx,ax
                         SHL Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je SHL_Bx_Val_our
                         jmp Exit
@@ -9347,18 +9459,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Bl_Reg_his
                         SHL_Bl_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         SHL Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHL_Bl_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         SHL Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHL_Bl_Reg_our
                         jmp Exit
@@ -9367,11 +9479,11 @@ CommMenu proc far
                         ja SHL_invalid
                         cmp selectedPUPType,1
                         SHL_Bl_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         SHL Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHL_Bl_Val_his:
                         mov Bx,ValRegBX
@@ -9381,7 +9493,7 @@ CommMenu proc far
                         mov Bl,al
                         SHL Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 SHL_Bh:
                     cmp selectedOp2Type,0
@@ -9395,18 +9507,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Bh_Reg_his
                         SHL_Bh_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         SHL Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHL_Bh_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         SHL Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHL_Bh_Reg_our
                         jmp Exit
@@ -9415,11 +9527,11 @@ CommMenu proc far
                         ja SHL_invalid
                         cmp selectedPUPType,1
                         SHL_Bh_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         SHL Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHL_Bh_Val_his:
                         mov Bx,ValRegBX
@@ -9429,7 +9541,7 @@ CommMenu proc far
                         mov Bh,al
                         SHL Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 SHL_Cx:
                     cmp selectedOp2Type,0
@@ -9443,12 +9555,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Cx_Reg_his
                         SHL_Cx_Reg_our:
-                        mov Cx,ourValRegCx
+                        mov Cx,p1_ValRegCx
                         mov ax,cx
                         mov cx,ax
                         SHL Cx,cl
                         call ourSetCF
-                        mov ourValRegCx,Cx
+                        mov p1_ValRegCx,Cx
                         jmp Exit
                         SHL_Cx_Reg_his:
                         cmp selectedOp2Reg,7
@@ -9458,7 +9570,7 @@ CommMenu proc far
                         mov cx,ax
                         SHL Cx,cl
                         call SetCarryFlag
-                        mov ValRegCx,Cx
+                        movp2_ValRegCx,Cx
                         cmp selectedPUPType,2
                         je SHL_Cx_Reg_our
                         jmp Exit
@@ -9468,11 +9580,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Cx_Val_his
                         SHL_Cx_Val_our:
-                        mov bx,ourValRegCx
+                        mov bx,p1_ValRegCx
                         mov cx,Op2Val
                         SHL bx,cl
                         call ourSetCF
-                        mov ourValRegCx,bx
+                        mov p1_ValRegCx,bx
                         jmp Exit
                         SHL_Cx_Val_his:
                         mov bx,ValRegCx
@@ -9482,7 +9594,7 @@ CommMenu proc far
                         mov bx,ax
                         SHL bx,cl
                         call SetCarryFlag
-                        mov ValRegCx,bx
+                        movp2_ValRegCx,bx
                         cmp selectedPUPType,2
                         je SHL_Cx_Val_our
                         jmp Exit
@@ -9498,18 +9610,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Cl_Reg_his
                         SHL_Cl_Reg_our:
-                        mov ax,ourValRegCX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegCX
+                        mov cx,p1_ValRegCX
                         SHL Al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         SHL_Cl_Reg_his:
                         mov ax,ValRegCX
                         mov cx,ValRegCX
                         SHL Al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je SHL_Cl_Reg_our
                         jmp Exit
@@ -9519,11 +9631,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Cl_Val_his
                         SHL_Cl_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         SHL al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         SHL_Cl_Val_his:
                         mov ax,ValRegCX
@@ -9531,7 +9643,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je SHL_Cl_Val_our
                         jmp Exit
@@ -9547,16 +9659,16 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Ch_Reg_his
                         SHL_Ch_Reg_our:
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         SHL Ch,cl
                         call ourSetCF
-                        mov ourValRegCX,Cx
+                        mov p1_ValRegCX,Cx
                         jmp Exit
                         SHL_Ch_Reg_his:
                         mov cx,ValRegCX
                         SHL Ch,cl
                         call SetCarryFlag
-                        mov ValRegCX,Cx
+                        movp2_ValRegCX,Cx
                         cmp selectedPUPType,2
                         je SHL_Ch_Reg_our
                         jmp Exit
@@ -9566,11 +9678,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Ch_Val_his
                         SHL_Ch_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         SHL ah,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         SHL_Ch_Val_his:
                         mov ax,ValRegCX
@@ -9583,7 +9695,7 @@ CommMenu proc far
                             mov al,bl
                         SHL ah,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je SHL_Ch_Val_our
                         jmp Exit
@@ -9599,18 +9711,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Dx_Reg_his
                         SHL_Dx_Reg_our:
-                        mov Dx,ourValRegDx
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDx
+                        mov cx,p1_ValRegCX
                         SHL Dx,cl
                         call ourSetCF
-                        mov ourValRegDx,Dx
+                        mov p1_ValRegDx,Dx
                         jmp Exit
                         SHL_Dx_Reg_his:
                         mov Dx,ValRegDx
                         mov cx,ValRegCX
                         SHL Dx,cl
                         call SetCarryFlag
-                        mov ValRegDx,Dx
+                        movp2_ValRegDx,Dx
                         cmp selectedPUPType,2
                         je SHL_Dx_Reg_our
                         jmp Exit
@@ -9620,11 +9732,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Dx_Val_his
                         SHL_Dx_Val_our:
-                        mov ax,ourValRegDx
+                        mov ax,p1_ValRegDx
                         mov cx,Op2Val
                         SHL ax,cl
                         call ourSetCF
-                        mov ourValRegDx,ax
+                        mov p1_ValRegDx,ax
                         jmp Exit
                         SHL_Dx_Val_his:
                         mov ax,ValRegDx
@@ -9632,7 +9744,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL ax,cl
                         call SetCarryFlag
-                        mov ValRegDx,ax
+                        movp2_ValRegDx,ax
                         cmp selectedPUPType,2
                         je SHL_Dx_Val_our
                         jmp Exit
@@ -9648,18 +9760,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Dl_Reg_his
                         SHL_Dl_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         SHL Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHL_Dl_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         SHL Dl,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je SHL_Dl_Reg_our
                         jmp Exit
@@ -9669,11 +9781,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Dl_Val_his
                         SHL_Dl_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         SHL Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHL_Dl_Val_his:
                         mov ax,ValRegDX
@@ -9681,7 +9793,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL al,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je SHL_Dl_Val_our
                         jmp Exit
@@ -9697,18 +9809,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Dh_Reg_his
                         SHL_Dh_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         SHL dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHL_Dh_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         SHL dh,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je SHL_Dh_Reg_our
                         jmp Exit
@@ -9718,11 +9830,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Dh_Val_his
                         SHL_Dh_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         SHL dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHL_Dh_Val_his:
                         mov ax,ValRegDX
@@ -9735,7 +9847,7 @@ CommMenu proc far
                             mov al,bl
                         SHL ah,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je SHL_Dh_Val_our
                         jmp Exit
@@ -9751,18 +9863,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Bp_Reg_his
                         SHL_Bp_Reg_our:
-                        mov Bp,ourValRegBp
-                        mov cx,ourValRegCX
+                        mov Bp,p1_ValRegBp
+                        mov cx,p1_ValRegCX
                         SHL Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHL_Bp_Reg_his:
                         mov Bp,ValRegBp
                         mov cx,ValRegCX
                         SHL Bp,cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je SHL_Bp_Reg_our
                         jmp Exit
@@ -9772,11 +9884,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Bp_Val_his
                         SHL_Bp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         mov cx,Op2Val
                         SHL Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHL_Bp_Val_his:
                         mov ax,ValRegBp
@@ -9784,7 +9896,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL ax,cl
                         call SetCarryFlag
-                        mov ValRegBp,ax
+                        movp2_ValRegBp,ax
                         cmp selectedPUPType,2
                         je SHL_Bp_Val_our
                         jmp Exit
@@ -9800,18 +9912,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Sp_Reg_his
                         SHL_Sp_Reg_our:
-                        mov Sp,ourValRegSp
-                        mov cx,ourValRegCX
+                        mov Sp,p1_ValRegSp
+                        mov cx,p1_ValRegCX
                         SHL Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         SHL_Sp_Reg_his:
                         mov Sp,ValRegSp
                         mov cx,ValRegCX
                         SHL Sp,cl
                         call SetCarryFlag
-                        mov ValRegSp,Sp
+                        movp2_ValRegSp,Sp
                         cmp selectedPUPType,2
                         je SHL_Sp_Reg_our
                         jmp Exit
@@ -9821,11 +9933,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Sp_Val_his
                         SHL_Sp_Val_our:
-                        mov Sp,ourValRegSp
+                        mov Sp,p1_ValRegSp
                         mov cx,Op2Val
                         SHL Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         SHL_Sp_Val_his:
                         mov ax,ValRegSp
@@ -9833,7 +9945,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL ax,cl
                         call SetCarryFlag
-                        mov ValRegSp,ax
+                        movp2_ValRegSp,ax
                         cmp selectedPUPType,2
                         je SHL_Sp_Val_our
                         jmp Exit
@@ -9849,18 +9961,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Si_Reg_his
                         SHL_Si_Reg_our:
-                        mov Si,ourValRegSi
-                        mov cx,ourValRegCX
+                        mov Si,p1_ValRegSi
+                        mov cx,p1_ValRegCX
                         SHL Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHL_Si_Reg_his:
                         mov Si,ValRegSi
                         mov cx,ValRegCX
                         SHL Si,cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je SHL_Si_Reg_our
                         jmp Exit
@@ -9870,11 +9982,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Si_Val_his
                         SHL_Si_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         mov cx,Op2Val
                         SHL Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHL_Si_Val_his:
                         mov ax,ValRegSi
@@ -9882,7 +9994,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL ax,cl
                         call SetCarryFlag
-                        mov ValRegSi,ax
+                        movp2_ValRegSi,ax
                         cmp selectedPUPType,2
                         je SHL_Si_Val_our
                         jmp Exit
@@ -9898,18 +10010,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Di_Reg_his
                         SHL_Di_Reg_our:
-                        mov Di,ourValRegDi
-                        mov cx,ourValRegCX
+                        mov Di,p1_ValRegDi
+                        mov cx,p1_ValRegCX
                         SHL Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHL_Di_Reg_his:
                         mov Di,ValRegDi
                         mov cx,ValRegCX
                         SHL Di,cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je SHL_Di_Reg_our
                         jmp Exit
@@ -9919,11 +10031,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_Di_Val_his
                         SHL_Di_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         mov cx,Op2Val
                         SHL Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHL_Di_Val_his:
                         mov ax,ValRegDi
@@ -9931,7 +10043,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHL ax,cl
                         call SetCarryFlag
-                        mov ValRegDi,ax
+                        movp2_ValRegDi,ax
                         cmp selectedPUPType,2
                         je SHL_Di_Val_our
                         jmp Exit
@@ -9957,13 +10069,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddBx_Reg_his
                         SHL_AddBx_Reg_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja SHL_invalid
-                        mov cx,ourValRegCX
-                        SHL ourValMem[Bx],cl
+                        mov cx,p1_ValRegCX
+                        SHL p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHL_AddBx_Reg_his:
                         mov Bx,ValRegBX
@@ -9973,10 +10085,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        SHL ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        SHLp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHL_AddBx_Reg_our
                         jmp Exit
@@ -9986,13 +10098,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddBx_Val_his
                         SHL_AddBx_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja SHL_invalid
                         mov cx,Op2Val
-                        SHL ourValMem[Bx],cl
+                        SHL p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHL_AddBx_Val_his:
                         mov Bx,ValRegBX
@@ -10002,10 +10114,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        SHL ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        SHLp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHL_AddBx_Val_our
                         jmp Exit
@@ -10021,13 +10133,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddBp_Reg_his
                         SHL_AddBp_Reg_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja SHL_invalid
-                        mov cx,ourValRegCX
-                        SHL ourValMem[Bp],cl
+                        mov cx,p1_ValRegCX
+                        SHL p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHL_AddBp_Reg_his:
                         mov Bp,ValRegBp
@@ -10037,10 +10149,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        SHL ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        SHLp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je SHL_AddBp_Reg_our
                         jmp Exit
@@ -10050,13 +10162,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddBp_Val_his
                         SHL_AddBp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja SHL_invalid
                         mov cx,Op2Val
-                        SHL ourValMem[Bp],cl
+                        SHL p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHL_AddBp_Val_his:
                         mov Bp,ValRegBp
@@ -10066,10 +10178,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        SHL ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        SHLp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je SHL_AddBp_Val_our
                         jmp Exit
@@ -10085,13 +10197,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddSi_Reg_his
                         SHL_AddSi_Reg_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja SHL_invalid
-                        mov cx,ourValRegCX
-                        SHL ourValMem[Si],cl
+                        mov cx,p1_ValRegCX
+                        SHL p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHL_AddSi_Reg_his:
                         mov Si,ValRegSi
@@ -10101,10 +10213,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        SHL ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        SHLp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je SHL_AddSi_Reg_our
                         jmp Exit
@@ -10114,13 +10226,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddSi_Val_his
                         SHL_AddSi_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja SHL_invalid
                         mov cx,Op2Val
-                        SHL ourValMem[Si],cl
+                        SHL p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHL_AddSi_Val_his:
                         mov Si,ValRegSi
@@ -10130,10 +10242,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        SHL ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        SHLp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je SHL_AddSi_Val_our
                         jmp Exit
@@ -10149,13 +10261,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddDi_Reg_his
                         SHL_AddDi_Reg_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja SHL_invalid
-                        mov cx,ourValRegCX
-                        SHL ourValMem[Di],cl
+                        mov cx,p1_ValRegCX
+                        SHL p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHL_AddDi_Reg_his:
                         mov Di,ValRegDi
@@ -10165,10 +10277,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        SHL ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        SHLp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je SHL_AddDi_Reg_our
                         jmp Exit
@@ -10178,13 +10290,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHL_AddDi_Val_his
                         SHL_AddDi_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja SHL_invalid
                         mov cx,Op2Val
-                        SHL ourValMem[Di],cl
+                        SHL p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHL_AddDi_Val_his:
                         mov Di,ValRegDi
@@ -10194,10 +10306,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        SHL ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        SHLp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je SHL_AddDi_Val_our
                         jmp Exit
@@ -10217,8 +10329,8 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne SHL_Mem_Reg_his
                     SHL_Mem_Reg_our:
-                    mov cx,ourValRegCX
-                    SHL ourValMem[si],cl
+                    mov cx,p1_ValRegCX
+                    SHL p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     SHL_Mem_Reg_his:
@@ -10226,8 +10338,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    SHL ValMem[si],cl
+                        movp2_ValMem[si],al
+                    SHLp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je SHL_Mem_Reg_our
@@ -10239,7 +10351,7 @@ CommMenu proc far
                     jne SHL_Mem_Val_his
                     SHL_Mem_Val_our:
                     mov cx,Op2Val
-                    SHL ourValMem[si],cl
+                    SHL p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     SHL_Mem_Val_his:
@@ -10247,8 +10359,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    SHL ValMem[si],cl
+                        movp2_ValMem[si],al
+                    SHLp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je SHL_Mem_Val_our
@@ -10326,18 +10438,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Ax_Reg_his
                         SHR_Ax_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         SHR Ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHR_Ax_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         SHR Ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHR_Ax_Reg_our
                         jmp Exit
@@ -10347,11 +10459,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Ax_Val_his
                         SHR_Ax_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         SHR ax,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHR_Ax_Val_his:
                         mov ax,ValRegAX
@@ -10359,7 +10471,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR ax,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHR_Ax_Val_our
                         jmp Exit
@@ -10375,18 +10487,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Al_Reg_his
                         SHR_Al_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         SHR Al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHR_Al_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         SHR Al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHR_Al_Reg_our
                         jmp Exit
@@ -10396,11 +10508,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Al_Val_his
                         SHR_Al_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         SHR al,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHR_Al_Val_his:
                         mov ax,ValRegAX
@@ -10408,7 +10520,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR al,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHR_Al_Val_our
                         jmp Exit
@@ -10424,18 +10536,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Ah_Reg_his
                         SHR_Ah_Reg_our:
-                        mov ax,ourValRegAX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegAX
+                        mov cx,p1_ValRegCX
                         SHR Ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHR_Ah_Reg_his:
                         mov ax,ValRegAX
                         mov cx,ValRegCX
                         SHR Ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHR_Ah_Reg_our
                         jmp Exit
@@ -10445,11 +10557,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Ah_Val_his
                         SHR_Ah_Val_our:
-                        mov ax,ourValRegAX
+                        mov ax,p1_ValRegAX
                         mov cx,Op2Val
                         SHR ah,cl
                         call ourSetCF
-                        mov ourValRegAX,ax
+                        mov p1_ValRegAX,ax
                         jmp Exit
                         SHR_Ah_Val_his:
                         mov ax,ValRegAX
@@ -10462,7 +10574,7 @@ CommMenu proc far
                             mov al,bl
                         SHR ah,cl
                         call SetCarryFlag
-                        mov ValRegAX,ax
+                        movp2_ValRegAX,ax
                         cmp selectedPUPType,2
                         je SHR_Ah_Val_our
                         jmp Exit
@@ -10478,18 +10590,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Bx_Reg_his
                         SHR_Bx_Reg_our:
-                        mov Bx,ourValRegBx
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBx
+                        mov cx,p1_ValRegCX
                         SHR Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         SHR_Bx_Reg_his:
                         mov Bx,ValRegBx
                         mov cx,ValRegCX
                         SHR Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je SHR_Bx_Reg_our
                         jmp Exit
@@ -10499,11 +10611,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Bx_Val_his
                         SHR_Bx_Val_our:
-                        mov Bx,ourValRegBx
+                        mov Bx,p1_ValRegBx
                         mov cx,Op2Val
                         SHR Bx,cl
                         call ourSetCF
-                        mov ourValRegBx,Bx
+                        mov p1_ValRegBx,Bx
                         jmp Exit
                         SHR_Bx_Val_his:
                         mov Bx,ValRegBx
@@ -10513,7 +10625,7 @@ CommMenu proc far
                         mov bx,ax
                         SHR Bx,cl
                         call SetCarryFlag
-                        mov ValRegBx,Bx
+                        movp2_ValRegBx,Bx
                         cmp selectedPUPType,2
                         je SHR_Bx_Val_our
                         jmp Exit
@@ -10529,18 +10641,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Bl_Reg_his
                         SHR_Bl_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         SHR Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHR_Bl_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         SHR Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHR_Bl_Reg_our
                         jmp Exit
@@ -10549,11 +10661,11 @@ CommMenu proc far
                         ja SHR_invalid
                         cmp selectedPUPType,1
                         SHR_Bl_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         SHR Bl,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHR_Bl_Val_his:
                         mov Bx,ValRegBX
@@ -10563,7 +10675,7 @@ CommMenu proc far
                         mov Bl,al
                         SHR Bl,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 SHR_Bh:
                     cmp selectedOp2Type,0
@@ -10577,18 +10689,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Bh_Reg_his
                         SHR_Bh_Reg_our:
-                        mov Bx,ourValRegBX
-                        mov cx,ourValRegCX
+                        mov Bx,p1_ValRegBX
+                        mov cx,p1_ValRegCX
                         SHR Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHR_Bh_Reg_his:
                         mov Bx,ValRegBX
                         mov cx,ValRegCX
                         SHR Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHR_Bh_Reg_our
                         jmp Exit
@@ -10597,11 +10709,11 @@ CommMenu proc far
                         ja SHR_invalid
                         cmp selectedPUPType,1
                         SHR_Bh_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         mov cx,Op2Val
                         SHR Bh,cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHR_Bh_Val_his:
                         mov Bx,ValRegBX
@@ -10611,7 +10723,7 @@ CommMenu proc far
                         mov Bh,al
                         SHR Bh,cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         jmp Exit
                 SHR_Cx:
                     cmp selectedOp2Type,0
@@ -10625,12 +10737,12 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Cx_Reg_his
                         SHR_Cx_Reg_our:
-                        mov Cx,ourValRegCx
+                        mov Cx,p1_ValRegCx
                         mov ax,cx
                         mov cx,ax
                         SHR Cx,cl
                         call ourSetCF
-                        mov ourValRegCx,Cx
+                        mov p1_ValRegCx,Cx
                         jmp Exit
                         SHR_Cx_Reg_his:
                         cmp selectedOp2Reg,7
@@ -10640,7 +10752,7 @@ CommMenu proc far
                         mov cx,ax
                         SHR Cx,cl
                         call SetCarryFlag
-                        mov ValRegCx,Cx
+                        movp2_ValRegCx,Cx
                         cmp selectedPUPType,2
                         je SHR_Cx_Reg_our
                         jmp Exit
@@ -10650,11 +10762,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Cx_Val_his
                         SHR_Cx_Val_our:
-                        mov bx,ourValRegCx
+                        mov bx,p1_ValRegCx
                         mov cx,Op2Val
                         SHR bx,cl
                         call ourSetCF
-                        mov ourValRegCx,bx
+                        mov p1_ValRegCx,bx
                         jmp Exit
                         SHR_Cx_Val_his:
                         mov bx,ValRegCx
@@ -10664,7 +10776,7 @@ CommMenu proc far
                         mov bx,ax
                         SHR bx,cl
                         call SetCarryFlag
-                        mov ValRegCx,bx
+                        movp2_ValRegCx,bx
                         cmp selectedPUPType,2
                         je SHR_Cx_Val_our
                         jmp Exit
@@ -10680,18 +10792,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Cl_Reg_his
                         SHR_Cl_Reg_our:
-                        mov ax,ourValRegCX
-                        mov cx,ourValRegCX
+                        mov ax,p1_ValRegCX
+                        mov cx,p1_ValRegCX
                         SHR Al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         SHR_Cl_Reg_his:
                         mov ax,ValRegCX
                         mov cx,ValRegCX
                         SHR Al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je SHR_Cl_Reg_our
                         jmp Exit
@@ -10701,11 +10813,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Cl_Val_his
                         SHR_Cl_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         SHR al,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         SHR_Cl_Val_his:
                         mov ax,ValRegCX
@@ -10713,7 +10825,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR al,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je SHR_Cl_Val_our
                         jmp Exit
@@ -10729,16 +10841,16 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Ch_Reg_his
                         SHR_Ch_Reg_our:
-                        mov cx,ourValRegCX
+                        mov cx,p1_ValRegCX
                         SHR Ch,cl
                         call ourSetCF
-                        mov ourValRegCX,Cx
+                        mov p1_ValRegCX,Cx
                         jmp Exit
                         SHR_Ch_Reg_his:
                         mov cx,ValRegCX
                         SHR Ch,cl
                         call SetCarryFlag
-                        mov ValRegCX,Cx
+                        movp2_ValRegCX,Cx
                         cmp selectedPUPType,2
                         je SHR_Ch_Reg_our
                         jmp Exit
@@ -10748,11 +10860,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Ch_Val_his
                         SHR_Ch_Val_our:
-                        mov ax,ourValRegCX
+                        mov ax,p1_ValRegCX
                         mov cx,Op2Val
                         SHR ah,cl
                         call ourSetCF
-                        mov ourValRegCX,ax
+                        mov p1_ValRegCX,ax
                         jmp Exit
                         SHR_Ch_Val_his:
                         mov ax,ValRegCX
@@ -10765,7 +10877,7 @@ CommMenu proc far
                             mov al,bl
                         SHR ah,cl
                         call SetCarryFlag
-                        mov ValRegCX,ax
+                        movp2_ValRegCX,ax
                         cmp selectedPUPType,2
                         je SHR_Ch_Val_our
                         jmp Exit
@@ -10781,18 +10893,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Dx_Reg_his
                         SHR_Dx_Reg_our:
-                        mov Dx,ourValRegDx
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDx
+                        mov cx,p1_ValRegCX
                         SHR Dx,cl
                         call ourSetCF
-                        mov ourValRegDx,Dx
+                        mov p1_ValRegDx,Dx
                         jmp Exit
                         SHR_Dx_Reg_his:
                         mov Dx,ValRegDx
                         mov cx,ValRegCX
                         SHR Dx,cl
                         call SetCarryFlag
-                        mov ValRegDx,Dx
+                        movp2_ValRegDx,Dx
                         cmp selectedPUPType,2
                         je SHR_Dx_Reg_our
                         jmp Exit
@@ -10802,11 +10914,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Dx_Val_his
                         SHR_Dx_Val_our:
-                        mov ax,ourValRegDx
+                        mov ax,p1_ValRegDx
                         mov cx,Op2Val
                         SHR ax,cl
                         call ourSetCF
-                        mov ourValRegDx,ax
+                        mov p1_ValRegDx,ax
                         jmp Exit
                         SHR_Dx_Val_his:
                         mov ax,ValRegDx
@@ -10814,7 +10926,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR ax,cl
                         call SetCarryFlag
-                        mov ValRegDx,ax
+                        movp2_ValRegDx,ax
                         cmp selectedPUPType,2
                         je SHR_Dx_Val_our
                         jmp Exit
@@ -10830,18 +10942,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Dl_Reg_his
                         SHR_Dl_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         SHR Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHR_Dl_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         SHR Dl,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je SHR_Dl_Reg_our
                         jmp Exit
@@ -10851,11 +10963,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Dl_Val_his
                         SHR_Dl_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         SHR Dl,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHR_Dl_Val_his:
                         mov ax,ValRegDX
@@ -10863,7 +10975,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR al,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je SHR_Dl_Val_our
                         jmp Exit
@@ -10879,18 +10991,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Dh_Reg_his
                         SHR_Dh_Reg_our:
-                        mov Dx,ourValRegDX
-                        mov cx,ourValRegCX
+                        mov Dx,p1_ValRegDX
+                        mov cx,p1_ValRegCX
                         SHR dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHR_Dh_Reg_his:
                         mov Dx,ValRegDX
                         mov cx,ValRegCX
                         SHR dh,cl
                         call SetCarryFlag
-                        mov ValRegDX,Dx
+                        movp2_ValRegDX,Dx
                         cmp selectedPUPType,2
                         je SHR_Dh_Reg_our
                         jmp Exit
@@ -10900,11 +11012,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Dh_Val_his
                         SHR_Dh_Val_our:
-                        mov Dx,ourValRegDX
+                        mov Dx,p1_ValRegDX
                         mov cx,Op2Val
                         SHR dh,cl
                         call ourSetCF
-                        mov ourValRegDX,Dx
+                        mov p1_ValRegDX,Dx
                         jmp Exit
                         SHR_Dh_Val_his:
                         mov ax,ValRegDX
@@ -10917,7 +11029,7 @@ CommMenu proc far
                             mov al,bl
                         SHR ah,cl
                         call SetCarryFlag
-                        mov ValRegDX,ax
+                        movp2_ValRegDX,ax
                         cmp selectedPUPType,2
                         je SHR_Dh_Val_our
                         jmp Exit
@@ -10933,18 +11045,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Bp_Reg_his
                         SHR_Bp_Reg_our:
-                        mov Bp,ourValRegBp
-                        mov cx,ourValRegCX
+                        mov Bp,p1_ValRegBp
+                        mov cx,p1_ValRegCX
                         SHR Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHR_Bp_Reg_his:
                         mov Bp,ValRegBp
                         mov cx,ValRegCX
                         SHR Bp,cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je SHR_Bp_Reg_our
                         jmp Exit
@@ -10954,11 +11066,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Bp_Val_his
                         SHR_Bp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         mov cx,Op2Val
                         SHR Bp,cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHR_Bp_Val_his:
                         mov ax,ValRegBp
@@ -10966,7 +11078,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR ax,cl
                         call SetCarryFlag
-                        mov ValRegBp,ax
+                        movp2_ValRegBp,ax
                         cmp selectedPUPType,2
                         je SHR_Bp_Val_our
                         jmp Exit
@@ -10982,18 +11094,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Sp_Reg_his
                         SHR_Sp_Reg_our:
-                        mov Sp,ourValRegSp
-                        mov cx,ourValRegCX
+                        mov Sp,p1_ValRegSp
+                        mov cx,p1_ValRegCX
                         SHR Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         SHR_Sp_Reg_his:
                         mov Sp,ValRegSp
                         mov cx,ValRegCX
                         SHR Sp,cl
                         call SetCarryFlag
-                        mov ValRegSp,Sp
+                        movp2_ValRegSp,Sp
                         cmp selectedPUPType,2
                         je SHR_Sp_Reg_our
                         jmp Exit
@@ -11003,11 +11115,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Sp_Val_his
                         SHR_Sp_Val_our:
-                        mov Sp,ourValRegSp
+                        mov Sp,p1_ValRegSp
                         mov cx,Op2Val
                         SHR Sp,cl
                         call ourSetCF
-                        mov ourValRegSp,Sp
+                        mov p1_ValRegSp,Sp
                         jmp Exit
                         SHR_Sp_Val_his:
                         mov ax,ValRegSp
@@ -11015,7 +11127,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR ax,cl
                         call SetCarryFlag
-                        mov ValRegSp,ax
+                        movp2_ValRegSp,ax
                         cmp selectedPUPType,2
                         je SHR_Sp_Val_our
                         jmp Exit
@@ -11031,18 +11143,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Si_Reg_his
                         SHR_Si_Reg_our:
-                        mov Si,ourValRegSi
-                        mov cx,ourValRegCX
+                        mov Si,p1_ValRegSi
+                        mov cx,p1_ValRegCX
                         SHR Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHR_Si_Reg_his:
                         mov Si,ValRegSi
                         mov cx,ValRegCX
                         SHR Si,cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je SHR_Si_Reg_our
                         jmp Exit
@@ -11052,11 +11164,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Si_Val_his
                         SHR_Si_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         mov cx,Op2Val
                         SHR Si,cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHR_Si_Val_his:
                         mov ax,ValRegSi
@@ -11064,7 +11176,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR ax,cl
                         call SetCarryFlag
-                        mov ValRegSi,ax
+                        movp2_ValRegSi,ax
                         cmp selectedPUPType,2
                         je SHR_Si_Val_our
                         jmp Exit
@@ -11080,18 +11192,18 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Di_Reg_his
                         SHR_Di_Reg_our:
-                        mov Di,ourValRegDi
-                        mov cx,ourValRegCX
+                        mov Di,p1_ValRegDi
+                        mov cx,p1_ValRegCX
                         SHR Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHR_Di_Reg_his:
                         mov Di,ValRegDi
                         mov cx,ValRegCX
                         SHR Di,cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je SHR_Di_Reg_our
                         jmp Exit
@@ -11101,11 +11213,11 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_Di_Val_his
                         SHR_Di_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         mov cx,Op2Val
                         SHR Di,cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHR_Di_Val_his:
                         mov ax,ValRegDi
@@ -11113,7 +11225,7 @@ CommMenu proc far
                         call LineStuckPwrUp
                         SHR ax,cl
                         call SetCarryFlag
-                        mov ValRegDi,ax
+                        movp2_ValRegDi,ax
                         cmp selectedPUPType,2
                         je SHR_Di_Val_our
                         jmp Exit
@@ -11139,13 +11251,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddBx_Reg_his
                         SHR_AddBx_Reg_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja SHR_invalid
-                        mov cx,ourValRegCX
-                        SHR ourValMem[Bx],cl
+                        mov cx,p1_ValRegCX
+                        SHR p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHR_AddBx_Reg_his:
                         mov Bx,ValRegBX
@@ -11155,10 +11267,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        SHR ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        SHRp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHR_AddBx_Reg_our
                         jmp Exit
@@ -11168,13 +11280,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddBx_Val_his
                         SHR_AddBx_Val_our:
-                        mov Bx,ourValRegBX
+                        mov Bx,p1_ValRegBX
                         cmp Bx,15d
                         ja SHR_invalid
                         mov cx,Op2Val
-                        SHR ourValMem[Bx],cl
+                        SHR p1_ValMem[Bx],cl
                         call ourSetCF
-                        mov ourValRegBX,Bx
+                        mov p1_ValRegBX,Bx
                         jmp Exit
                         SHR_AddBx_Val_his:
                         mov Bx,ValRegBX
@@ -11184,10 +11296,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bx]
                             call LineStuckPwrUp
-                            mov ValMem[Bx],al
-                        SHR ValMem[Bx],cl
+                            movp2_ValMem[Bx],al
+                        SHRp2_ValMem[Bx],cl
                         call SetCarryFlag
-                        mov ValRegBX,Bx
+                        movp2_ValRegBX,Bx
                         cmp selectedPUPType,2
                         je SHR_AddBx_Val_our
                         jmp Exit
@@ -11203,13 +11315,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddBp_Reg_his
                         SHR_AddBp_Reg_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja SHR_invalid
-                        mov cx,ourValRegCX
-                        SHR ourValMem[Bp],cl
+                        mov cx,p1_ValRegCX
+                        SHR p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHR_AddBp_Reg_his:
                         mov Bp,ValRegBp
@@ -11219,10 +11331,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        SHR ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        SHRp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je SHR_AddBp_Reg_our
                         jmp Exit
@@ -11232,13 +11344,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddBp_Val_his
                         SHR_AddBp_Val_our:
-                        mov Bp,ourValRegBp
+                        mov Bp,p1_ValRegBp
                         cmp Bp,15d
                         ja SHR_invalid
                         mov cx,Op2Val
-                        SHR ourValMem[Bp],cl
+                        SHR p1_ValMem[Bp],cl
                         call ourSetCF
-                        mov ourValRegBp,Bp
+                        mov p1_ValRegBp,Bp
                         jmp Exit
                         SHR_AddBp_Val_his:
                         mov Bp,ValRegBp
@@ -11248,10 +11360,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Bp]
                             call LineStuckPwrUp
-                            mov ValMem[Bp],al
-                        SHR ValMem[Bp],cl
+                            movp2_ValMem[Bp],al
+                        SHRp2_ValMem[Bp],cl
                         call SetCarryFlag
-                        mov ValRegBp,Bp
+                        movp2_ValRegBp,Bp
                         cmp selectedPUPType,2
                         je SHR_AddBp_Val_our
                         jmp Exit
@@ -11267,13 +11379,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddSi_Reg_his
                         SHR_AddSi_Reg_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja SHR_invalid
-                        mov cx,ourValRegCX
-                        SHR ourValMem[Si],cl
+                        mov cx,p1_ValRegCX
+                        SHR p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHR_AddSi_Reg_his:
                         mov Si,ValRegSi
@@ -11283,10 +11395,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        SHR ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        SHRp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je SHR_AddSi_Reg_our
                         jmp Exit
@@ -11296,13 +11408,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddSi_Val_his
                         SHR_AddSi_Val_our:
-                        mov Si,ourValRegSi
+                        mov Si,p1_ValRegSi
                         cmp Si,15d
                         ja SHR_invalid
                         mov cx,Op2Val
-                        SHR ourValMem[Si],cl
+                        SHR p1_ValMem[Si],cl
                         call ourSetCF
-                        mov ourValRegSi,Si
+                        mov p1_ValRegSi,Si
                         jmp Exit
                         SHR_AddSi_Val_his:
                         mov Si,ValRegSi
@@ -11312,10 +11424,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Si]
                             call LineStuckPwrUp
-                            mov ValMem[Si],al
-                        SHR ValMem[Si],cl
+                            movp2_ValMem[Si],al
+                        SHRp2_ValMem[Si],cl
                         call SetCarryFlag
-                        mov ValRegSi,Si
+                        movp2_ValRegSi,Si
                         cmp selectedPUPType,2
                         je SHR_AddSi_Val_our
                         jmp Exit
@@ -11331,13 +11443,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddDi_Reg_his
                         SHR_AddDi_Reg_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja SHR_invalid
-                        mov cx,ourValRegCX
-                        SHR ourValMem[Di],cl
+                        mov cx,p1_ValRegCX
+                        SHR p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHR_AddDi_Reg_his:
                         mov Di,ValRegDi
@@ -11347,10 +11459,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        SHR ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        SHRp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je SHR_AddDi_Reg_our
                         jmp Exit
@@ -11360,13 +11472,13 @@ CommMenu proc far
                         cmp selectedPUPType,1
                         jne SHR_AddDi_Val_his
                         SHR_AddDi_Val_our:
-                        mov Di,ourValRegDi
+                        mov Di,p1_ValRegDi
                         cmp Di,15d
                         ja SHR_invalid
                         mov cx,Op2Val
-                        SHR ourValMem[Di],cl
+                        SHR p1_ValMem[Di],cl
                         call ourSetCF
-                        mov ourValRegDi,Di
+                        mov p1_ValRegDi,Di
                         jmp Exit
                         SHR_AddDi_Val_his:
                         mov Di,ValRegDi
@@ -11376,10 +11488,10 @@ CommMenu proc far
                         ;;;;;;;;;;;;;;;;;;;;;;;
                             mov al,ValMem[Di]
                             call LineStuckPwrUp
-                            mov ValMem[Di],al
-                        SHR ValMem[Di],cl
+                            movp2_ValMem[Di],al
+                        SHRp2_ValMem[Di],cl
                         call SetCarryFlag
-                        mov ValRegDi,Di
+                        movp2_ValRegDi,Di
                         cmp selectedPUPType,2
                         je SHR_AddDi_Val_our
                         jmp Exit
@@ -11399,8 +11511,8 @@ CommMenu proc far
                     cmp selectedPUPType,1
                     jne SHR_Mem_Reg_his
                     SHR_Mem_Reg_our:
-                    mov cx,ourValRegCX
-                    SHR ourValMem[si],cl
+                    mov cx,p1_ValRegCX
+                    SHR p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     SHR_Mem_Reg_his:
@@ -11408,8 +11520,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    SHR ValMem[si],cl
+                        movp2_ValMem[si],al
+                    SHRp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je SHR_Mem_Reg_our
@@ -11421,7 +11533,7 @@ CommMenu proc far
                     jne SHR_Mem_Val_his
                     SHR_Mem_Val_our:
                     mov cx,Op2Val
-                    SHR ourValMem[si],cl
+                    SHR p1_ValMem[si],cl
                     call ourSetCF
                     jmp Exit
                     SHR_Mem_Val_his:
@@ -11429,8 +11541,8 @@ CommMenu proc far
                     ;;;;;;;;;;;;;;;;;;
                         mov al,ValMem[si]
                         call LineStuckPwrUp
-                        mov ValMem[si],al
-                    SHR ValMem[si],cl
+                        movp2_ValMem[si],al
+                    SHRp2_ValMem[si],cl
                     call SetCarryFlag
                     cmp selectedPUPType,2
                     je SHR_Mem_Val_our
@@ -11518,179 +11630,179 @@ AND_Comm_PROC PROC FAR
         AndOp1RegAX: 
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andax   
-            ExecAndReg ourValRegAX, ourValCF      ;command
+            ExecAndReg p1_ValRegAX, p1_ValCF      ;command
             jmp Exit
             notthispower1_andax:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andax  
-            ExecAndReg ourValRegAX, ourValCF       ;coomand
+            ExecAndReg p1_ValRegAX, p1_ValCF       ;coomand
             notthispower2_andax:
-            ExecAndReg ValRegAX, ValCF
+            ExecAndRegp2_ValRegAX,p2_ValCF
         AndOp1RegAL:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andal   
-            ExecAndReg_8Bit ourValRegAX, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegAX, p1_ValCF      ;command
             jmp Exit
             notthispower1_andal:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andal  
-            ExecAndReg_8Bit ourValRegAX, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegAX, p1_ValCF       ;coomand
             notthispower2_andal:
-            ExecAndReg_8Bit ValRegAX, ValCF
+            ExecAndReg_8Bitp2_ValRegAX,p2_ValCF
         AndOp1RegAH:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andah    
-            ExecAndReg_8Bit ourValRegAX+1, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegAX+1, p1_ValCF      ;command
             jmp Exit
             notthispower1_andah:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andah  
-            ExecAndReg_8Bit ourValRegAX+1, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegAX+1, p1_ValCF       ;coomand
             notthispower2_andah:
-            ExecAndReg_8Bit ValRegAX+1, ValCF
+            ExecAndReg_8Bitp2_ValRegAX+1,p2_ValCF
         AndOp1RegBX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andbx   
-            ExecAndReg ourValRegBX, ourValCF      ;command
+            ExecAndReg p1_ValRegBX, p1_ValCF      ;command
             jmp Exit
             notthispower1_andbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andbx  
-            ExecAndReg ourValRegBX, ourValCF       ;coomand
+            ExecAndReg p1_ValRegBX, p1_ValCF       ;coomand
             notthispower2_andbx:
-            ExecAndReg ValRegBX, ValCF
+            ExecAndRegp2_ValRegBX,p2_ValCF
         AndOp1RegBL:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andbl    
-            ExecAndReg_8Bit ourValRegBX, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegBX, p1_ValCF      ;command
             jmp Exit
             notthispower1_andbl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andbl 
-            ExecAndReg_8Bit ourValRegBX, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegBX, p1_ValCF       ;coomand
             notthispower2_andbl:
-            ExecAndReg_8Bit ValRegBX, ValCF
+            ExecAndReg_8Bitp2_ValRegBX,p2_ValCF
         AndOp1RegBH:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andbh    
-            ExecAndReg_8Bit ourValRegBX+1, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegBX+1, p1_ValCF      ;command
             jmp Exit
             notthispower1_andbh:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andbh  
-            ExecAndReg_8Bit ourValRegBX+1, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegBX+1, p1_ValCF       ;coomand
             notthispower2_andbh:
-            ExecAndReg_8Bit ValRegBX+1, ValCF
+            ExecAndReg_8Bitp2_ValRegBX+1,p2_ValCF
         AndOp1RegCX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andcx    
-            ExecAndReg ourValRegCX, ourValCF      ;command
+            ExecAndReg p1_ValRegCX, p1_ValCF      ;command
             jmp Exit
             notthispower1_andcx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andcx  
-            ExecAndReg ourValRegCX, ourValCF       ;coomand
+            ExecAndReg p1_ValRegCX, p1_ValCF       ;coomand
             notthispower2_andcx:
-            ExecAndReg ValRegCX, ValCF
+            ExecAndRegp2_ValRegCX,p2_ValCF
         AndOp1RegCL:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andcl    
-            ExecAndReg_8Bit ourValRegCX, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegCX, p1_ValCF      ;command
             jmp Exit
             notthispower1_andcl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andcl  
-            ExecAndReg_8Bit ourValRegCX, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegCX, p1_ValCF       ;coomand
             notthispower2_andcl:
-            ExecAndReg_8Bit ValRegCX, ValCF
+            ExecAndReg_8Bitp2_ValRegCX,p2_ValCF
         AndOp1RegCH:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andch    
-            ExecAndReg_8Bit ourValRegCX+1, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegCX+1, p1_ValCF      ;command
             jmp Exit
             notthispower1_andch:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andch  
-            ExecAndReg_8Bit ourValRegCX+1, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegCX+1, p1_ValCF       ;coomand
             notthispower2_andch:
-            ExecAndReg_8Bit ValRegCX+1, ValCF
+            ExecAndReg_8Bitp2_ValRegCX+1,p2_ValCF
         AndOp1RegDX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_anddx    
-            ExecAndReg ourValRegDX, ourValCF      ;command
+            ExecAndReg p1_ValRegDX, p1_ValCF      ;command
             jmp Exit
             notthispower1_anddx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_anddx  
-            ExecAndReg ourValRegDX, ourValCF       ;coomand
+            ExecAndReg p1_ValRegDX, p1_ValCF       ;coomand
             notthispower2_anddx:
-            ExecAndReg ValRegDX, ValCF
+            ExecAndRegp2_ValRegDX,p2_ValCF
         AndOp1RegDL:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_anddl    
-            ExecAndReg_8Bit ourValRegDX, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegDX, p1_ValCF      ;command
             jmp Exit
             notthispower1_anddl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_anddl  
-            ExecAndReg_8Bit ourValRegDX, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegDX, p1_ValCF       ;coomand
             notthispower2_anddl:
-            ExecAndReg_8Bit ValRegDX, ValCF
+            ExecAndReg_8Bitp2_ValRegDX,p2_ValCF
         AndOp1RegDH:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_anddh    
-            ExecAndReg_8Bit ourValRegDX+1, ourValCF      ;command
+            ExecAndReg_8Bit p1_ValRegDX+1, p1_ValCF      ;command
             jmp Exit
             notthispower1_anddh:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_anddh  
-            ExecAndReg_8Bit ourValRegDX+1, ourValCF       ;coomand
+            ExecAndReg_8Bit p1_ValRegDX+1, p1_ValCF       ;coomand
             notthispower2_anddh:
-            ExecAndReg_8Bit ValRegDX+1, ValCF
+            ExecAndReg_8Bitp2_ValRegDX+1,p2_ValCF
         AndOp1RegBP: 
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andbp    
-            ExecAndReg ourValRegBP, ourValCF      ;command
+            ExecAndReg p1_ValRegBP, p1_ValCF      ;command
             jmp Exit
             notthispower1_andbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andbp  
-            ExecAndReg ourValRegBP, ourValCF       ;coomand
+            ExecAndReg p1_ValRegBP, p1_ValCF       ;coomand
             notthispower2_andbp:
-            ExecAndReg ValRegBP, ValCF
+            ExecAndRegp2_ValRegBP,p2_ValCF
         AndOp1RegSP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andsp    
-            ExecAndReg ourValRegSP, ourValCF      ;command
+            ExecAndReg p1_ValRegSP, p1_ValCF      ;command
             jmp Exit
             notthispower1_andsp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andsp  
-            ExecAndReg ourValRegSP, ourValCF       ;coomand
+            ExecAndReg p1_ValRegSP, p1_ValCF       ;coomand
             notthispower2_andsp:
-            ExecAndReg ValRegSP, ValCF
+            ExecAndRegp2_ValRegSP,p2_ValCF
         AndOp1RegSI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andsi    
-            ExecAndReg ourValRegSI, ourValCF      ;command
+            ExecAndReg p1_ValRegSI, p1_ValCF      ;command
             jmp Exit
             notthispower1_andsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andsi  
-            ExecAndReg ourValRegSI, ourValCF       ;coomand
+            ExecAndReg p1_ValRegSI, p1_ValCF       ;coomand
             notthispower2_andsi:
-            ExecAndReg ValRegSI, ValCF
+            ExecAndRegp2_ValRegSI,p2_ValCF
         AndOp1RegDI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_anddi    
-            ExecAndReg ourValRegDI, ourValCF      ;command
+            ExecAndReg p1_ValRegDI, p1_ValCF      ;command
             jmp Exit
             notthispower1_anddi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_anddi  
-            ExecAndReg ourValRegDI, ourValCF       ;coomand
+            ExecAndReg p1_ValRegDI, p1_ValCF       ;coomand
             notthispower2_anddi:
-            ExecAndReg ValRegDI, ValCF
+            ExecAndRegp2_ValRegDI,p2_ValCF
 
     AndOp1AddReg:
 
@@ -11713,68 +11825,68 @@ AND_Comm_PROC PROC FAR
         AndOp1AddRegBX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andaddbx    
-            ExecAndAddReg ourValRegBX, ourValMem, ourValCF      ;command
+            ExecAndAddReg p1_ValRegBX, p1_ValMem, p1_ValCF      ;command
             jmp Exit
             notthispower1_andaddbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andaddbx  
-            ExecAndAddReg ourValRegBX, ourValMem, ourValCF       ;coomand
+            ExecAndAddReg p1_ValRegBX, p1_ValMem, p1_ValCF       ;coomand
             notthispower2_andaddbx:   
-            ExecAndAddReg ValRegBX, ValMem, ValCF
+            ExecAndAddRegp2_ValRegBX,p2_ValMem,p2_ValCF
         AndOp1AddRegBP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andaddbp    
-            ExecAndAddReg ourValRegBP, ourValMem, ourValCF      ;command
+            ExecAndAddReg p1_ValRegBP, p1_ValMem, p1_ValCF      ;command
             jmp Exit
             notthispower1_andaddbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andaddbp  
-            ExecAndAddReg ourValRegBP, ourValMem, ourValCF       ;coomand
+            ExecAndAddReg p1_ValRegBP, p1_ValMem, p1_ValCF       ;coomand
             notthispower2_andaddbp:
-            ExecAndAddReg ValRegBP, ValMem, ValCF
+            ExecAndAddRegp2_ValRegBP,p2_ValMem,p2_ValCF
         AndOp1AddRegSI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andaddsi    
-            ExecAndAddReg ourValRegSI, ourValMem, ourValCF      ;command
+            ExecAndAddReg p1_ValRegSI, p1_ValMem, p1_ValCF      ;command
             jmp Exit
             notthispower1_andaddsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andaddsi 
-            ExecAndAddReg ourValRegSI, ourValMem, ourValCF       ;coomand
+            ExecAndAddReg p1_ValRegSI, p1_ValMem, p1_ValCF       ;coomand
             notthispower2_andaddsi:
-            ExecAndAddReg ValRegSI, ValMem, ValCF
+            ExecAndAddRegp2_ValRegSI,p2_ValMem,p2_ValCF
         AndOp1AddRegDI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_andadddi    
-            ExecAndAddReg ourValRegDI, ourValMem, ourValCF      ;command
+            ExecAndAddReg p1_ValRegDI, p1_ValMem, p1_ValCF      ;command
             jmp Exit
             notthispower1_andadddi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_andadddi 
-            ExecAndAddReg ourValRegDI, ourValMem, ourValCF       ;coomand
+            ExecAndAddReg p1_ValRegDI, p1_ValMem, p1_ValCF       ;coomand
             notthispower2_andadddi:
-            ExecAndAddReg ValRegDI, ValMem, ValCF
+            ExecAndAddRegp2_ValRegDI,p2_ValMem,p2_ValCF
     AndOp1Mem:
                 
-                    mov si,0
-                    SearchForMemand:
-                    mov cx,si 
-                    cmp selectedOp2Mem,cl
-                    JNE Nextand
-                    cmp selectedPUPType,1 ;command on your own processor  
-                    jne notthispower1_andmem   
-                    ExecAndMem ourValMem[si], ourValCF      ;command
-                    jmp Exit
-                    notthispower1_andmem:
-                    cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-                    jne notthispower2_andmem 
-                    ExecAndMem ourValMem[si], ourValCF       ;coomand
-                    notthispower2_andmem:
-                    ExecAndMem ValMem[si], ValCF
-                    JMP Exit 
-                    Nextand:
-                    inc si 
-                    jmp SearchForMemand
+        mov si,0
+        SearchForMemand:
+        mov cx,si 
+        cmp selectedOp2Mem,cl
+        JNE Nextand
+        cmp selectedPUPType,1 ;command on your own processor  
+        jne notthispower1_andmem   
+        ExecAndMem p1_ValMem[si], p1_ValCF      ;command
+        jmp Exit
+        notthispower1_andmem:
+        cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
+        jne notthispower2_andmem 
+        ExecAndMem p1_ValMem[si], p1_ValCF       ;coomand
+        notthispower2_andmem:
+        ExecAndMemp2_ValMem[si],p2_ValCF
+        JMP Exit 
+        Nextand:
+        inc si 
+        jmp SearchForMemand
     RET
 ENDP
 MOV_Comm_PROC PROC FAR
@@ -11838,226 +11950,226 @@ MOV_Comm_PROC PROC FAR
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movax   
-            MOV ourValRegAX, AX     ;command
+            MOV p1_ValRegAX, AX     ;command
             jmp Exit
             notthispower1_movax:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movax 
-            MOV ourValRegAX, AX      ;coomand
+            MOV p1_ValRegAX, AX      ;coomand
             notthispower2_movax:
             CALL GetSrcOp
-            MOV ValRegAX, AX
+            MOVp2_ValRegAX, AX
             JMP Exit
         MOVOp1RegAL:
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_moval  
-            MOV BYTE PTR ourValRegAX, AL    ;command
+            MOV BYTE PTR p1_ValRegAX, AL    ;command
             jmp Exit
             notthispower1_moval:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_moval 
-            MOV BYTE PTR ourValRegAX, AL      ;coomand
+            MOV BYTE PTR p1_ValRegAX, AL      ;coomand
             notthispower2_moval:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegAX, AL
+            MOV BYTE PTRp2_ValRegAX, AL
             JMP Exit
         MOVOp1RegAH:
             ; Delete this lineAH
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movah 
-            MOV BYTE PTR ourValRegAX+1, AL    ;command
+            MOV BYTE PTR p1_ValRegAX+1, AL    ;command
             jmp Exit
             notthispower1_movah:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movah 
-            MOV BYTE PTR ourValRegAX+1, AL      ;coomand
+            MOV BYTE PTR p1_ValRegAX+1, AL      ;coomand
             notthispower2_movah:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegAX+1, AL
+            MOV BYTE PTRp2_ValRegAX+1, AL
             JMP Exit
         MOVOp1RegBX:
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movbx   
-            MOV ourValRegBX, AX    ;command
+            MOV p1_ValRegBX, AX    ;command
             jmp Exit
             notthispower1_movbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movbx 
-            MOV ourValRegBX, AX      ;coomand
+            MOV p1_ValRegBX, AX      ;coomand
             notthispower2_movbx:
             CALL GetSrcOp
-            MOV ValRegBX, AX
+            MOVp2_ValRegBX, AX
             JMP Exit
         MOVOp1RegBL:
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movbl 
-            MOV BYTE PTR ourValRegBX, AL    ;command
+            MOV BYTE PTR p1_ValRegBX, AL    ;command
             jmp Exit
             notthispower1_movbl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movbl
-            MOV BYTE PTR ourValRegBX, AL      ;coomand
+            MOV BYTE PTR p1_ValRegBX, AL      ;coomand
             notthispower2_movbl:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegBX, AL
+            MOV BYTE PTRp2_ValRegBX, AL
             JMP Exit
         MOVOp1RegBH:
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movbh
-            MOV BYTE PTR ourValRegBX+1, AL    ;command
+            MOV BYTE PTR p1_ValRegBX+1, AL    ;command
             jmp Exit
             notthispower1_movbh:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movbh
-            MOV BYTE PTR ourValRegBX+1, AL     ;coomand
+            MOV BYTE PTR p1_ValRegBX+1, AL     ;coomand
             notthispower2_movbh:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegBX+1, AL
+            MOV BYTE PTRp2_ValRegBX+1, AL
             JMP Exit
         MOVOp1RegCX:
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movcx   
-            MOV ourValRegCX, AX    ;command
+            MOV p1_ValRegCX, AX    ;command
             jmp Exit
             notthispower1_movcx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movcx 
-            MOV ourValRegCX, AX      ;coomand
+            MOV p1_ValRegCX, AX      ;coomand
             notthispower2_movcx:
             CALL GetSrcOp
-            MOV ValRegCX, AX
+            MOVp2_ValRegCX, AX
             JMP Exit
         MOVOp1RegCL:
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movcl
-            MOV BYTE PTR ourValRegCX, AL    ;command
+            MOV BYTE PTR p1_ValRegCX, AL    ;command
             jmp Exit
             notthispower1_movcl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movcl
-            MOV BYTE PTR ourValRegCX, AL     ;coomand
+            MOV BYTE PTR p1_ValRegCX, AL     ;coomand
             notthispower2_movcl:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegCX, AL
+            MOV BYTE PTRp2_ValRegCX, AL
             JMP Exit
         MOVOp1RegCH:
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movch
-            MOV BYTE PTR ourValRegCX+1, AL    ;command
+            MOV BYTE PTR p1_ValRegCX+1, AL    ;command
             jmp Exit
             notthispower1_movch:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movch
-            MOV BYTE PTR ourValRegCX+1, AL     ;coomand
+            MOV BYTE PTR p1_ValRegCX+1, AL     ;coomand
             notthispower2_movch:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegCX+1, AL
+            MOV BYTE PTRp2_ValRegCX+1, AL
             JMP Exit
         MOVOp1RegDX:
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movdx   
-            MOV ourValRegDX, AX    ;command
+            MOV p1_ValRegDX, AX    ;command
             jmp Exit
             notthispower1_movdx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movdx 
-            MOV ourValRegDX, AX      ;coomand
+            MOV p1_ValRegDX, AX      ;coomand
             notthispower2_movdx:
             CALL GetSrcOp
-            MOV ValRegDX, AX
+            MOVp2_ValRegDX, AX
             JMP Exit
         MOVOp1RegDL:
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movdl
-            MOV BYTE PTR ourValRegDX, AL    ;command
+            MOV BYTE PTR p1_ValRegDX, AL    ;command
             jmp Exit
             notthispower1_movdl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movdl
-            MOV BYTE PTR ourValRegDX, AL     ;coomand
+            MOV BYTE PTR p1_ValRegDX, AL     ;coomand
             notthispower2_movdl:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegDX, AL
+            MOV BYTE PTRp2_ValRegDX, AL
             JMP Exit
         MOVOp1RegDH:
             CALL ourGetSrcOp_8Bit
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movdh
-            MOV BYTE PTR ourValRegDX+1, AL    ;command
+            MOV BYTE PTR p1_ValRegDX+1, AL    ;command
             jmp Exit
             notthispower1_movdh:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movdh
-            MOV BYTE PTR ourValRegDX+1, AL     ;coomand
+            MOV BYTE PTR p1_ValRegDX+1, AL     ;coomand
             notthispower2_movdh:
             CALL GetSrcOp_8Bit
-            MOV BYTE PTR ValRegDX+1, AL
+            MOV BYTE PTRp2_ValRegDX+1, AL
             JMP Exit
         MOVOp1RegBP:
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movbp   
-            MOV ourValRegBP, AX    ;command
+            MOV p1_ValRegBP, AX    ;command
             jmp Exit
             notthispower1_movbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movbp 
-            MOV ourValRegBP, AX      ;coomand
+            MOV p1_ValRegBP, AX      ;coomand
             notthispower2_movbp:
             CALL GetSrcOp
-            MOV ValRegBP, AX
+            MOVp2_ValRegBP, AX
             JMP Exit
         MOVOp1RegSP:
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movsp   
-            MOV ourValRegSP, AX    ;command
+            MOV p1_ValRegSP, AX    ;command
             jmp Exit
             notthispower1_movsp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movsp 
-            MOV ourValRegSP, AX      ;coomand
+            MOV p1_ValRegSP, AX      ;coomand
             notthispower2_movsp:
             CALL GetSrcOp
-            MOV ValRegSP, AX
+            MOVp2_ValRegSP, AX
             JMP Exit
         MOVOp1RegSI:
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movsi   
-            MOV ourValRegSI, AX    ;command
+            MOV p1_ValRegSI, AX    ;command
             jmp Exit
             notthispower1_movsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movsi 
-            MOV ourValRegSI, AX      ;coomand
+            MOV p1_ValRegSI, AX      ;coomand
             notthispower2_movsi:
             CALL GetSrcOp
-            MOV ValRegSI, AX
+            MOVp2_ValRegSI, AX
             JMP Exit
         MOVOp1RegDI:
             CALL ourGetSrcOp
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movdi   
-            MOV ourValRegDI, AX    ;command
+            MOV p1_ValRegDI, AX    ;command
             jmp Exit
             notthispower1_movdi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movdi 
-            MOV ourValRegDI, AX      ;coomand
+            MOV p1_ValRegDI, AX      ;coomand
             notthispower2_movdi:
             CALL GetSrcOp
-            MOV ValRegDI, AX
+            MOVp2_ValRegDI, AX
             JMP Exit
 
     MOVOp1AddReg:
@@ -12081,47 +12193,47 @@ MOV_Comm_PROC PROC FAR
         MOVOp1AddRegBX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movaddbx   
-            ExecMovAddReg ourValRegBX, ourValMem    ;command
+            ExecMovAddReg p1_ValRegBX, p1_ValMem    ;command
             jmp Exit
             notthispower1_movaddbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movaddbx 
-            ExecMovAddReg ourValRegBX, ourValMem      ;coomand
+            ExecMovAddReg p1_ValRegBX, p1_ValMem      ;coomand
             notthispower2_movaddbx:
-            ExecMovAddReg ValRegBX, ValMem
+            ExecMovAddRegp2_ValRegBX,p2_ValMem
         MOVOp1AddRegBP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movaddbp   
-            ExecMovAddReg ourValRegBP, ourValMem    ;command
+            ExecMovAddReg p1_ValRegBP, p1_ValMem    ;command
             jmp Exit
             notthispower1_movaddbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movaddbp
-            ExecMovAddReg ourValRegBP, ourValMem      ;coomand
+            ExecMovAddReg p1_ValRegBP, p1_ValMem      ;coomand
             notthispower2_movaddbp:
-            ExecMovAddReg ValRegBP, ValMem
+            ExecMovAddRegp2_ValRegBP,p2_ValMem
         MOVOp1AddRegSI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movaddsi 
-            ExecMovAddReg ourValRegSI, ourValMem    ;command
+            ExecMovAddReg p1_ValRegSI, p1_ValMem    ;command
             jmp Exit
             notthispower1_movaddsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movaddsi 
-            ExecMovAddReg ourValRegSI, ourValMem      ;coomand
+            ExecMovAddReg p1_ValRegSI, p1_ValMem      ;coomand
             notthispower2_movaddsi:
-            ExecMovAddReg ValRegSI, ValMem
+            ExecMovAddRegp2_ValRegSI,p2_ValMem
         MOVOp1AddRegDI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_movadddi 
-            ExecMovAddReg ourValRegDI, ourValMem    ;command
+            ExecMovAddReg p1_ValRegDI, p1_ValMem    ;command
             jmp Exit
             notthispower1_movadddi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_movadddi 
-            ExecMovAddReg ourValRegDI, ourValMem      ;coomand
+            ExecMovAddReg p1_ValRegDI, p1_ValMem      ;coomand
             notthispower2_movadddi:
-            ExecMovAddReg ValRegDI, ValMem
+            ExecMovAddRegp2_ValRegDI,p2_ValMem
     MOVOp1Mem:
         
             mov si,0
@@ -12131,14 +12243,14 @@ MOV_Comm_PROC PROC FAR
             JNE Nextmov
             cmp selectedPUPType,1 ; our command
             jne notthispower1_movmem
-            ExecMovMem ourValMem[si] ; command
+            ExecMovMem p1_ValMem[si] ; command
             jmp Exit
             notthispower1_movmem:  
             cmp selectedPUPType,2 ;his/her and our command 
             jne notthispower2_movmem 
-            ExecMovMem ourValMem[si] ;command
+            ExecMovMem p1_ValMem[si] ;command
             notthispower2_movmem: 
-            ExecMovMem ValMem[si]
+            ExecMovMemp2_ValMem[si]
             JMP Exit 
             Nextmov:
             inc si 
@@ -12211,19 +12323,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addax 
             CLC
-            ADD ourValRegAX, AX ;command
+            ADD p1_ValRegAX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_addax:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addax  
             CLC
-            ADD ourValRegAX, AX ;command
+            ADD p1_ValRegAX, AX ;command
             CALL ourSetCF        
             notthispower2_addax:
             CALL GetSrcOp
             CLC
-            ADD ValRegAX, AX ;command
+            ADDp2_ValRegAX, AX ;command
             CALL SetCF
             JMP Exit
         AddOp1RegAL:
@@ -12231,19 +12343,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addal  
             CLC
-            ADD BYTE PTR ourValRegAX, AL
+            ADD BYTE PTR p1_ValRegAX, AL
             CALL ourSetCF      
             jmp Exit
             notthispower1_addal:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addal 
             CLC
-            ADD BYTE PTR ourValRegAX, AL
+            ADD BYTE PTR p1_ValRegAX, AL
             CALL ourSetCF        
             notthispower2_addal:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegAX, AL
+            ADD BYTE PTRp2_ValRegAX, AL
             CALL SetCF
             JMP Exit
         AddOp1RegAH:
@@ -12251,19 +12363,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addah  
             CLC
-            ADD BYTE PTR ourValRegAX+1, AL ;command
+            ADD BYTE PTR p1_ValRegAX+1, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_addah:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addah 
             CLC
-            ADD BYTE PTR ourValRegAX+1, AL ;command
+            ADD BYTE PTR p1_ValRegAX+1, AL ;command
             CALL ourSetCF        
             notthispower2_addah:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegAX+1, AL ;command
+            ADD BYTE PTRp2_ValRegAX+1, AL ;command
             CALL SetCF
             JMP Exit
         AddOp1RegBX:
@@ -12271,19 +12383,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addbx 
             CLC
-            ADD ourValRegBX, AX ;command
+            ADD p1_ValRegBX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_addbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addbx  
             CLC
-            ADD ourValRegBX, AX ;command
+            ADD p1_ValRegBX, AX ;command
             CALL ourSetCF        
             notthispower2_addbx:
             CALL GetSrcOp
             CLC
-            ADD ValRegBX, AX
+            ADDp2_ValRegBX, AX
             CALL SetCF
             JMP Exit
         AddOp1RegBL:
@@ -12291,19 +12403,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addbl  
             CLC
-            ADD BYTE PTR ourValRegBX, AL
+            ADD BYTE PTR p1_ValRegBX, AL
             CALL ourSetCF      
             jmp Exit
             notthispower1_addbl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addbl 
             CLC
-            ADD BYTE PTR ourValRegBX, AL
+            ADD BYTE PTR p1_ValRegBX, AL
             CALL ourSetCF        
             notthispower2_addbl:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegBX, AL
+            ADD BYTE PTRp2_ValRegBX, AL
             CALL SetCF
             JMP Exit
         AddOp1RegBH:
@@ -12311,19 +12423,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addbh  
             CLC
-            ADD BYTE PTR ourValRegBX+1, AL
+            ADD BYTE PTR p1_ValRegBX+1, AL
             CALL ourSetCF      
             jmp Exit
             notthispower1_addbh:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addbh 
             CLC
-            ADD BYTE PTR ourValRegBX+1, AL
+            ADD BYTE PTR p1_ValRegBX+1, AL
             CALL ourSetCF        
             notthispower2_addbh:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegBX+1, AL
+            ADD BYTE PTRp2_ValRegBX+1, AL
             CALL SetCF
             JMP Exit
         AddOp1RegCX:
@@ -12331,19 +12443,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addcx 
             CLC
-            ADD ourValRegCX, AX ;command
+            ADD p1_ValRegCX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_addcx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addcx  
             CLC
-            ADD ourValRegCX, AX ;command
+            ADD p1_ValRegCX, AX ;command
             CALL ourSetCF        
             notthispower2_addcx:
             CALL GetSrcOp
             CLC
-            ADD ValRegCX, AX
+            ADDp2_ValRegCX, AX
             CALL SetCF
             JMP Exit
         AddOp1RegCL:
@@ -12351,19 +12463,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addcl 
             CLC
-            ADD BYTE PTR ourValRegCX, AL
+            ADD BYTE PTR p1_ValRegCX, AL
             CALL ourSetCF      
             jmp Exit
             notthispower1_addcl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addcl 
             CLC
-            ADD BYTE PTR ourValRegCX, AL
+            ADD BYTE PTR p1_ValRegCX, AL
             CALL ourSetCF        
             notthispower2_addcl:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegCX, AL
+            ADD BYTE PTRp2_ValRegCX, AL
             CALL SetCF
             JMP Exit
         AddOp1RegCH:
@@ -12371,19 +12483,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addch 
             CLC
-            ADD BYTE PTR ourValRegCX+1, AL
+            ADD BYTE PTR p1_ValRegCX+1, AL
             CALL ourSetCF      
             jmp Exit
             notthispower1_addch:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addch 
             CLC
-            ADD BYTE PTR ourValRegCX+1, AL
+            ADD BYTE PTR p1_ValRegCX+1, AL
             CALL ourSetCF        
             notthispower2_addch:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegCX+1, AL
+            ADD BYTE PTRp2_ValRegCX+1, AL
             CALL SetCF
             JMP Exit
         AddOp1RegDX:
@@ -12391,19 +12503,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adddx 
             CLC
-            ADD ourValRegDX, AX ;command
+            ADD p1_ValRegDX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adddx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adddx  
             CLC
-            ADD ourValRegDX, AX ;command
+            ADD p1_ValRegDX, AX ;command
             CALL ourSetCF        
             notthispower2_adddx:
             CALL GetSrcOp
             CLC
-            ADD ValRegDX, AX
+            ADDp2_ValRegDX, AX
             CALL SetCF
             JMP Exit
         AddOp1RegDL:
@@ -12411,19 +12523,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adddl 
             CLC
-            ADD BYTE PTR ourValRegDX, AL
+            ADD BYTE PTR p1_ValRegDX, AL
             CALL ourSetCF      
             jmp Exit
             notthispower1_adddl:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adddl 
             CLC
-            ADD BYTE PTR ourValRegDX, AL
+            ADD BYTE PTR p1_ValRegDX, AL
             CALL ourSetCF        
             notthispower2_adddl:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegDX, AL
+            ADD BYTE PTRp2_ValRegDX, AL
             CALL SetCF
             JMP Exit
         AddOp1RegDH:
@@ -12431,19 +12543,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adddh 
             CLC
-            ADD BYTE PTR ourValRegDX+1, AL
+            ADD BYTE PTR p1_ValRegDX+1, AL
             CALL ourSetCF      
             jmp Exit
             notthispower1_adddh:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adddh
             CLC
-            ADD BYTE PTR ourValRegDX+1, AL
+            ADD BYTE PTR p1_ValRegDX+1, AL
             CALL ourSetCF        
             notthispower2_adddh:
             CALL GetSrcOp_8Bit
             CLC
-            ADD BYTE PTR ValRegDX+1, AL
+            ADD BYTE PTRp2_ValRegDX+1, AL
             CALL SetCF
             JMP Exit
         AddOp1RegBP:
@@ -12451,19 +12563,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addbp 
             CLC
-            ADD ourValRegBP, AX ;command
+            ADD p1_ValRegBP, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_addbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addbp  
             CLC
-            ADD ourValRegBP, AX ;command
+            ADD p1_ValRegBP, AX ;command
             CALL ourSetCF        
             notthispower2_addbp:
             CALL GetSrcOp
             CLC
-            ADD ValRegBP, AX
+            ADDp2_ValRegBP, AX
             CALL SetCF
             JMP Exit
         AddOp1RegSP:
@@ -12471,19 +12583,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addsp 
             CLC
-            ADD ourValRegSP, AX ;command
+            ADD p1_ValRegSP, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_addsp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addsp  
             CLC
-            ADD ourValRegSP, AX ;command
+            ADD p1_ValRegSP, AX ;command
             CALL ourSetCF        
             notthispower2_addsp:
             CALL GetSrcOp
             CLC
-            ADD ValRegSP, AX
+            ADDp2_ValRegSP, AX
             CALL SetCF
             JMP Exit
         AddOp1RegSI:
@@ -12491,19 +12603,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addsi 
             CLC
-            ADD ourValRegSI, AX ;command
+            ADD p1_ValRegSI, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_addsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addsi 
             CLC
-            ADD ourValRegSI, AX ;command
+            ADD p1_ValRegSI, AX ;command
             CALL ourSetCF        
             notthispower2_addsi:
             CALL GetSrcOp
             CLC
-            ADD ValRegSI, AX
+            ADDp2_ValRegSI, AX
             CALL SetCF
             JMP Exit
         AddOp1RegDI:
@@ -12511,19 +12623,19 @@ ADD_Comm_PROC PROC FAR
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adddi 
             CLC
-            ADD ourValRegDI, AX ;command
+            ADD p1_ValRegDI, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adddi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adddi  
             CLC
-            ADD ourValRegDI, AX ;command
+            ADD p1_ValRegDI, AX ;command
             CALL ourSetCF        
             notthispower2_adddi:
             CALL GetSrcOp
             CLC
-            ADD ValRegDI, AX
+            ADDp2_ValRegDI, AX
             CALL SetCF
             JMP Exit
 
@@ -12548,47 +12660,47 @@ ADD_Comm_PROC PROC FAR
         AddOp1AddRegBX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addaddbx 
-            ExecAddAddReg ourValRegBx, ourValMem ;command      
+            ExecAddAddReg p1_ValRegBx, p1_ValMem ;command      
             jmp Exit
             notthispower1_addaddbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addaddbx   
-            ExecAddAddReg ourValRegBx, ourValMem ;command       
+            ExecAddAddReg p1_ValRegBx, p1_ValMem ;command       
             notthispower2_addaddbx:
-            ExecAddAddReg ValRegBx, ValMem
+            ExecAddAddRegp2_ValRegBx,p2_ValMem
         AddOp1AddRegBP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addaddbp 
-            ExecAddAddReg ourValRegBP, ourValMem ;command      
+            ExecAddAddReg p1_ValRegBP, p1_ValMem ;command      
             jmp Exit
             notthispower1_addaddbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addaddbp   
-            ExecAddAddReg ourValRegBP, ourValMem ;command       
+            ExecAddAddReg p1_ValRegBP, p1_ValMem ;command       
             notthispower2_addaddbp:
-            ExecAddAddReg ValRegBP, ValMem
+            ExecAddAddRegp2_ValRegBP,p2_ValMem
         AddOp1AddRegSI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addaddsi 
-            ExecAddAddReg ourValRegSI, ourValMem ;command      
+            ExecAddAddReg p1_ValRegSI, p1_ValMem ;command      
             jmp Exit
             notthispower1_addaddsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addaddsi   
-            ExecAddAddReg ourValRegSI, ourValMem ;command       
+            ExecAddAddReg p1_ValRegSI, p1_ValMem ;command       
             notthispower2_addaddsi:
-            ExecAddAddReg ValRegSI, ValMem
+            ExecAddAddRegp2_ValRegSI,p2_ValMem
         AddOp1AddRegDI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_addadddi 
-            ExecAddAddReg ourValRegDI, ourValMem ;command      
+            ExecAddAddReg p1_ValRegDI, p1_ValMem ;command      
             jmp Exit
             notthispower1_addadddi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_addadddi   
-            ExecAddAddReg ourValRegDI, ourValMem ;command       
+            ExecAddAddReg p1_ValRegDI, p1_ValMem ;command       
             notthispower2_addadddi:
-            ExecAddAddReg ValRegDI, ValMem
+            ExecAddAddRegp2_ValRegDI,p2_ValMem
 
     AddOp1Mem:
         
@@ -12599,14 +12711,14 @@ ADD_Comm_PROC PROC FAR
             JNE Nextadd
             cmp selectedPUPType,1 ; our command
             jne notthispower1_addmem
-            ExecAddMem ourValMem[si] ; command
+            ExecAddMem p1_ValMem[si] ; command
             jmp Exit
             notthispower1_addmem:  
             cmp selectedPUPType,2 ;his/her and our command 
             jne notthispower2_addmem 
-            ExecAddMem ourValMem[si] ;command
+            ExecAddMem p1_ValMem[si] ;command
             notthispower2_addmem: 
-            ExecAddMem ValMem[si]
+            ExecAddMemp2_ValMem[si]
             JMP Exit 
             Nextadd:
             inc si 
@@ -12680,7 +12792,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcax 
             CLC
             CALL ourGetCF
-            ADC ourValRegAX, AX ;command
+            ADC p1_ValRegAX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcax:
@@ -12688,13 +12800,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcax  
             CLC
             CALL ourGetCF
-            ADC ourValRegAX, AX ;command
+            ADC p1_ValRegAX, AX ;command
             CALL ourSetCF        
             notthispower2_adcax:
             CALL GetSrcOp 
             CLC
             CALL GetCF
-            ADC ValRegAX, AX
+            ADCp2_ValRegAX, AX
             CALL SetCF
             JMP Exit
         AdcOp1RegAL:
@@ -12703,7 +12815,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcal 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegAX, AL ;command
+            ADC BYTE PTR p1_ValRegAX, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcal:
@@ -12711,13 +12823,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcal  
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegAX, AL ;command
+            ADC BYTE PTR p1_ValRegAX, AL ;command
             CALL ourSetCF        
             notthispower2_adcal:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegAX, AL
+            ADC BYTE PTRp2_ValRegAX, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegAH:
@@ -12726,7 +12838,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcah 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegAX+1, AL ;command
+            ADC BYTE PTR p1_ValRegAX+1, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcah:
@@ -12734,13 +12846,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcah  
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegAX+1, AL ;command
+            ADC BYTE PTR p1_ValRegAX+1, AL ;command
             CALL ourSetCF        
             notthispower2_adcah:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegAX+1, AL
+            ADC BYTE PTRp2_ValRegAX+1, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegBX:
@@ -12749,7 +12861,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcbx 
             CLC
             CALL ourGetCF
-            ADC ourValRegBX, AX ;command
+            ADC p1_ValRegBX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcbx:
@@ -12757,13 +12869,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcbx  
             CLC
             CALL ourGetCF
-            ADC ourValRegBX, AX ;command
+            ADC p1_ValRegBX, AX ;command
             CALL ourSetCF        
             notthispower2_adcbx:
             CALL GetSrcOp
             CLC
             CALL GetCF
-            ADC ValRegBX, AX
+            ADCp2_ValRegBX, AX
             CALL SetCF
             JMP Exit
         AdcOp1RegBL:
@@ -12772,7 +12884,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcbl 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegBX, AL ;command
+            ADC BYTE PTR p1_ValRegBX, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcbl:
@@ -12780,13 +12892,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcbl  
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegBX, AL ;command
+            ADC BYTE PTR p1_ValRegBX, AL ;command
             CALL ourSetCF        
             notthispower2_adcbl:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegBX, AL
+            ADC BYTE PTRp2_ValRegBX, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegBH:
@@ -12795,7 +12907,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcbh 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegBX+1, AL ;command
+            ADC BYTE PTR p1_ValRegBX+1, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcbh:
@@ -12803,13 +12915,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcbh  
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegBX+1, AL ;command
+            ADC BYTE PTR p1_ValRegBX+1, AL ;command
             CALL ourSetCF        
             notthispower2_adcbh:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegBX+1, AL
+            ADC BYTE PTRp2_ValRegBX+1, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegCX:
@@ -12818,7 +12930,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adccx 
             CLC
             CALL ourGetCF
-            ADC ourValRegCX, AX ;command
+            ADC p1_ValRegCX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adccx:
@@ -12826,13 +12938,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adccx  
             CLC
             CALL ourGetCF
-            ADC ourValRegCX, AX ;command
+            ADC p1_ValRegCX, AX ;command
             CALL ourSetCF        
             notthispower2_adccx:
             CALL GetSrcOp
             CLC
             CALL GetCF
-            ADC ValRegCX, AX
+            ADCp2_ValRegCX, AX
             CALL SetCF
             JMP Exit
         AdcOp1RegCL:
@@ -12841,7 +12953,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adccl 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegCX, AL ;command
+            ADC BYTE PTR p1_ValRegCX, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adccl:
@@ -12849,13 +12961,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adccl  
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegCX, AL ;command
+            ADC BYTE PTR p1_ValRegCX, AL ;command
             CALL ourSetCF        
             notthispower2_adccl:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegCX, AL
+            ADC BYTE PTRp2_ValRegCX, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegCH:
@@ -12864,7 +12976,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcch 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegCX+1, AL ;command
+            ADC BYTE PTR p1_ValRegCX+1, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcch:
@@ -12872,13 +12984,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcch 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegCX+1, AL ;command
+            ADC BYTE PTR p1_ValRegCX+1, AL ;command
             CALL ourSetCF        
             notthispower2_adcch:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegCX+1, AL
+            ADC BYTE PTRp2_ValRegCX+1, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegDX:
@@ -12887,7 +12999,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcdx 
             CLC
             CALL ourGetCF
-            ADC ourValRegDX, AX ;command
+            ADC p1_ValRegDX, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcdx:
@@ -12895,13 +13007,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcdx  
             CLC
             CALL ourGetCF
-            ADC ourValRegDX, AX ;command
+            ADC p1_ValRegDX, AX ;command
             CALL ourSetCF        
             notthispower2_adcdx:
             CALL GetSrcOp
             CLC
             CALL GetCF
-            ADC ValRegDX, AX
+            ADCp2_ValRegDX, AX
             CALL SetCF
             JMP Exit
         AdcOp1RegDL:
@@ -12910,7 +13022,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcdl 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegDX, AL ;command
+            ADC BYTE PTR p1_ValRegDX, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcdl:
@@ -12918,13 +13030,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcdl  
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegDX, AL ;command
+            ADC BYTE PTR p1_ValRegDX, AL ;command
             CALL ourSetCF        
             notthispower2_adcdl:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegDX, AL
+            ADC BYTE PTRp2_ValRegDX, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegDH:
@@ -12933,7 +13045,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcdh 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegDX+1, AL ;command
+            ADC BYTE PTR p1_ValRegDX+1, AL ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcdh:
@@ -12941,13 +13053,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcdh 
             CLC
             CALL ourGetCF
-            ADC BYTE PTR ourValRegDX+1, AL ;command
+            ADC BYTE PTR p1_ValRegDX+1, AL ;command
             CALL ourSetCF        
             notthispower2_adcdh:
             CALL GetSrcOp_8Bit
             CLC
             CALL GetCF
-            ADC BYTE PTR ValRegDX+1, AL
+            ADC BYTE PTRp2_ValRegDX+1, AL
             CALL SetCF
             JMP Exit
         AdcOp1RegBP:
@@ -12956,7 +13068,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcbp 
             CLC
             CALL ourGetCF
-            ADC ourValRegBP, AX ;command
+            ADC p1_ValRegBP, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcbp:
@@ -12964,13 +13076,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcbp  
             CLC
             CALL ourGetCF
-            ADC ourValRegBP, AX ;command
+            ADC p1_ValRegBP, AX ;command
             CALL ourSetCF        
             notthispower2_adcbp:
             CALL GetSrcOp
             CLC
             CALL GetCF
-            ADC ValRegBP, AX
+            ADCp2_ValRegBP, AX
             CALL SetCF
             JMP Exit
         AdcOp1RegSP:
@@ -12979,7 +13091,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcsp 
             CLC
             CALL ourGetCF
-            ADC ourValRegSP, AX ;command
+            ADC p1_ValRegSP, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcsp:
@@ -12987,13 +13099,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcsp  
             CLC
             CALL ourGetCF
-            ADC ourValRegSP, AX ;command
+            ADC p1_ValRegSP, AX ;command
             CALL ourSetCF        
             notthispower2_adcsp:
             CALL GetSrcOp
             CLC
             CALL GetCF
-            ADC ValRegSP, AX
+            ADCp2_ValRegSP, AX
             CALL SetCF
             JMP Exit
         AdcOp1RegSI:
@@ -13002,7 +13114,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcsi 
             CLC
             CALL ourGetCF
-            ADC ourValRegSI, AX ;command
+            ADC p1_ValRegSI, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcsi:
@@ -13010,13 +13122,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcsi  
             CLC
             CALL ourGetCF
-            ADC ourValRegSI, AX ;command
+            ADC p1_ValRegSI, AX ;command
             CALL ourSetCF        
             notthispower2_adcsi:
             CALL GetSrcOp
             CLC
             CALL GetCF
-            ADC ValRegSI, AX
+            ADCp2_ValRegSI, AX
             CALL SetCF
             JMP Exit
         AdcOp1RegDI:
@@ -13025,7 +13137,7 @@ ADC_Comm_PROC PROC FAR
             jne notthispower1_adcdi 
             CLC
             CALL ourGetCF
-            ADC ourValRegDI, AX ;command
+            ADC p1_ValRegDI, AX ;command
             CALL ourSetCF      
             jmp Exit
             notthispower1_adcdi:
@@ -13033,13 +13145,13 @@ ADC_Comm_PROC PROC FAR
             jne notthispower2_adcdi  
             CLC
             CALL ourGetCF
-            ADC ourValRegDI, AX ;command
+            ADC p1_ValRegDI, AX ;command
             CALL ourSetCF        
             notthispower2_adcdi:
             CALL GetSrcOp
             CLC
             CALL GetCF
-            ADC ValRegDI, AX
+            ADCp2_ValRegDI, AX
             CALL SetCF
             JMP Exit
 
@@ -13064,47 +13176,47 @@ ADC_Comm_PROC PROC FAR
         AdcOp1AddregBX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adcaddbx 
-            EexecAdcAddReg ourValRegBX, ourValMem     
+            EexecAdcAddReg p1_ValRegBX, p1_ValMem     
             jmp Exit
             notthispower1_adcaddbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adcaddbx 
-            EexecAdcAddReg ourValRegBX, ourValMem        
+            EexecAdcAddReg p1_ValRegBX, p1_ValMem        
             notthispower2_adcaddbx:
-            EexecAdcAddReg ValRegBX, ValMem
+            EexecAdcAddRegp2_ValRegBX,p2_ValMem
         AdcOp1AddregBP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adcaddbp 
-            EexecAdcAddReg ourValRegBP, ourValMem     
+            EexecAdcAddReg p1_ValRegBP, p1_ValMem     
             jmp Exit
             notthispower1_adcaddbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adcaddbp 
-            EexecAdcAddReg ourValRegBP, ourValMem        
+            EexecAdcAddReg p1_ValRegBP, p1_ValMem        
             notthispower2_adcaddbp:
-            EexecAdcAddReg ValRegBP, ValMem
+            EexecAdcAddRegp2_ValRegBP,p2_ValMem
         AdcOp1AddregSI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adcaddsi 
-            EexecAdcAddReg ourValRegSI, ourValMem     
+            EexecAdcAddReg p1_ValRegSI, p1_ValMem     
             jmp Exit
             notthispower1_adcaddsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adcaddsi
-            EexecAdcAddReg ourValRegSI, ourValMem        
+            EexecAdcAddReg p1_ValRegSI, p1_ValMem        
             notthispower2_adcaddsi:
-            EexecAdcAddReg ValRegSI, ValMem
+            EexecAdcAddRegp2_ValRegSI,p2_ValMem
         AdcOp1AddregDI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_adcadddi 
-            EexecAdcAddReg ourValRegDI, ourValMem     
+            EexecAdcAddReg p1_ValRegDI, p1_ValMem     
             jmp Exit
             notthispower1_adcadddi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_adcadddi
-            EexecAdcAddReg ourValRegDI, ourValMem        
+            EexecAdcAddReg p1_ValRegDI, p1_ValMem        
             notthispower2_adcadddi:
-            EexecAdcAddReg ValRegDI, ValMem
+            EexecAdcAddRegp2_ValRegDI,p2_ValMem
     AdcOp1Mem:
 
             mov si,0
@@ -13114,14 +13226,14 @@ ADC_Comm_PROC PROC FAR
             JNE Nextadc
             cmp selectedPUPType,1 ; our command
             jne notthispower1_adcmem
-            ExecAdcMem ourValMem[si] ; command
+            ExecAdcMem p1_ValMem[si] ; command
             jmp Exit
             notthispower1_adcmem:  
             cmp selectedPUPType,2 ;his/her and our command 
             jne notthispower2_adcmem 
-            ExecAdcMem ourValMem[si] ;command
+            ExecAdcMem p1_ValMem[si] ;command
             notthispower2_adcmem: 
-            ExecAdcMem ValMem[si]
+            ExecAdcMemp2_ValMem[si]
             JMP Exit 
             Nextadc:
             inc si 
@@ -13138,7 +13250,7 @@ PUSH_Comm_PROC PROC FAR
     call  PowerUpeMenu ; to choose power up
     CALL CheckForbidCharProc
 
-    ; Todo - CHECK VALIDATIONS
+    ; Todo - CHECKp2_ValIDATIONS
     CMP selectedOp1Size, 8
     JZ InValidCommand
     CMP selectedOp1Type, 0
@@ -13178,98 +13290,98 @@ PUSH_Comm_PROC PROC FAR
         PushOpRegAX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushax  
-            ourExecPush ourValRegAX      
+            ourExecPush p1_ValRegAX      
             jmp Exit
             notthispower1_pushax:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushax  
-            ourExecPush ourValRegAX        
+            ourExecPush p1_ValRegAX        
             notthispower2_pushax:
-            ExecPush ValRegAX
+            ExecPushp2_ValRegAX
             JMP Exit
         PushOpRegBX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushbx  
-            ourExecPush ourValRegBX      
+            ourExecPush p1_ValRegBX      
             jmp Exit
             notthispower1_pushbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushbx  
-            ourExecPush ourValRegBX        
+            ourExecPush p1_ValRegBX        
             notthispower2_pushbx:
-            ExecPush ValRegBX
+            ExecPushp2_ValRegBX
             JMP Exit
         PushOpRegCX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushcx  
-            ourExecPush ourValRegCX      
+            ourExecPush p1_ValRegCX      
             jmp Exit
             notthispower1_pushcx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushcx  
-            ourExecPush ourValRegCX        
+            ourExecPush p1_ValRegCX        
             notthispower2_pushcx:
-            ExecPush ValRegCX
+            ExecPushp2_ValRegCX
             JMP Exit
         PushOpRegDX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushdx  
-            ourExecPush ourValRegDX      
+            ourExecPush p1_ValRegDX      
             jmp Exit
             notthispower1_pushdx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushdx  
-            ourExecPush ourValRegDX        
+            ourExecPush p1_ValRegDX        
             notthispower2_pushdx:
-            ExecPush ValRegDX
+            ExecPushp2_ValRegDX
             JMP Exit
         PushOpRegBP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushbp  
-            ourExecPush ourValRegBP      
+            ourExecPush p1_ValRegBP      
             jmp Exit
             notthispower1_pushbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushbp  
-            ourExecPush ourValRegBP       
+            ourExecPush p1_ValRegBP       
             notthispower2_pushbp:
-            ExecPush ValRegBP
+            ExecPushp2_ValRegBP
             JMP Exit
         PushOpRegSP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushsp  
-            ourExecPush ourValRegSP      
+            ourExecPush p1_ValRegSP      
             jmp Exit
             notthispower1_pushsp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushsp  
-            ourExecPush ourValRegSP        
+            ourExecPush p1_ValRegSP        
             notthispower2_pushsp:
-            ExecPush ValRegSP
+            ExecPushp2_ValRegSP
             JMP Exit
         PushOpRegSI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushsi  
-            ourExecPush ourValRegSI      
+            ourExecPush p1_ValRegSI      
             jmp Exit
             notthispower1_pushsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushsi  
-            ourExecPush ourValRegSI        
+            ourExecPush p1_ValRegSI        
             notthispower2_pushsi:
-            ExecPush ValRegSI
+            ExecPushp2_ValRegSI
             JMP Exit
         PushOpRegDI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushdi  
-            ourExecPush ourValRegDI      
+            ourExecPush p1_ValRegDI      
             jmp Exit
             notthispower1_pushdi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushdi  
-            ourExecPush ourValRegDI        
+            ourExecPush p1_ValRegDI        
             notthispower2_pushdi:
-            ExecPush ValRegDI
+            ExecPushp2_ValRegDI
             JMP Exit
 
     ; Mem as operand
@@ -13281,14 +13393,14 @@ PUSH_Comm_PROC PROC FAR
             JNE Nextpush
             cmp selectedPUPType,1 ; our command
             jne notthispower1_pushmem
-            ourExecPushMem ourValMem[si] ; command
+            ourExecPushMem p1_ValMem[si] ; command
             jmp Exit
             notthispower1_pushmem:  
             cmp selectedPUPType,2 ;his/her and our command 
             jne notthispower2_pushmem 
-            ourExecPushMem ourValMem[si] ;command
+            ourExecPushMem p1_ValMem[si] ;command
             notthispower2_pushmem: 
-            ExecPushMem ValMem[si]
+            ExecPushMemp2_ValMem[si]
             JMP Exit 
             Nextpush:
             inc si 
@@ -13310,120 +13422,120 @@ PUSH_Comm_PROC PROC FAR
         PushOpAddRegBX:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushaddbx  
-            mov dx, ourValRegBX
+            mov dx, p1_ValRegBX
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegBX
-            ourExecPushMem ourValMem[SI]      
+            mov SI, p1_ValRegBX
+            ourExecPushMem p1_ValMem[SI]      
             jmp Exit
             notthispower1_pushaddbx:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushaddbx  
-            mov dx, ourValRegBX
+            mov dx, p1_ValRegBX
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegBX
-            ourExecPushMem ourValMem[SI]       
+            mov SI, p1_ValRegBX
+            ourExecPushMem p1_ValMem[SI]       
             notthispower2_pushaddbx:
 
-            mov dx, ValRegBX
+            mov dx,p2_ValRegBX
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ValRegBX
-            ExecPushMem ValMem[SI]
+            mov SI,p2_ValRegBX
+            ExecPushMemp2_ValMem[SI]
             JMP Exit
         PushOpAddRegBP:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushaddbp  
-            mov dx, ourValRegBP
+            mov dx, p1_ValRegBP
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegBP
-            ourExecPushMem ourValMem[SI]      
+            mov SI, p1_ValRegBP
+            ourExecPushMem p1_ValMem[SI]      
             jmp Exit
             notthispower1_pushaddbp:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushaddbp  
-            mov dx, ourValRegBP
+            mov dx, p1_ValRegBP
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegBP
-            ourExecPushMem ourValMem[SI]       
+            mov SI, p1_ValRegBP
+            ourExecPushMem p1_ValMem[SI]       
             notthispower2_pushaddbp:
 
-            mov dx, ValRegBP
+            mov dx,p2_ValRegBP
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ValRegBP
-            ExecPushMem ValMem[SI]
+            mov SI,p2_ValRegBP
+            ExecPushMemp2_ValMem[SI]
             JMP Exit
 
         PushOpAddRegSI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushaddsi  
-            mov dx, ourValRegSI
+            mov dx, p1_ValRegSI
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegSI
-            ourExecPushMem ourValMem[SI]      
+            mov SI, p1_ValRegSI
+            ourExecPushMem p1_ValMem[SI]      
             jmp Exit
             notthispower1_pushaddsi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushaddsi  
-            mov dx, ourValRegSI
+            mov dx, p1_ValRegSI
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegSI
-            ourExecPushMem ourValMem[SI]       
+            mov SI, p1_ValRegSI
+            ourExecPushMem p1_ValMem[SI]       
             notthispower2_pushaddsi:
 
-            mov dx, ValRegSI
+            mov dx,p2_ValRegSI
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ValRegSI
-            ExecPushMem ValMem[SI]
+            mov SI,p2_ValRegSI
+            ExecPushMemp2_ValMem[SI]
             JMP Exit
         
         PushOpAddRegDI:
             cmp selectedPUPType,1 ;command on your own processor  
             jne notthispower1_pushadddi  
-            mov dx, ourValRegDI
+            mov dx, p1_ValRegDI
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegDI
-            ourExecPushMem ourValMem[SI]      
+            mov SI, p1_ValRegDI
+            ourExecPushMem p1_ValMem[SI]      
             jmp Exit
             notthispower1_pushadddi:
             cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
             jne notthispower2_pushadddi  
-            mov dx, ourValRegDI
+            mov dx, p1_ValRegDI
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ourValRegDI
-            ourExecPushMem ourValMem[SI]       
+            mov SI, p1_ValRegDI
+            ourExecPushMem p1_ValMem[SI]       
             notthispower2_pushadddi:
 
-            mov dx, ValRegDI
+            mov dx,p2_ValRegDI
             CALL CheckAddress
-            cmp bl, 1               ; Value is greater than 16
+            cmp bl, 1               ;p2_Value is greater than 16
             JZ InValidCommand
-            mov SI, ValRegDI
-            ExecPushMem ValMem[SI]
+            mov SI,p2_ValRegDI
+            ExecPushMemp2_ValMem[SI]
             JMP Exit
 
 
-    ; Value as operand
+    ;p2_Value as operand
     PushOpVal:
         CMP Op1Valid, 0
         jz InValidCommand
@@ -13461,7 +13573,7 @@ SetCarryFlag PROC far
     push dx
     mov dx,0h
     adc dx,0h
-    mov ValCF,dl
+    movp2_ValCF,dl
     pop dx
     ret
 SetCarryFlag ENDP
@@ -13574,7 +13686,7 @@ WaitKeyPress PROC ; AH:scancode,AL:ASCII
 
     ret
 WaitKeyPress ENDP
-CheckAddress proc     ; Value of register supposed to be in dx before calling the proc, if greater bl = 1 else bl = 0
+CheckAddress proc     ;p2_Value of register supposed to be in dx before calling the proc, if greater bl = 1 else bl = 0
     cmp dx, 16
     jg InValid
     mov bl, 0
@@ -13730,7 +13842,7 @@ Op1TypeMenu PROC
         ; Check overflow
             cmp dx, offset Reg
             jnz NotOverflow_1
-            mov dx, offset Value           ; Op1TypeLastChoiceLoc
+            mov dx, offsetp2_Value           ; Op1TypeLastChoiceLoc
             add dx, CommStringSize
         NotOverflow_1:
             sub dx, CommStringSize
@@ -13740,7 +13852,7 @@ Op1TypeMenu PROC
     CommDown_1:
         mov ah, 9
         ; Check End of file
-            cmp dx, offset Value           ; Op1TypeLastChoiceLoc
+            cmp dx, offsetp2_Value           ; Op1TypeLastChoiceLoc
             jnz NotEOF_1
             mov dx, offset Reg
             sub dx, CommStringSize
@@ -13831,7 +13943,7 @@ PowerUpeMenu PROC
         
     ret
 PowerUpeMenu ENDP
-LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
+LineStuckPwrUp PROC  FAR   ;p2_Value to be stucked is saved in AX/AL
     PUSH BX
     PUSH CX
     PUSH DX
@@ -13860,7 +13972,7 @@ LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
     NoTStuck:
         cmp selectedPUPType,4
         jne Return_LineStuckPwrUp
-        ;TODO Take 1 input from the user as the value to be stuck 0 or 1, and 1 input for the index of the value stuck
+        ;TODO Take 1 input from the user as thep2_Value to be stuck 0 or 1, and 1 input for the index of thep2_Value stuck
         mov ah,1
         int 21h
         cmp al,31h
@@ -13932,7 +14044,7 @@ Op2TypeMenu PROC
         ; Check overflow
             cmp dx, offset Reg
             jnz NotOverflow_Op2Type
-            mov dx, offset Value           ; OpTypeLastChoiceLoc
+            mov dx, offsetp2_Value           ; OpTypeLastChoiceLoc
             add dx, CommStringSize
         NotOverflow_Op2Type:
             sub dx, CommStringSize
@@ -13942,7 +14054,7 @@ Op2TypeMenu PROC
     CommDown_Op2Type:
         mov ah, 9
         ; Check End of file
-            cmp dx, offset Value           ; OpTypeLastChoiceLoc
+            cmp dx, offsetp2_Value           ; OpTypeLastChoiceLoc
             jnz NotEOF_Op2Type
             mov dx, offset Reg
             sub dx, CommStringSize
@@ -13982,7 +14094,7 @@ Op1Menu PROC
     JZ ChooseAddReg
     CMP selectedOp1Type, MemIndex
     JZ ChooseMem
-    CMP selectedOp1Type, ValIndex
+    CMP selectedOp1Type,p2_ValIndex
     JZ EnterVal
     jmp InvalidOp1Type
 
@@ -14199,7 +14311,7 @@ Op1Menu PROC
 
     EnterVal:
 
-        ; Clear the space which the user should enter the value into
+        ; Clear the space which the user should enter thep2_Value into
         mov dx, offset ClearSpace
         CALL DisplayString
 
@@ -14212,7 +14324,7 @@ Op1Menu PROC
         int 21h
         
 
-        ; Take value as a String from User
+        ; Takep2_Value as a String from User
         mov ah,0Ah                   
         mov dx,offset num
         int 21h    
@@ -14241,7 +14353,7 @@ Op1Menu PROC
         jnz hoop2
         
         hoop1:
-            cmp cl,4         ;check that value is hexa or Get error    
+            cmp cl,4         ;check thatp2_Value is hexa or Get error    
             jng sk 
             JMP InValidVal
 
@@ -14327,8 +14439,8 @@ Op1Menu ENDP
 CheckOp1Size PROC
     CMP selectedOp1Type, RegIndex
     jz Reg_CheckOp1Size
-    CMP selectedOp1Type, ValIndex
-    jz Val_CheckOp1Size
+    CMP selectedOp1Type,p2_ValIndex
+    jzp2_Val_CheckOp1Size
     
     ; Memory is 16-bit addressable
     MOV selectedOp1Size, 16
@@ -14420,7 +14532,7 @@ CheckOp1Size PROC
             MOV selectedOp1Size, 16
             ret
 
-    Val_CheckOp1Size:
+   p2_Val_CheckOp1Size:
         CMP Op1Val, 0FFH
         ja Op1Val_16Bit
         mov selectedOp1Size, 8
@@ -14452,7 +14564,7 @@ Op2Menu PROC
     JZ ChooseAddReg_Op2Menu
     CMP selectedOp2Type, MemIndex
     JZ ChooseMem_Op2Menu
-    CMP selectedOp2Type, ValIndex
+    CMP selectedOp2Type,p2_ValIndex
     JZ EnterVal_Op2Menu
     jmp InvalidOp2Type
 
@@ -14669,7 +14781,7 @@ Op2Menu PROC
 
     EnterVal_Op2Menu:
 
-        ; Clear the space which the user should enter the value into
+        ; Clear the space which the user should enter thep2_Value into
         mov dx, offset ClearSpace
         CALL DisplayString
 
@@ -14680,7 +14792,7 @@ Op2Menu PROC
             mov ah,07
             int 21h
 
-        ; Take value as a String from User
+        ; Takep2_Value as a String from User
         mov ah,0Ah                   
         mov dx,offset num2
         int 21h    
@@ -14709,7 +14821,7 @@ Op2Menu PROC
         jnz hoop2_Op2Menu
         
         hoop1_Op2Menu:
-            cmp cl,4         ;check that value is hexa or Get error    
+            cmp cl,4         ;check thatp2_Value is hexa or Get error    
             jng sk_Op2Menu 
             JMP InValidVal_Op2Menu
 
@@ -14797,8 +14909,8 @@ Op2Menu ENDP
 CheckOp2Size PROC
     CMP selectedOp2Type, 0
     jz Reg_CheckOp2Size
-    CMP selectedOp2Type, ValIndex
-    jz Val_CheckOp2Size
+    CMP selectedOp2Type,p2_ValIndex
+    jzp2_Val_CheckOp2Size
     
     ; Memory is 16-bit addressable
     MOV selectedOp2Size, 16
@@ -14890,7 +15002,7 @@ CheckOp2Size PROC
             MOV selectedOp2Size, 16
             ret
 
-    Val_CheckOp2Size:
+   p2_Val_CheckOp2Size:
         CMP Op2Val, 0FFH
         ja Op2Val_16Bit
         mov selectedOp2Size, 8
@@ -14899,7 +15011,7 @@ CheckOp2Size PROC
         mov selectedOp2Size, 16
         ret
 ENDP
-ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
+ourGetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
 
     MOV AL, selectedOp1Size
     CMP AL, selectedOp2Size
@@ -14939,28 +15051,28 @@ ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         JMP InValidCommand
 
         SrcOp2RegAL_8Bit2:
-            mov al, BYTE PTR ourValRegAX
+            mov al, BYTE PTR p1_ValRegAX
             RET
         SrcOp2RegAH_8Bit2:
-            mov al, BYTE PTR ourValRegAX+1
+            mov al, BYTE PTR p1_ValRegAX+1
             RET
         SrcOp2RegBL_8Bit2:
-            mov al, BYTE PTR ourValRegBX
+            mov al, BYTE PTR p1_ValRegBX
             RET
         SrcOp2RegBH_8Bit2:
-            mov al, BYTE PTR ourValRegBX+1
+            mov al, BYTE PTR p1_ValRegBX+1
             RET
         SrcOp2RegCL_8Bit2:
-            mov al, BYTE PTR ourValRegCX
+            mov al, BYTE PTR p1_ValRegCX
             RET
         SrcOp2RegCH_8Bit2:
-            mov al, BYTE PTR ourValRegCX+1
+            mov al, BYTE PTR p1_ValRegCX+1
             RET
         SrcOp2RegDL_8Bit2:
-            mov al, BYTE PTR ourValRegDX
+            mov al, BYTE PTR p1_ValRegDX
             RET
         SrcOp2RegDH_8Bit2:
-            mov al, BYTE PTR ourValRegDX+1
+            mov al, BYTE PTR p1_ValRegDX+1
             RET
         
 
@@ -14979,35 +15091,35 @@ ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         JMP InValidCommand
 
         SrcOp2AddRegBX_8Bit2:
-            MOV DX, ourValRegBX
+            MOV DX, p1_ValRegBX
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegBX
+            MOV SI, p1_ValRegBX
             MOV AL, [SI]
             RET
         SrcOp2AddRegBP_8Bit2:
-            MOV DX, ourValRegBP
+            MOV DX, p1_ValRegBP
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegBP
+            MOV SI, p1_ValRegBP
             MOV AL, [SI]
             RET
         SrcOp2AddRegSI_8Bit2:
-            MOV DX, ourValRegSI
+            MOV DX, p1_ValRegSI
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegSI
+            MOV SI, p1_ValRegSI
             MOV AL, [SI]
             RET
         SrcOp2AddRegDI_8Bit2:
-            MOV DX, ourValRegDI
+            MOV DX, p1_ValRegDI
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegDI
+            MOV SI, p1_ValRegDI
             MOV AL, [SI]
             RET
 
@@ -15048,52 +15160,52 @@ ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         JMP InValidCommand
         
         SrcOp2Mem0_8Bit2:
-            MOV AL, ourValMem
+            MOV AL, p1_ValMem
             RET
         SrcOp2Mem1_8Bit2:
-            MOV AL, ourValMem+1
+            MOV AL, p1_ValMem+1
             RET
         SrcOp2Mem2_8Bit2:
-            MOV AL, ourValMem+2
+            MOV AL, p1_ValMem+2
             RET
         SrcOp2Mem3_8Bit2:
-            MOV AL, ourValMem+3
+            MOV AL, p1_ValMem+3
             RET
         SrcOp2Mem4_8Bit2:
-            MOV AL, ourValMem+4
+            MOV AL, p1_ValMem+4
             RET
         SrcOp2Mem5_8Bit2:
-            MOV AL, ourValMem+5
+            MOV AL, p1_ValMem+5
             RET
         SrcOp2Mem6_8Bit2:
-            MOV AL, ourValMem+6
+            MOV AL, p1_ValMem+6
             RET
         SrcOp2Mem7_8Bit2:
-            MOV AL, ourValMem+7
+            MOV AL, p1_ValMem+7
             RET
         SrcOp2Mem8_8Bit2:
-            MOV AL, ourValMem+8
+            MOV AL, p1_ValMem+8
             RET
         SrcOp2Mem9_8Bit2:
-            MOV AL, ourValMem+9
+            MOV AL, p1_ValMem+9
             RET
         SrcOp2Mem10_8Bit2:
-            MOV AL, ourValMem+10
+            MOV AL, p1_ValMem+10
             RET
         SrcOp2Mem11_8Bit2:
-            MOV AL, ourValMem+11
+            MOV AL, p1_ValMem+11
             RET
         SrcOp2Mem12_8Bit2:
-            MOV AL, ourValMem+12
+            MOV AL, p1_ValMem+12
             RET
         SrcOp2Mem13_8Bit2:
-            MOV AL, ourValMem+13
+            MOV AL, p1_ValMem+13
             RET
         SrcOp2Mem14_8Bit2:
-            MOV AL, ourValMem+14
+            MOV AL, p1_ValMem+14
             RET
         SrcOp2Mem15_8Bit2:
-            MOV AL, ourValMem+15
+            MOV AL, p1_ValMem+15
             RET
     SrcOp2Val_8Bit2:
         CMP Op2Valid, 0
@@ -15101,7 +15213,7 @@ ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         MOV AL, BYTE PTR Op2Val
         RET
 ourGetSrcOp_8Bit ENDP    
-GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
+GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
 
     MOV AL, selectedOp1Size
     CMP AL, selectedOp2Size
@@ -15141,28 +15253,28 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         JMP InValidCommand
 
         SrcOp2RegAL_8Bit:
-            mov al, BYTE PTR ValRegAX
+            mov al, BYTE PTRp2_ValRegAX
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegAH_8Bit:
-            mov al, BYTE PTR ValRegAX+1
+            mov al, BYTE PTRp2_ValRegAX+1
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegBL_8Bit:
-            mov al, BYTE PTR ValRegBX
+            mov al, BYTE PTRp2_ValRegBX
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegBH_8Bit:
-            mov al, BYTE PTR ValRegBX+1
+            mov al, BYTE PTRp2_ValRegBX+1
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegCL_8Bit:
-            mov al, BYTE PTR ValRegCX
+            mov al, BYTE PTRp2_ValRegCX
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegCH_8Bit:
-            mov al, BYTE PTR ValRegCX+1
+            mov al, BYTE PTRp2_ValRegCX+1
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegDL_8Bit:
-            mov al, BYTE PTR ValRegDX
+            mov al, BYTE PTRp2_ValRegDX
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2RegDH_8Bit:
-            mov al, BYTE PTR ValRegDX+1
+            mov al, BYTE PTRp2_ValRegDX+1
             JMP RETURN_GetSrcOp_8Bit
         
 
@@ -15181,35 +15293,35 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         JMP InValidCommand
 
         SrcOp2AddRegBX_8Bit:
-            MOV DX, ValRegBX
+            MOV DX,p2_ValRegBX
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ValRegBX
+            MOV SI,p2_ValRegBX
             MOV AL, [SI]
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2AddRegBP_8Bit:
-            MOV DX, ValRegBP
+            MOV DX,p2_ValRegBP
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ValRegBP
+            MOV SI,p2_ValRegBP
             MOV AL, [SI]
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2AddRegSI_8Bit:
-            MOV DX, ValRegSI
+            MOV DX,p2_ValRegSI
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ValRegSI
+            MOV SI,p2_ValRegSI
             MOV AL, [SI]
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2AddRegDI_8Bit:
-            MOV DX, ValRegDI
+            MOV DX,p2_ValRegDI
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ValRegDI
+            MOV SI,p2_ValRegDI
             MOV AL, [SI]
             JMP RETURN_GetSrcOp_8Bit
 
@@ -15250,52 +15362,52 @@ GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
         JMP InValidCommand
         
         SrcOp2Mem0_8Bit:
-            MOV AL, ValMem
+            MOV AL,p2_ValMem
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem1_8Bit:
-            MOV AL, ValMem+1
+            MOV AL,p2_ValMem+1
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem2_8Bit:
-            MOV AL, ValMem+2
+            MOV AL,p2_ValMem+2
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem3_8Bit:
-            MOV AL, ValMem+3
+            MOV AL,p2_ValMem+3
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem4_8Bit:
-            MOV AL, ValMem+4
+            MOV AL,p2_ValMem+4
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem5_8Bit:
-            MOV AL, ValMem+5
+            MOV AL,p2_ValMem+5
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem6_8Bit:
-            MOV AL, ValMem+6
+            MOV AL,p2_ValMem+6
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem7_8Bit:
-            MOV AL, ValMem+7
+            MOV AL,p2_ValMem+7
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem8_8Bit:
-            MOV AL, ValMem+8
+            MOV AL,p2_ValMem+8
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem9_8Bit:
-            MOV AL, ValMem+9
+            MOV AL,p2_ValMem+9
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem10_8Bit:
-            MOV AL, ValMem+10
+            MOV AL,p2_ValMem+10
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem11_8Bit:
-            MOV AL, ValMem+11
+            MOV AL,p2_ValMem+11
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem12_8Bit:
-            MOV AL, ValMem+12
+            MOV AL,p2_ValMem+12
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem13_8Bit:
-            MOV AL, ValMem+13
+            MOV AL,p2_ValMem+13
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem14_8Bit:
-            MOV AL, ValMem+14
+            MOV AL,p2_ValMem+14
             JMP RETURN_GetSrcOp_8Bit
         SrcOp2Mem15_8Bit:
-            MOV AL, ValMem+15
+            MOV AL,p2_ValMem+15
             JMP RETURN_GetSrcOp_8Bit
     SrcOp2Val_8Bit:
         CMP Op2Valid, 0
@@ -15360,7 +15472,7 @@ DisPlayNumber PROC ;display number from Registers
     RET
 
     DisPlayNumber ENDP
-GetSrcOp PROC    ; Returned Value is saved in AX
+GetSrcOp PROC    ; Returned Value is saved in AX, CALL TWICE IF Command is executed on BOTH CPUS
     CMP selectedOp2Type, 0
     JZ SrcOp2Reg
     CMP selectedOp2Type, 1
@@ -15394,32 +15506,25 @@ GetSrcOp PROC    ; Returned Value is saved in AX
         CMP selectedOp2Reg, 18
         JZ SrcOp2RegDI
 
-        JMP InValidCommand
+        MOV InValidCommand, 1
+        JMP RETURN_GetSrcOp
 
         SrcOp2RegAX:
-            MOV AX, ValRegAX
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegAX, p2_ValRegAX
         SrcOp2RegBX:
-            MOV AX, ValRegBX
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegBX, p2_ValRegBX
         SrcOp2RegCX:
-            MOV AX, ValRegCX
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegCX, p2_ValRegCX
         SrcOp2pRegDX:
-            MOV AX, ValRegDX
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegDX, p2_ValRegDX
         SrcOp2RegBP:
-            MOV AX, ValRegBP
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegBP, p2_ValRegBP
         SrcOp2RegSP:
-            MOV AX, ValRegSP
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegSP, p2_ValRegSP
         SrcOp2RegSI:
-            MOV AX, ValRegSI
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegSI, p2_ValRegSI
         SrcOp2RegDI:
-            MOV AX, ValRegDI
-            JMP RETURN_GetSrcOp
+            SrcOpReg p1_ValRegDI, p2_ValRegDI
         
 
 
@@ -15434,137 +15539,65 @@ GetSrcOp PROC    ; Returned Value is saved in AX
         CMP selectedOp2AddReg, 18
         JZ SrcOp2AddRegDI
 
-        JMP InValidCommand
+        MOV InValidCommand, 1
+        JMP RETURN_GetSrcOp
 
         SrcOp2AddRegBX:
-            MOV DX, ValRegBX
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegBX
-            MOV AX, [SI]
-            JMP RETURN_GetSrcOp
+            SrcOpAddReg p1_ValRegBX, p2_ValRegBX
         SrcOp2AddRegBP:
-            MOV DX, ValRegBP
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegBP
-            MOV AX, [SI]
-            JMP RETURN_GetSrcOp
+            SrcOpAddReg p1_ValRegBP, p2_ValRegBP
         SrcOp2AddRegSI:
-            MOV DX, ValRegSI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegSI
-            MOV AX, [SI]
-            JMP RETURN_GetSrcOp
+            SrcOpAddReg p1_ValRegSI, p2_ValRegSI
         SrcOp2AddRegDI:
-            MOV DX, ValRegDI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegDI
-            MOV AX, [SI]
-            JMP RETURN_GetSrcOp
+            SrcOpAddReg p1_ValRegDI, p2_ValRegDI
 
     SrcOp2Mem:
 
-        CMP selectedOp2Mem, 0
-        JZ SrcOp2Mem0
-        CMP selectedOp2Mem, 1
-        JZ SrcOp2Mem1
-        CMP selectedOp2Mem, 2
-        JZ SrcOp2Mem2
-        CMP selectedOp2Mem, 3
-        JZ SrcOp2Mem3
-        CMP selectedOp2Mem, 4
-        JZ SrcOp2Mem4
-        CMP selectedOp2Mem, 5
-        JZ SrcOp2Mem5
-        CMP selectedOp2Mem, 6
-        JZ SrcOp2Mem6
-        CMP selectedOp2Mem, 7
-        JZ SrcOp2Mem7
-        CMP selectedOp2Mem, 8
-        JZ SrcOp2Mem8
-        CMP selectedOp2Mem, 9
-        JZ SrcOp2Mem9
-        CMP selectedOp2Mem, 10
-        JZ SrcOp2Mem10
-        CMP selectedOp2Mem, 11
-        JZ SrcOp2Mem11
-        CMP selectedOp2Mem, 12
-        JZ SrcOp2Mem12
-        CMP selectedOp2Mem, 13
-        JZ SrcOp2Mem13
-        CMP selectedOp2Mem, 14
-        JZ SrcOp2Mem14
-        CMP selectedOp2Mem, 15
-        JZ SrcOp2Mem15
-        JMP InValidCommand
-        
-        SrcOp2Mem0:
-            MOV AX, WORD PTR ValMem
+        MOV BX, 0
+        SearchForMem_GetSrc: 
+            CMP selectedOp2Mem, BL
+            JNE NextMem_GetSrc
+
+            CMP p1_CpuEnabled, 1
+            JZ p1_GetSrc
+            CMP p2_CpuEnabled, 1
+            JZ p2_GetSrc
             JMP RETURN_GetSrcOp
-        SrcOp2Mem1:
-            MOV AX, WORD PTR ValMem+1
+
+            p1_GetSrc:
+                MOV p1_CpuEnabled, 0
+                MOV AX, p1_ValMem[BX]      ;command
+                JMP RETURN_GetSrcOp
+            
+            p2_GetSrc:
+                MOV p2_CpuEnabled, 0
+                MOV AX, p2_ValMem[BX]      ;command
+                JMP RETURN_GetSrcOp
+
+
+            NextMem_GetSrc:
+                INC BX
+                CMP BX, 16
+                JZ EndSearch
+        jmp SearchForMem_GetSrc
+        EndSearch_GetSrc:
+            MOV InvalidCommand, 1
             JMP RETURN_GetSrcOp
-        SrcOp2Mem2:
-            MOV AX, WORD PTR ValMem+2
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem3:
-            MOV AX, WORD PTR ValMem+3
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem4:
-            MOV AX, WORD PTR ValMem+4
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem5:
-            MOV AX, WORD PTR ValMem+5
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem6:
-            MOV AX, WORD PTR ValMem+6
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem7:
-            MOV AX, WORD PTR ValMem+7
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem8:
-            MOV AX, WORD PTR ValMem+8
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem9:
-            MOV AX, WORD PTR ValMem+9
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem10:
-            MOV AX, WORD PTR ValMem+10
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem11:
-            MOV AX, WORD PTR ValMem+11
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem12:
-            MOV AX, WORD PTR ValMem+12
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem13:
-            MOV AX, WORD PTR ValMem+13
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem14:
-            MOV AX, WORD PTR ValMem+14
-            JMP RETURN_GetSrcOp
-        SrcOp2Mem15:
-            MOV AX, WORD PTR ValMem+15
-            JMP RETURN_GetSrcOp
+
     SrcOp2Val:
-        CMP Op2Valid, 0
-        jz InValidCommand
-        MOV AX, Op2Val
-        JMP RETURN_GetSrcOp
+        CMP Op2Valid, 1
+        JZ ValidVal_GetSrc
+        MOV InvalidCommand, 1
+        ValidVal_GetSrc:
+            MOV AX, Op2Val
+            JMP RETURN_GetSrcOp
 
     RETURN_GetSrcOp:
         CALL LineStuckPwrUp
         RET
 
 GetSrcOp ENDP
-ourGetSrcOp PROC    ; Returned Value is saved in AX
+ourGetSrcOp PROC    ; Returnedp2_Value is saved in AX
     CMP selectedOp2Type, 0
     JZ SrcOp2Rega
     CMP selectedOp2Type, 1
@@ -15601,28 +15634,28 @@ ourGetSrcOp PROC    ; Returned Value is saved in AX
         JMP InValidCommand
 
         SrcOp2RegAXa:
-            MOV AX, ourValRegAX
+            MOV AX, p1_ValRegAX
             RET
         SrcOp2RegBXa:
-            MOV AX, ourValRegBX
+            MOV AX, p1_ValRegBX
             RET
         SrcOp2RegCXa:
-            MOV AX, ourValRegCX
+            MOV AX, p1_ValRegCX
             RET
         SrcOp2pRegDXa:
-            MOV AX, ourValRegDX
+            MOV AX, p1_ValRegDX
             RET
         SrcOp2RegBPa:
-            MOV AX, ourValRegBP
+            MOV AX, p1_ValRegBP
             RET
         SrcOp2RegSPa:
-            MOV AX, ourValRegSP
+            MOV AX, p1_ValRegSP
             RET
         SrcOp2RegSIa:
-            MOV AX, ourValRegSI
+            MOV AX, p1_ValRegSI
             RET
         SrcOp2RegDIa:
-            MOV AX, ourValRegDI
+            MOV AX, p1_ValRegDI
             RET
         
 
@@ -15641,35 +15674,35 @@ ourGetSrcOp PROC    ; Returned Value is saved in AX
         JMP InValidCommand
 
         SrcOp2AddRegBXa:
-            MOV DX, ourValRegBX
+            MOV DX, p1_ValRegBX
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegBX
+            MOV SI, p1_ValRegBX
             MOV AX, [SI]
             RET
         SrcOp2AddRegBPa:
-            MOV DX, ourValRegBP
+            MOV DX, p1_ValRegBP
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegBP
+            MOV SI, p1_ValRegBP
             MOV AX, [SI]
             RET
         SrcOp2AddRegSIa:
-            MOV DX, ourValRegSI
+            MOV DX, p1_ValRegSI
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegSI
+            MOV SI, p1_ValRegSI
             MOV AX, [SI]
             RET
         SrcOp2AddRegDIa:
-            MOV DX, ourValRegDI
+            MOV DX, p1_ValRegDI
             CALL CheckAddress
             CMP BL, 1
             JZ InValidCommand
-            MOV SI, ourValRegDI
+            MOV SI, p1_ValRegDI
             MOV AX, [SI]
             RET
 
@@ -15710,52 +15743,52 @@ ourGetSrcOp PROC    ; Returned Value is saved in AX
         JMP InValidCommand
         
         SrcOp2Mem0a:
-            MOV AX, WORD PTR ourValMem
+            MOV AX, WORD PTR p1_ValMem
             RET
         SrcOp2Mem1a:
-            MOV AX, WORD PTR ourValMem+1
+            MOV AX, WORD PTR p1_ValMem+1
             RET
         SrcOp2Mem2a:
-            MOV AX, WORD PTR ourValMem+2
+            MOV AX, WORD PTR p1_ValMem+2
             RET
         SrcOp2Mem3a:
-            MOV AX, WORD PTR ourValMem+3
+            MOV AX, WORD PTR p1_ValMem+3
             RET
         SrcOp2Mem4a:
-            MOV AX, WORD PTR ourValMem+4
+            MOV AX, WORD PTR p1_ValMem+4
             RET
         SrcOp2Mem5a:
-            MOV AX, WORD PTR ourValMem+5
+            MOV AX, WORD PTR p1_ValMem+5
             RET
         SrcOp2Mem6a:
-            MOV AX, WORD PTR ourValMem+6
+            MOV AX, WORD PTR p1_ValMem+6
             RET
         SrcOp2Mem7a:
-            MOV AX, WORD PTR ourValMem+7
+            MOV AX, WORD PTR p1_ValMem+7
             RET
         SrcOp2Mem8a:
-            MOV AX, WORD PTR ourValMem+8
+            MOV AX, WORD PTR p1_ValMem+8
             RET
         SrcOp2Mem9a:
-            MOV AX, WORD PTR ourValMem+9
+            MOV AX, WORD PTR p1_ValMem+9
             RET
         SrcOp2Mem10a:
-            MOV AX, WORD PTR ourValMem+10
+            MOV AX, WORD PTR p1_ValMem+10
             RET
         SrcOp2Mem11a:
-            MOV AX, WORD PTR ourValMem+11
+            MOV AX, WORD PTR p1_ValMem+11
             RET
         SrcOp2Mem12a:
-            MOV AX, WORD PTR ourValMem+12
+            MOV AX, WORD PTR p1_ValMem+12
             RET
         SrcOp2Mem13a:
-            MOV AX, WORD PTR ourValMem+13
+            MOV AX, WORD PTR p1_ValMem+13
             RET
         SrcOp2Mem14a:
-            MOV AX, WORD PTR ourValMem+14
+            MOV AX, WORD PTR p1_ValMem+14
             RET
         SrcOp2Mem15a:
-            MOV AX, WORD PTR ourValMem+15
+            MOV AX, WORD PTR p1_ValMem+15
             RET
     SrcOp2Vala:
         CMP Op2Valid, 0
@@ -15770,7 +15803,7 @@ SetCF PROC
     PUSH BX
         MOV BL, 0
         ADC BL, 0
-        MOV BL, ValCF
+        MOV BL,p2_ValCF
     POP BX
 
     RET
@@ -15779,14 +15812,14 @@ ourSetCF PROC
     PUSH BX
         MOV BL, 0
         ADC BL, 0
-        MOV BL, ourValCF
+        MOV BL, p1_ValCF
     POP BX
 
     RET
 ENDP
 ourGetCF PROC
     PUSH BX
-        MOV BL, ourValCF
+        MOV BL, p1_ValCF
         ADD BL, 0FFH
     POP BX
 
@@ -15794,10 +15827,163 @@ ourGetCF PROC
 ENDP
 GetCF PROC
     PUSH BX
-        MOV BL, ValCF
+        MOV BL,p2_ValCF
         ADD BL, 0FFH
     POP BX
 
     RET
 ENDP
+GetDst PROC FAR  ; offset of the operand is saved in di, destination is called by op1 menu. Call the procedure twice to get the next value if two cpus are enabled
+
+    CMP selectedOp1Type, 0
+    JZ DstOp1Reg
+    CMP selectedOp1Type, 1
+    JZ DstOp1AddReg
+    CMP selectedOp1Type, 2
+    JZ DstOp1Mem
+
+    MOV InvalidCommand, 1
+    JMP RETURN_DstSrc
+    
+    DstOp1Reg:
+        CMP selectedOp1Reg, 0
+        JZ DstOp1RegAX
+        CMP selectedOp1Reg, 1
+        JZ DstOp1RegAX
+        CMP selectedOp1Reg, 2
+        JZ DstOp1RegAH
+
+
+        CMP selectedOp1Reg, 3
+        JZ DstOp1RegBX
+        CMP selectedOp1Reg, 4
+        JZ DstOp1RegBX
+        CMP selectedOp1Reg, 5
+        JZ DstOp1RegBH
+
+
+        CMP selectedOp1Reg, 6
+        JZ DstOp1RegCX
+        CMP selectedOp1Reg, 7
+        JZ DstOp1RegCX
+        CMP selectedOp1Reg, 8
+        JZ DstOp1RegCH
+
+        CMP selectedOp1Reg, 9
+        JZ DstOp1RegDX
+        CMP selectedOp1Reg, 8
+        JZ DstOp1RegDX
+        CMP selectedOp1Reg, 10
+        JZ DstOp1RegDH
+
+        CMP selectedOp1Reg, 15
+        JZ DstOp1RegBP
+        CMP selectedOp1Reg, 16
+        JZ DstOp1RegSP
+        CMP selectedOp1Reg, 17
+        JZ DstOp1RegSI
+        CMP selectedOp1Reg, 18
+        JZ DstOp1RegDI
+
+        MOV InvalidCommand, 1
+        JMP RETURN_DstSrc
+
+        DstOp1RegAX:
+            DstOpReg p1_ValRegAX, p2_ValRegAX
+
+        DstOp1RegAH:
+            DstOpReg p1_ValRegAX+1, p2_ValRegAX+1
+
+        DstOp1RegBX:
+            DstOpReg p1_ValRegBX, p2_ValRegBX
+
+        DstOp1RegBH:
+            DstOpReg p1_ValRegBX+1, p2_ValRegBX+1
+
+        DstOp1RegCX:
+            DstOpReg p1_ValRegCX, p2_ValRegCX
+
+        DstOp1RegCH:
+            DstOpReg p1_ValRegCX+1, p2_ValRegCX+1
+        
+        DstOp1RegDX:
+            DstOpReg p1_ValRegDX, p2_ValRegDX
+
+        DstOp1RegDH:
+            DstOpReg p1_ValRegDX+1, p2_ValRegDX+1
+
+        DstOp1RegBP:
+            DstOpReg p1_ValRegBP, p2_ValRegBP
+
+        DstOp1RegSP:
+            DstOpReg p1_ValRegSP, p2_ValRegSP
+
+        DstOp1RegSI:
+            DstOpReg p1_ValRegSI, p2_ValRegSI
+
+        DstOp1RegDI:
+            DstOpReg p1_ValRegDI, p2_ValRegDI
+        
+
+
+    DstOp1AddReg:
+
+        CMP selectedOp1AddReg, 3
+        JZ DstOp1AddRegBX
+        CMP selectedOp1AddReg, 15
+        JZ DstOp1AddRegBP
+        CMP selectedOp1AddReg, 17
+        JZ DstOp1AddRegSI
+        CMP selectedOp1AddReg, 18
+        JZ DstOp1AddRegDI
+
+        MOV InvalidCommand, 1
+        JMP RETURN_DstSrc
+
+        DstOp1AddRegBX:
+            DstOpAddReg p1_ValRegBX, p2_ValRegBX
+        DstOp1AddRegBP:
+            DstOpAddReg p1_ValRegBP, p2_ValRegBP
+        DstOp1AddRegSI:
+            DstOpAddReg p1_ValRegSI, p2_ValRegSI
+        DstOp1AddRegDI:
+            DstOpAddReg p1_ValRegDI, p2_ValRegDI
+
+    DstOp1Mem:
+
+        MOV BX, 0
+        SearchForMem_GetDst: 
+            CMP selectedOp1Mem, BL
+            JNE NextMem_GetDst
+
+            CMP p1_CpuEnabled, 1
+            JZ p1_DstMem
+            CMP p2_CpuEnabled, 1
+            JZ p2_DstMem
+            JMP RETURN_DstSrc
+
+            p1_DstMem:
+                MOV p1_CpuEnabled, 0
+                LEA DI, p1_ValMem[BX]      ;command
+                JMP RETURN_DstSrc
+            
+            p2_DstMem:
+                MOV p2_CpuEnabled, 0
+                LEA DI, p2_ValMem[BX]      ;command
+                JMP RETURN_DstSrc
+
+
+            NextMem_GetDst:
+                INC BX
+                CMP BX, 16
+                JZ EndSearch
+        jmp SearchForMem_GetDst
+        EndSearch_GetDst:
+            MOV InvalidCommand, 1
+            JMP RETURN_DstSrc
+
+
+    RETURN_DstSrc:
+        RET
+GetDst ENDP
 END CommMenu
