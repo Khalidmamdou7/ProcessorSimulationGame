@@ -520,12 +520,12 @@ ENDM
         p2_ValRegCX dw 'CX'
         p2_ValRegDX dw 'DX'
         p2_ValRegBP dw 0
-        p2_ValRegSP dw 0
+        p2_ValRegSP dw 1
         p2_ValRegSI dw 'SI'
         p2_ValRegDI dw 'DI'
 
         p2_ValMem db 16 dup('M'), '$'
-        p2_ValStack DW 8 dup('S'), '$'
+        p2_ValStack DW 8 dup('Ss'), '$'
         ;p2_ValStackPointer db 0
         p2_ValCF db 1
 
@@ -535,7 +535,7 @@ ENDM
         p1_ValRegCX dw 'CX'
         p1_ValRegDX dw 'DX'
         p1_ValRegBP dw 0
-        p1_ValRegSP dw 0
+        p1_ValRegSP dw 1
         p1_ValRegSI dw 'SI'
         p1_ValRegDI dw 'DI' 
         p1_ValCF db 0
@@ -736,8 +736,7 @@ CommMenu proc far
             JMP Exit
 
         POP_Comm:
-        
-
+            CALL POP_Comm_PROC
             JMP Exit
         INC_Comm:
             
@@ -1348,11 +1347,14 @@ CommMenu ENDP
         CALL Op2Menu
 
         CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_PushCom
+
         CMP selectedOp2Size, 8
         JNZ ValidSize_Push
 
-        CMP isInvalidCommand, 1
-        JZ Return_PushCom
+        MOV isInvalidCommand, 1
+        JMP Return_PushCom
 
         ValidSize_Push:
             CMP p1_CpuEnabled, 1
@@ -1390,6 +1392,55 @@ CommMenu ENDP
             RET
         
     ENDP
+    POP_Comm_PROC PROC FAR
+        CALL Op1Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_POPCom
+
+        CMP selectedOp1Size, 8
+        JNZ ValidSize_POP
+        
+        MOV isInvalidCommand, 1
+        JMP Return_POPCom
+
+        ValidSize_POP:
+            CMP p1_CpuEnabled, 1
+            JZ POP_p1
+            JMP POP_p2
+            POP_p1:
+                CALL GetDst
+
+                CMP isInvalidCommand, 1
+                JZ POP_p2
+
+                Mov BX, p1_ValRegSP
+                MOV DX, p1_ValStack[BX]
+                MOV [DI], DX
+                DEC p1_ValRegSP
+                JMP POP_p2
+
+            POP_p2:
+                MOV p1_CpuEnabled, 0
+                MOV isInvalidCommand, 0
+                CMP p2_CpuEnabled, 1
+                jnz Return_POPCom
+
+                CALL GetDst
+
+                CMP isInvalidCommand, 1
+                JZ Return_POPCom
+
+                Mov BX, p2_ValRegSP
+                MOV DX, p2_ValStack[BX]
+                MOV [DI], DX
+                DEC p2_ValRegSP
+
+        Return_POPCom:
+            RET
+
+    ENDP
 
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
@@ -1398,7 +1449,7 @@ CommMenu ENDP
             ; Display Command
             DisplayComm:
                 mov ah, 9
-                mov dx, offset PUSHcom
+                mov dx, offset POPcom
                 int 21h
 
             CheckKeyComType:
@@ -2686,7 +2737,7 @@ CommMenu ENDP
                 RET
 
         GetSrcOp ENDP
-        GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
+        GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
             ; Saving values of DI
                 PUSH DI
 
