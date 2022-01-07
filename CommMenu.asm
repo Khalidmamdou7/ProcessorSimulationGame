@@ -697,18 +697,7 @@ CommMenu proc far
 
     ; Commands (operations) Labels
         NOP_Comm:
-            CALL CheckForbidCharProc         
-            call  PowrUpMenu ; to choose power up
-            cmp selectedPUPType,1 ;command on your own processor  
-            jne notthispower1_nop  
-            NOP      
-            jmp Exit
-            notthispower1_nop:
-            cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-            jne notthispower2_nop  
-            NOP        
-            notthispower2_nop:
-            NOP
+            CALL CheckForbidCharProc
             JMP Exit
         
         CLC_Comm:
