@@ -520,13 +520,13 @@ ENDM
         p2_ValRegCX dw 'CX'
         p2_ValRegDX dw 'DX'
         p2_ValRegBP dw 0
-        p2_ValRegSP dw 'SP'
+        p2_ValRegSP dw 0
         p2_ValRegSI dw 'SI'
         p2_ValRegDI dw 'DI'
 
         p2_ValMem db 16 dup('M'), '$'
-        p2_ValStack db 16 dup('S'), '$'
-        p2_ValStackPointer db 0
+        p2_ValStack DW 8 dup('S'), '$'
+        ;p2_ValStackPointer db 0
         p2_ValCF db 1
 
         ;OUR Regisesters
@@ -535,14 +535,14 @@ ENDM
         p1_ValRegCX dw 'CX'
         p1_ValRegDX dw 'DX'
         p1_ValRegBP dw 0
-        p1_ValRegSP dw 'SP'
+        p1_ValRegSP dw 0
         p1_ValRegSI dw 'SI'
         p1_ValRegDI dw 'DI' 
         p1_ValCF db 0
         p1_ValMem db 16 dup('M'), '$'
 
-        p1_ValStack db 16 dup('S'), '$'
-        p1_ValStackPointer db 0
+        p1_ValStack DW 8 dup('S'), '$'
+        ;p1_ValStackPointer db 0
     
 
     ; Operandp2_Value Needed Variables
@@ -732,7 +732,8 @@ CommMenu proc far
             CALL ADC_Comm_PROC
             JMP Exit
         PUSH_Comm:
-            ;CALL PUSH_Comm_PROC
+            CALL PUSH_Comm_PROC
+            JMP Exit
 
         POP_Comm:
         
@@ -807,12 +808,6 @@ CommMenu proc far
             lea dx,p2_ValStack
             Call DisplayString
 
-            lea dx, mesStackPointer
-            CALL DisplayString
-            mov dl,p2_ValStackPointer
-            add dl, '0'
-            Call DisplayChar
-
             lea dx, mesVal
             CALL DisplayString
             mov dx, Op1Val
@@ -876,7 +871,7 @@ CommMenu proc far
             
             LEA DX, mesRegCF
             CALL DisplayString
-            mov dl,p2_ValCF
+            mov dl, p2_ValCF
             add dl, '0'
             CALL DisplayChar
 
@@ -1350,9 +1345,50 @@ CommMenu ENDP
             RET
     ENDP
     PUSH_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        CALL CheckForbidCharProc
+        CMP selectedOp2Size, 8
+        JNZ ValidSize_Push
+
+        CMP isInvalidCommand, 1
+        JZ Return_PushCom
+
+        ValidSize_Push:
+            CMP p1_CpuEnabled, 1
+            JZ Push_p1
+            JMP Push_p2
+            Push_p1:
+                CALL GetSrcOp
+
+                CMP isInvalidCommand, 1
+                JZ Push_p2
+
+                Mov BX, p1_ValRegSP
+                MOV p1_ValStack[BX], AX
+                INC p1_ValRegSP
+                JMP Push_p2
+
+                
+
+            Push_p2:
+                MOV p1_CpuEnabled, 0
+                MOV isInvalidCommand, 0
+                CMP p2_CpuEnabled, 1
+                jnz Return_PushCom
+
+                CALL GetSrcOp
+
+                CMP isInvalidCommand, 1
+                JZ Return_PushCom
+
+                Mov BX, p2_ValRegSP
+                MOV p2_ValStack[BX], AX
+                INC p2_ValRegSP
+
+        Return_PushCom:
+            RET
         
-        
-        RET
     ENDP
 
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
@@ -1362,7 +1398,7 @@ CommMenu ENDP
             ; Display Command
             DisplayComm:
                 mov ah, 9
-                mov dx, offset MOVcom
+                mov dx, offset PUSHcom
                 int 21h
 
             CheckKeyComType:
@@ -2920,7 +2956,8 @@ CommMenu ENDP
                 jz ForbidCharOp1Mem
                 cmp selectedOp1Type, 3
                 jz ForbidCharOp1Val
-                ret
+                
+                JMP CheckForbidCharOp2
 
                 ForbidCharOp1Reg:
                     mov Ah, 0
