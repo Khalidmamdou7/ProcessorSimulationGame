@@ -230,80 +230,96 @@
 
         ; positions of X axis of the AX register in right processor
         p1_AX_X1 EQU 44
+        p1_AX_X3 EQU 46
         p1_AX_Y EQU 4 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of the BX register in right processor
         p1_BX_X1 EQU 44
+        p1_BX_X3 EQU 46
         p1_BX_Y EQU 6 ; the Y axis of the AX register of the left processor 
 
 
         ; position of X axis of the DX register in right processor
         p1_CX_X1 EQU 44
+        p1_CX_X3 EQU 46
         p1_CX_Y EQU 8 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of the DX register in right processor
-        p1_DX_X1 EQU 44        
+        p1_DX_X1 EQU 44   
+        p1_DX_X3 EQU 46     
         p1_DX_Y EQU 10 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of SP register in right processor 
         p1_SP_X1 equ 49
+        p1_SP_X3 EQU 51
         p1_SP_Y equ 4 ; the Y position of SP register in the left processor 
 
 
         ; positions of X axis of BP register in right processor 
         p1_BP_X1 equ 49
+        p1_BP_X3 EQU 51
         p1_BP_Y equ 6 ; the Y position of BP register in the left processor 
 
         ; positions of X axis of SI register in right processor 
         p1_SI_X1 equ 49
+        p1_SI_X3 EQU 51
         p1_SI_Y equ 8 ; the Y position of SI register in the left processor 
 
 
         ; positions of X axis of DI register in right processor 
         p1_DI_X1 equ 49
+        p1_DI_X3 EQU 51
         p1_DI_Y equ 10 ; the Y position of SI register in the left processor 
 
     ;---------------------------------------RIGHT PROCESSOR----------------------------------------------:
 
         ; positions of X axis of the AX register in right processor
         p2_AX_X1 EQU 107
+        p2_AX_X3 EQU 109
         p2_AX_Y EQU 4 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of the BX register in right processor
         p2_BX_X1 EQU 107
+        p2_BX_X3 EQU 109
         p2_BX_Y EQU 6 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of the DX register in right processor
         p2_CX_X1 EQU 107
+        p2_CX_X3 EQU 109
         p2_CX_Y EQU 8 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of the DX register in right processor
         p2_DX_X1 EQU 107
+        p2_DX_X3 EQU 109
         p2_DX_Y EQU 10 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of SP register in right processor 
         p2_SP_X1 equ 113
+        p2_SP_X3 EQU 115
         p2_SP_Y equ 4 ; the Y position of SP register in the left processor 
 
 
         ; positions of X axis of BP register in right processor 
         p2_BP_X1 equ 113
+        p2_BP_X3 EQU 115
         p2_BP_Y equ 6 ; the Y position of BP register in the left processor 
 
         ; positions of X axis of SI register in right processor 
         p2_SI_X1 equ 113
+        p2_SI_X3 EQU 115
         p2_SI_Y equ 8 ; the Y position of SI register in the left processor 
 
 
         ; positions of X axis of DI register in right processor 
         p2_DI_X1 equ 113
+        p2_DI_X3 EQU 115
         p2_DI_Y equ 10 ; the Y position of SI register in the left processor 
 
 
@@ -1084,7 +1100,7 @@ CHATMODE            PROC  NEAR
 	mov ax , @data
 	mov ds , ax
 	mov ah,2 ;cursor up 
-    mov dx,0000h
+    MOV DH, 000h
 	int 10h 
 	MOV DX, OFFSET border
 	CALL PRINTMESSAGE
@@ -1563,7 +1579,7 @@ Send    			endp
 
         GameLoop:
             CALL DrawGuiLayout
-            ;CALL DisplayGUIValues
+            CALL DisplayGUIValues
             CALL DrawFlyingObj
             CALL DrawShooter
             Set 21 0
@@ -2104,94 +2120,408 @@ Send    			endp
     DisplayGUIValues PROC FAR
 
         P1_Registers:
-            push ValRegAX
+            mov dx, ourValRegAX
+            mov BH, p1_AX_X3        ; x3 POS
+            mov BL, p1_AX_Y         ; y3 pos
+            mov al,dl
+            call Display_ByteNum
+            
             mov BH, p1_AX_X1        ; x1 POS
             mov BL, p1_AX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push  ValRegBX
+            mov dx, ourValRegBX
+            mov BH, p1_BX_X3        ; x3 POS
+            mov BL, p1_BX_Y         ; y3 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p1_BX_X1        ; x1 POS
             mov BL, p1_BX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ValRegCX
+            mov dx, ourValRegCX
+            mov BH, p1_CX_X3        ; x3 POS
+            mov BL, p1_CX_Y         ; y3 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p1_CX_X1        ; x1 POS
             mov BL, p1_CX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ValRegDX
+            mov dx, ourValRegDX
+            mov BH, p1_DX_X3        ; x3 POS
+            mov BL, p1_DX_Y         ; y3 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p1_DX_X1        ; x1 POS
             mov BL, p1_DX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ValRegBP
+            mov dx, ourValRegBP
+            mov BH, p1_BP_X3        ; x3 POS
+            mov BL, p1_BP_Y         ; y3 pos
+            mov al,dl
+            
+            call Display_ByteNum
             mov BH, p1_BP_X1        ; x1 POS
             mov BL, p1_BP_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ValRegSP
+            mov dx, ourValRegSP
+            mov BH, p1_SP_X3        ; x3 POS
+            mov BL, p1_SP_Y         ; y3 pos
+            mov al,dl
+            call Display_ByteNum
             mov BH, p1_SP_X1        ; x1 POS
             mov BL, p1_SP_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ValRegSI
+            mov dx, ourValRegSI
+            mov BH, p1_SI_X3        ; x3 POS
+            mov BL, p1_SI_Y         ; y3 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p1_SI_X1        ; x1 POS
             mov BL, p1_SI_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ValRegDI
+            mov dx, ourValRegDI
+            mov BH, p1_DI_X3        ; x3 POS
+            mov BL, p1_DI_Y         ; y3 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p1_DI_X1        ; x1 POS
             mov BL, p1_DI_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
         P2_Registers:
-            push ourValRegAX
+            mov dx, ValRegAX
+            mov BH, p2_AX_X3        ; x1 POS
+            mov BL, p2_AX_Y         ; y1 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_AX_X1        ; x1 POS
             mov BL, p2_AX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ourValRegBX
+            mov dx, ValRegBX
+            mov BH, p2_BX_X3        ; x1 POS
+            mov BL, p2_BX_Y         ; y1 pos
+           
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_BX_X1        ; x1 POS
             mov BL, p2_BX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ourValRegCX
+            mov dx, ValRegCX
+            mov BH, p2_CX_X3        ; x1 POS
+            mov BL, p2_CX_Y         ; y1 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_CX_X1        ; x1 POS
             mov BL, p2_CX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ourValRegDX
+            mov dx, ValRegDX
+            mov BH, p2_DX_X3        ; x1 POS
+            mov BL, p2_DX_Y         ; y1 pos
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_DX_X1        ; x1 POS
             mov BL, p2_DX_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ourValRegBP
+            mov dx, ValRegBP
+            mov BH, p2_BP_X3        ; x1 POS
+            mov BL, p2_BP_Y         ; y1 pos
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_BP_X1        ; x1 POS
             mov BL, p2_BP_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ourValRegSP
+            mov dx, ValRegSP
+            mov BH, p2_SP_X3        ; x1 POS
+            mov BL, p2_SP_Y         ; y1 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_SP_X1        ; x1 POS
             mov BL, p2_SP_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ourValRegSI
+            mov dx, ValRegSI
+            mov BH, p2_SI_X3        ; x1 POS
+            mov BL, p2_SI_Y         ; y1 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_SI_X1        ; x1 POS
             mov BL, p2_SI_Y         ; y1 pos
-            call DisPlayNumber
+            mov al,dh
+            call Display_ByteNum
 
-            push ourValRegDI
+            mov dx, ValRegDI
+            mov BH, p2_DI_X3        ; x1 POS
+            mov BL, p2_DI_Y         ; y1 pos
+            
+            mov al,dl
+            call Display_ByteNum
             mov BH, p2_DI_X1        ; x1 POS
             mov BL, p2_DI_Y         ; y1 pos
-            call DisPlayNumber
-        
-        P1_Memory:
+            mov al,dh
+            call Display_ByteNum    
 
-        P2_Memory:
 
-        Scores:
+        left_memo:
+            mov dh, 00
+            mov dl, ourValMem
+            mov bh, left_mem_X0  ;row
+            mov bl, left_mem_Y0  ;column
+            mov al,dl
+            call Display_ByteNum
 
-        
+            MOV DH, 0
+            MOV DL, ourValMem+1
+            mov bh, left_mem_X2
+            mov bl, left_mem_Y2
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+2
+            mov bh, left_mem_X4
+            mov bl, left_mem_Y4
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+3
+            mov bh, left_mem_X6
+            mov bl, left_mem_Y6
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ourValMem+4
+            mov bh, left_mem_X8
+            mov bl, left_mem_Y8
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ourValMem+5
+            mov bh, left_mem_X10
+            mov bl, left_mem_Y10
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+6
+            mov bh, left_mem_X12
+            mov bl, left_mem_Y12
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+7
+            mov bh, left_mem_X14
+            mov bl, left_mem_Y14
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+8
+            mov bh, left_mem_X16
+            mov bl, left_mem_Y16
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+9
+            mov bh, left_mem_X18
+            mov bl, left_mem_Y18
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+10
+            mov bh, left_mem_X20
+            mov bl, left_mem_Y20
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+11
+            mov bh, left_mem_X22
+            mov bl, left_mem_Y22
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+12
+            mov bh, left_mem_X24
+            mov bl, left_mem_Y24
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+13
+            mov bh, left_mem_X26
+            mov bl, left_mem_Y26
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+14
+            mov bh, left_mem_X28
+            mov bl, left_mem_Y28
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ourValMem+15
+            mov bh, left_mem_X30
+            mov bl, left_mem_Y30
+            mov al,dl
+            call Display_ByteNum
+
+        right_memo:
+            MOV DH, 0
+            MOV DL, ValMem
+            mov bh, right_mem_X0
+            mov bl, right_mem_Y0
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ValMem+1
+            mov bh, right_mem_X2
+            mov bl, right_mem_Y2
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+2
+            mov bh, right_mem_X4
+            mov bl, right_mem_Y4
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+3
+            mov bh, right_mem_X6
+            mov bl, right_mem_Y6
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+4
+            mov bh, right_mem_X8
+            mov bl, right_mem_Y8
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ValMem+5
+            mov bh, right_mem_X10
+            mov bl, right_mem_Y10
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ValMem+6
+            mov bh, right_mem_X12
+            mov bl, right_mem_Y12
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+7
+            mov bh, right_mem_X14
+            mov bl, right_mem_Y14
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+8
+            mov bh, right_mem_X16
+            mov bl, right_mem_Y16
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+9
+            mov bh, right_mem_X18
+            mov bl, right_mem_Y18
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ValMem+10
+            mov bh, right_mem_X20
+            mov bl, right_mem_Y20
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+11
+            mov bh, right_mem_X22
+            mov bl, right_mem_Y22
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ValMem+12
+            mov bh, right_mem_X24
+            mov bl, right_mem_Y24
+            mov al,dl
+            call Display_ByteNum
+
+            MOV DH, 0
+            MOV DL, ValMem+13
+            mov bh, right_mem_X26
+            mov bl, right_mem_Y26
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+14
+            mov bh, right_mem_X28
+            mov bl, right_mem_Y28
+            mov al,dl
+            call Display_ByteNum
+            
+            MOV DH, 0
+            MOV DL, ValMem+15
+            mov bh, right_mem_X30
+            mov bl, right_mem_Y30
+            mov al,dl
+            call Display_ByteNum
+
+            
         RET
     ENDP
     DisplayRegValues PROC FAR
@@ -6238,7 +6568,7 @@ Send    			endp
             CHECK:
                 PUSHA
                     CALL DrawGuiLayout
-                    ; CALL DisplayGUIValues
+                    CALL DisplayGUIValues
                     CALL DrawFlyingObj
                     CALL DrawShooter
                 POPA
@@ -6345,6 +6675,38 @@ Send    			endp
             RET
 
         DisplayHexanumber ENDP
+        Display_ByteNum proc
+            mov x_axis,bl
+            mov y_axis,bh
+            mov ah,0
+            mov cl,c
+            div cl
+            mov ch,ah
+            mov dl,al
+            cmp dl,0Ah 
+            jnl hexalet11
+            add dl,30h
+            jmp hexanum11
+            hexalet11:
+            add dl,37h
+            hexanum11:
+            Set x_axis y_axis      
+            PrintChar dl
+
+            mov dl,ch
+            cmp dl,0Ah 
+            jnl hexalet12
+            add dl,30h
+            jmp hexanum12
+            hexalet12:
+            add dl,37h
+            hexanum12:
+            inc y_axis
+            Set x_axis y_axis           
+            PrintChar dl
+
+            RET
+            Display_ByteNum ENDP 
         DisPlayNumber PROC 
             mov x_axis,bl
             mov y_axis, bh
