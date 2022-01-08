@@ -1036,9 +1036,6 @@ CommMenu ENDP
                 CMP selectedOp2Size, 8
                 JZ p1_MovSrc_16_8BIT
 
-                MOV isInValidCommand, 1
-                RET
-
                 p1_MovSrc_16_16BIT:
                     CALL GetSrcOp
                     CMP isInvalidCommand, 1
@@ -1071,7 +1068,6 @@ CommMenu ENDP
             JZ p2_MovDst_16BIT
             CMP selectedOp1Size, 8
             JZ p2_MovDst_8BIT
-            JMP Mov_p2
 
             p2_MovDst_16BIT:
                 CMP selectedOp2Size, 16
@@ -1079,9 +1075,6 @@ CommMenu ENDP
                 CMP selectedOp2Size, 8
                 JZ p2_MovSrc_16_8BIT
 
-                
-                MOV isInValidCommand, 1
-                RET
 
                 p2_MovSrc_16_16BIT:
                     CALL GetSrcOp
@@ -1092,6 +1085,7 @@ CommMenu ENDP
                 
                 p2_MovSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    
                     CMP isInvalidCommand, 1
                     JZ Return_MovCom
                     Mov [DI], AL
@@ -2824,6 +2818,7 @@ CommMenu ENDP
             CMP selectedOp2Type, 2
             JZ SrcOp2Mem_8Bit
             CMP selectedOp2Type, 3
+            JZ SrcOp2Val_8Bit
 
             MOV isInValidCommand, 1
             JMP RETURN_GetSrcOp_8Bit
@@ -3013,18 +3008,16 @@ CommMenu ENDP
 
             CMP selectedOp1Type, RegIndex
             JZ CheckSizeOp2
-            CMP selectedOp1Type, ValIndex
-            JZ CheckSizeOp2
             RET
 
             CheckSizeOp2:
                 CMP selectedOp2Type, RegIndex
-                JZ CheckSizeMismatchLbl
+                JZ CheckSizeMismatch_Op2Reg
                 CMP selectedOp2Type, ValIndex
-                JZ CheckSizeMismatchLbl
+                JZ CheckSizeMismatch_Op2Val
                 RET
 
-                CheckSizeMismatchLbl:
+                CheckSizeMismatch_Op2Reg:
                     ; Saving values of ax
                         push ax
                     mov al, selectedOp1Size
@@ -3036,6 +3029,14 @@ CommMenu ENDP
                         MOV isInValidCommand, 1
                         POP AX
                         RET
+                CheckSizeMismatch_Op2Val:
+                    PUSH AX
+
+                    MOV AL, selectedOp1Size
+                    CMP AL, selectedOp2Size
+                    JB SizeMismatch
+                    POP AX
+                    RET
 
                     
 
