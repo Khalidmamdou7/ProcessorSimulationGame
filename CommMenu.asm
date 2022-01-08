@@ -643,9 +643,9 @@ ENDM
     ; Power Up Variables
     isPwrUp3Used db 0    ;Chance to use forbiden power up
     isPwrUp5Used db 0
-    ourPwrUpDataLineIndex db 1
+    ourPwrUpDataLineIndex db 5
     ourPwrUpStuckVal db 1
-    ourPwrUpStuckEnabled db 0
+    ourPwrUpStuckEnabled db 1
 
     opponentPwrUpDataLineIndex db 0
     opponentPwrUpStuckVal      db 0
@@ -1614,6 +1614,8 @@ CommMenu ENDP
                 call GetSrcOp
                 mov bx,ax
                 call LoadP1Registers
+                cmp bx,0
+                je Return_DIV
                 DIV BX
                 call SetCF
                 call UpdateP1Registers
@@ -1622,6 +1624,8 @@ CommMenu ENDP
                 call GetSrcOp_8Bit
                 mov bl,al
                 call LoadP1Registers
+                cmp bl,0
+                je Return_DIV
                 DIV Bl
                 call SetCF
                 call UpdateP1Registers
@@ -1637,6 +1641,8 @@ CommMenu ENDP
                 call GetSrcOp
                 mov bx,ax
                 call LoadP2Registers
+                cmp bx,0
+                je Return_DIV
                 DIV BX
                 call SetCF
                 call UpdateP2Registers
@@ -1645,6 +1651,8 @@ CommMenu ENDP
                 call GetSrcOp_8Bit
                 mov bl,al
                 call LoadP2Registers
+                cmp bl,0
+                je Return_DIV
                 DIV Bl
                 call SetCF
                 call UpdateP2Registers
@@ -1740,6 +1748,8 @@ CommMenu ENDP
                 call GetSrcOp
                 mov bx,ax
                 call LoadP1Registers
+                cmp bx,0
+                je Return_IDIV
                 IDIV BX
                 call SetCF
                 call UpdateP1Registers
@@ -1748,6 +1758,8 @@ CommMenu ENDP
                 call GetSrcOp_8Bit
                 mov bl,al
                 call LoadP1Registers
+                cmp bl,0
+                je Return_IDIV
                 IDIV Bl
                 call SetCF
                 call UpdateP1Registers
@@ -1763,6 +1775,8 @@ CommMenu ENDP
                 call GetSrcOp
                 mov bx,ax
                 call LoadP2Registers
+                cmp bx,0
+                je Return_IDIV
                 IDIV BX
                 call SetCF
                 call UpdateP2Registers
@@ -1771,6 +1785,8 @@ CommMenu ENDP
                 call GetSrcOp_8Bit
                 mov bl,al
                 call LoadP2Registers
+                cmp bl,0
+                je Return_IDIV
                 IDIV Bl
                 call SetCF
                 call UpdateP2Registers
