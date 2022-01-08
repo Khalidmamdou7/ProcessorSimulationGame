@@ -514,6 +514,26 @@ ENDM
         PUP4 db 'PUp4 ','$'
         PUP5 db 'PUp5 ','$'
 
+        DataIndex0 db  'Data Line 0 ','$'
+        DataIndex1 db  'Data Line 1 ','$'
+        DataIndex2 db  'Data Line 2 ','$'
+        DataIndex3 db  'Data Line 3 ','$'
+        DataIndex4 db  'Data Line 4 ','$'
+        DataIndex5 db  'Data Line 5 ','$'
+        DataIndex6 db  'Data Line 6 ','$'
+        DataIndex7 db  'Data Line 7 ','$'
+        DataIndex8 db  'Data Line 8 ','$'
+        DataIndex9 db  'Data Line 9 ','$'
+        DataIndex10 db 'Data Line 10','$'
+        DataIndex11 db 'Data Line 11','$'
+        DataIndex12 db 'Data Line 12','$'
+        DataIndex13 db 'Data Line 13','$'
+        DataIndex14 db 'Data Line 14','$'
+        DataIndex15 db 'Data Line 15','$'
+
+        StuckVal0 db   'Stuck Val: 0', '$'
+        StuckVal1 db   'Stuck Val: 1', '$'
+
     ;; -------------------------------------- Player's Data ------------------------------ ;;
         p2_ValRegAX dw 'AX'
         p2_ValRegBX dw 'BX'
@@ -557,6 +577,7 @@ ENDM
 
     ; Variables Memory Locations and data
     CommStringSize EQU  6
+    SubPwrUpSize EQU 13
 
 
     ; Test Messages
@@ -622,8 +643,8 @@ ENDM
     ; Power Up Variables
     isPwrUp3Used db 0    ;Chance to use forbiden power up
     isPwrUp5Used db 0
-    ourPwrUpDataLineIndex db 0
-    ourPwrUpStuckVal db 0
+    ourPwrUpDataLineIndex db 1
+    ourPwrUpStuckVal db 1
     ourPwrUpStuckEnabled db 0
 
     opponentPwrUpDataLineIndex db 0
@@ -657,6 +678,8 @@ CommMenu proc far
     CALL ClearScreenTxtMode
 
     Start:
+    CALL PowrUpMenu
+    CALL ExecPwrUp
     
     CALL MnemonicMenu
     ; SelectedMenmonic index is saved, Call operands according to each operation (Menmonic)
@@ -793,106 +816,82 @@ CommMenu proc far
             ValidCommand:
 
             ; Test Messages
-            LEA DX, mesCom
-            CALL DisplayString
-            mov dl, selectedComm
-            add dl, '0'
-            CALL DisplayChar 
+                lea dx, mesMem
+                CAll DisplayString
+                lea dx,p2_ValMem
+                CALL DisplayString
 
-            LEA DX, mesOp1Type
-            CALL DisplayString
-            mov dl, selectedOp1Type
-            add dl, '0'
-            CALL DisplayChar
+                lea dx, mesStack
+                CAll DisplayString
+                lea dx,p2_ValStack
+                Call DisplayString
 
-            LEA DX, mesReg
-            CALL DisplayString
-            mov dl, selectedOp1Reg
-            add dl, '0'
-            CALL DisplayChar 
+                lea dx, mesVal
+                CALL DisplayString
+                mov dx, Op1Val
+                Call DisplayChar
 
-            lea dx, mesMem
-            CAll DisplayString
-            lea dx,p2_ValMem
-            CALL DisplayString
+                LEA DX, mesRegAX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegAX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegAX+1
+                CALL DisplayChar
 
-            lea dx, mesStack
-            CAll DisplayString
-            lea dx,p2_ValStack
-            Call DisplayString
+                LEA DX, mesRegBX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegBX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegBX+1
+                CALL DisplayChar 
 
-            lea dx, mesVal
-            CALL DisplayString
-            mov dx, Op1Val
-            Call DisplayChar
+                LEA DX, mesRegCX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegCX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegCX+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegAX
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegAX
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegAX+1
-            CALL DisplayChar
+                LEA DX, mesRegDX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegDX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegDX+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegBX
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegBX
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegBX+1
-            CALL DisplayChar 
+                LEA DX, mesRegSI
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegSI
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegSI+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegCX
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegCX
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegCX+1
-            CALL DisplayChar 
+                LEA DX, mesRegDI
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegDI
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegDI+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegDX
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegDX
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegDX+1
-            CALL DisplayChar 
+                LEA DX, mesRegBP
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegBP
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegBP+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegSI
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegSI
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegSI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegDI
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegDI
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegDI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegBP
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegBP
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegBP+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegSP
-            CALL DisplayString
-            mov dl,Byte ptr p2_ValRegSP
-            CALL DisplayChar
-            mov dl, byte ptr p2_ValRegSP+1
-            CALL DisplayChar
-            
-            LEA DX, mesRegCF
-            CALL DisplayString
-            mov dl, p2_ValCF
-            add dl, '0'
-            CALL DisplayChar
-
-            LEA DX, mesReg
-            CALL DisplayString
-            mov dl, Op2Valid
-            add dl, '0'
-            CALL DisplayChar  
+                LEA DX, mesRegSP
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegSP
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegSP+1
+                CALL DisplayChar
+                
+                LEA DX, mesRegCF
+                CALL DisplayString
+                mov dl, p2_ValCF
+                add dl, '0'
+                CALL DisplayChar
 
             
 
@@ -2186,11 +2185,19 @@ CommMenu ENDP
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
         MnemonicMenu PROC
+            
+            ; Reset Cursor
+                mov ah,2
+                mov dx, MenmonicCursorLoc
+                int 10h
 
             ; Display Command
             DisplayComm:
+                ; Clear buffer
+                mov ah,07
+                int 21h
                 mov ah, 9
-                mov dx, offset DECcom
+                mov dx, offset ADDcom
                 int 21h
 
             CheckKeyComType:
@@ -3155,7 +3162,7 @@ CommMenu ENDP
             jz CommDown_2
             cmp ah, EnterScanCode
             jz Selected_2
-            JMP CheckKeyOp1Type
+            JMP CheckKeyOp1Type2
 
 
             CommUp_2:
@@ -3192,7 +3199,152 @@ CommMenu ENDP
                 
             ret
         PowrUpMenu ENDP
-        
+        StuckIndexSubMenu PROC FAR
+            ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+                
+            mov ah, 9
+            mov dx, offset DataIndex0
+            int 21h
+
+            CheckKeyOp1Type_DataIndex:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_DataIndex 
+            cmp ah, DownArrowScanCode
+            jz CommDown_DataIndex 
+            cmp ah, EnterScanCode
+            jz Selected_DataIndex 
+            JMP CheckKeyOp1Type_DataIndex
+
+
+            CommUp_DataIndex:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset DataIndex0     ; Power Up firstChoiceLoc
+                    jnz NotOverflow_DataIndex 
+                    mov dx, offset DataIndex15           ; Power Up LastChoiceLoc
+                    add dx, SubPwrUpSize
+                NotOverflow_DataIndex:
+                    sub dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_DataIndex
+            
+            CommDown_DataIndex :
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset DataIndex15          ; Power Up LastChoiceLoc
+                    jnz NotEOF_DataIndex
+                    mov dx, offset DataIndex0
+                    sub dx, SubPwrUpSize
+                NotEOF_DataIndex:
+                    add dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_DataIndex
+            
+            Selected_DataIndex :
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset DataIndex0         ; Op1FirstChoiceLoc
+                mov bl, SubPwrUpSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov opponentPwrUpDataLineIndex, AL
+                
+
+            RET
+        ENDP
+        StuckValSubMenu PROC FAR
+            ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+                
+            mov ah, 9
+            mov dx, offset StuckVal0
+            int 21h
+
+            CheckKeyOp1Type_StuckVal:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_StuckVal 
+            cmp ah, DownArrowScanCode
+            jz CommDown_StuckVal 
+            cmp ah, EnterScanCode
+            jz Selected_StuckVal 
+            JMP CheckKeyOp1Type_StuckVal
+
+
+            CommUp_StuckVal:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset StuckVal0     ; Power Up firstChoiceLoc
+                    jnz NotOverflow_StuckVal 
+                    mov dx, offset StuckVal1           ; Power Up LastChoiceLoc
+                    add dx, SubPwrUpSize
+                NotOverflow_StuckVal:
+                    sub dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_StuckVal
+            
+            CommDown_StuckVal :
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset StuckVal1          ; Power Up LastChoiceLoc
+                    jnz NotEOF_StuckVal
+                    mov dx, offset StuckVal0
+                    sub dx, SubPwrUpSize
+                NotEOF_StuckVal:
+                    add dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_StuckVal
+            
+            Selected_StuckVal :
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset StuckVal0         ; Op1FirstChoiceLoc
+                mov bl, SubPwrUpSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov opponentPwrUpStuckVal, AL
+                
+
+            RET
+        ENDP
         
     ;; -------------------------- Getters Procedures ----------------------- ;;
         GetDst PROC FAR  ; offset of the operand is saved in di, destination is called by op1 menu. Call the procedure twice to get the next value if two cpus are enabled
@@ -4102,8 +4254,8 @@ CommMenu ENDP
 
                 ; Prompt the user for the details using LineStuckIndexMsg, LineStuckValMsg
                 ; Validate user Input and enter it in the opponent data line variables
-                ;opponentPwrUpDataLineIndex db 0
-                ;opponentPwrUpStuckVal      db 0
+                CALL StuckIndexSubMenu
+                CALL StuckValSubMenu
                 MOV opponentPwrUpStuckEnabled, 1
 
                 JMP Return_ExecPwrUp
@@ -4185,6 +4337,8 @@ CommMenu ENDP
                 ROL BX,cl
                 OR AX, BX
                 mov ourPwrUpStuckEnabled, 0
+                ;MOV DL, AL
+                ;CALL DisplayChar
             NotStuck:
                 
             POP DX
@@ -4192,6 +4346,7 @@ CommMenu ENDP
             POP BX
             RET
         ENDP
+        
     ;; ------------------------- Other Helper prcoedures ------------------- ;;
         
         
