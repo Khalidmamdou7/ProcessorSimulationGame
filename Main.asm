@@ -2069,6 +2069,9 @@ Send    			endp
             draw_point '1', 0fh
             Set 0 3
             draw_point ':', 0fh
+            Set 0 4
+            Lea dx, NAMEP1
+            CALL DisplayString
 
             ;for S1
             Set 0 14
@@ -2085,6 +2088,8 @@ Send    			endp
             draw_point '2', 0fh
             Set 0 26
             draw_point ':', 0fh
+            LEA DX, NAMEP2
+            CALL DisplayString
 
             ;for S1
             Set 0 34
