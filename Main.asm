@@ -704,6 +704,8 @@
                 a EQU 1000H
                 B EQU 100H
                 C EQU 10H
+                cc equ 10
+
         ; ------------------------------------- Game Variables ------------------------------ ;
             ; ----------- Opponent Data ----------;
                 ValRegAX dw 'AX'
@@ -854,8 +856,8 @@
         MOV Player2_Points, BH
         JMP NEXT_FORWARD
         TAKE_PLAYER2POINTS:
-        ;	MOV Player1_Points, BL
-        ;	MOV Player2_Points, BL
+            MOV Player1_Points, BL
+            MOV Player2_Points, BL
         NEXT_FORWARD:	                                  ; CALL GAME FUNCTION 
             JMP BACK_TO_MAIN_SCREEN
         CHECK_CHAT:  CMP CHOSEN,2
@@ -2067,7 +2069,11 @@ Send    			endp
             Set 0 15
             draw_point ':', 0fh
             Set 0 16
-            draw_point Player1_Points, 0fh
+            MOV AL, Player1_Points
+            MOV AH, 0
+            MOV BL, 0
+            MOV BH, 16
+            CALL Display_Digit
 
             ;for P2
             Set 0 24
@@ -2076,6 +2082,7 @@ Send    			endp
             draw_point '2', 0fh
             Set 0 26
             draw_point ':', 0fh
+            Set 0 27
             LEA DX, NAMEP2
             CALL DisplayString
 
@@ -2085,7 +2092,11 @@ Send    			endp
             Set 0 35
             draw_point ':', 0fh
             Set 0 36
-            draw_point Player2_Points, 0fh
+            MOV AH, 0
+            MOV AL, Player2_Points
+            MOV BL, 0
+            MOV BH, 36
+            CALL Display_Digit
 
         RET
     DrawGuiLayout ENDP
@@ -6415,7 +6426,27 @@ Send    			endp
             RET        
 
         DisPlayNumber ENDP 
+        Display_Digit proc  ; Mov Val to ax, BL: X-AXIS , BH: Y-AXIS
+            mov x_axis,bl
+            mov y_axis,bh
+            mov ch,cc
+            div ch 
+            mov ch,ah
+            mov dl,al
+            add dl,30h
+            
+            Set x_axis y_axis
+            PrintChar dl 
 
+            mov dl,ch
+            add dl,30h
+
+            inc y_axis 
+            Set x_axis y_axis
+            PrintChar dl
+
+            RET
+            ENDP
         ClearScreenTxtMode PROC far
             ; Change to text mode (clear screen)
             mov ah,0
