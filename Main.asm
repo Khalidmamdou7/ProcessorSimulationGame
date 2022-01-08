@@ -226,76 +226,84 @@
 .STACK 64
 ;================================================================================================================
 .DATA
-        
+    ;---------------------------------------LEFT PROCESSOR----------------------------------------------:
+
+        ; positions of X axis of the AX register in right processor
+        p1_AX_X1 EQU 44
+        p1_AX_Y EQU 4 ; the Y axis of the AX register of the left processor 
+
+
+        ; positions of X axis of the BX register in right processor
+        p1_BX_X1 EQU 44
+        p1_BX_Y EQU 6 ; the Y axis of the AX register of the left processor 
+
+
+        ; position of X axis of the DX register in right processor
+        p1_CX_X1 EQU 44
+        p1_CX_Y EQU 8 ; the Y axis of the AX register of the left processor 
+
+
+        ; positions of X axis of the DX register in right processor
+        p1_DX_X1 EQU 44        
+        p1_DX_Y EQU 10 ; the Y axis of the AX register of the left processor 
+
+
+        ; positions of X axis of SP register in right processor 
+        p1_SP_X1 equ 49
+        p1_SP_Y equ 4 ; the Y position of SP register in the left processor 
+
+
+        ; positions of X axis of BP register in right processor 
+        p1_BP_X1 equ 49
+        p1_BP_Y equ 6 ; the Y position of BP register in the left processor 
+
+        ; positions of X axis of SI register in right processor 
+        p1_SI_X1 equ 49
+        p1_SI_Y equ 8 ; the Y position of SI register in the left processor 
+
+
+        ; positions of X axis of DI register in right processor 
+        p1_DI_X1 equ 49
+        p1_DI_Y equ 10 ; the Y position of SI register in the left processor 
+
     ;---------------------------------------RIGHT PROCESSOR----------------------------------------------:
 
         ; positions of X axis of the AX register in right processor
-        p2_AX_X1 db 107
-        p2_AX_X2 EQU 108
-        p2_AX_X3 EQU 109
-        p2_AX_X4 EQU 110
-        
+        p2_AX_X1 EQU 107
         p2_AX_Y EQU 4 ; the Y axis of the AX register of the left processor 
 
+
         ; positions of X axis of the BX register in right processor
-        p2_BX_X1 db 107
-        p2_BX_X2 EQU 108
-        p2_BX_X3 EQU 109
-        p2_BX_X4 EQU 110
-        
+        p2_BX_X1 EQU 107
         p2_BX_Y EQU 6 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of the DX register in right processor
-        p2_CX_X1 db 107
-        p2_CX_X2 EQU 108
-        p2_CX_X3 EQU 109
-        p2_CX_X4 EQU 110
-        
+        p2_CX_X1 EQU 107
         p2_CX_Y EQU 8 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of the DX register in right processor
-        p2_DX_X1 db 107
-        p2_DX_X2 EQU 108
-        p2_DX_X3 EQU 109
-        p2_DX_X4 EQU 110
-        
+        p2_DX_X1 EQU 107
         p2_DX_Y EQU 10 ; the Y axis of the AX register of the left processor 
 
 
         ; positions of X axis of SP register in right processor 
-        p2_SP_X1 db 113
-        p2_SP_X2 equ 114
-        p2_SP_X3 equ 115
-        p2_SP_X4 equ 116
-
+        p2_SP_X1 equ 113
         p2_SP_Y equ 4 ; the Y position of SP register in the left processor 
 
 
         ; positions of X axis of BP register in right processor 
-        p2_BP_X1 db 113
-        p2_BP_X2 equ 114
-        p2_BP_X3 equ 115
-        p2_BP_X4 equ 116
-
+        p2_BP_X1 equ 113
         p2_BP_Y equ 6 ; the Y position of BP register in the left processor 
 
         ; positions of X axis of SI register in right processor 
-        p2_SI_X1 db 113
-        p2_SI_X2 equ 114
-        p2_SI_X3 equ 115
-        p2_SI_X4 equ 116
-
+        p2_SI_X1 equ 113
         p2_SI_Y equ 8 ; the Y position of SI register in the left processor 
 
 
         ; positions of X axis of DI register in right processor 
-        p2_DI_X1 db 113
-        p2_DI_X2 equ 114
-        p2_DI_X3 equ 115
-        p2_DI_X4 equ 116
-
+        p2_DI_X1 equ 113
         p2_DI_Y equ 10 ; the Y position of SI register in the left processor 
 
 
@@ -443,15 +451,16 @@
         right_mem_Y30 equ 18
         right_mem_Y31 equ 18
 
+    
+    
 
-    ;----------------------object points----------------------;
-        red_pt db '1'
     ; ----------------------------------------------- Keys Scan Codes ------------------------------------------- ;
         UpArrowScanCode EQU 72
         DownArrowScanCode EQU 80
         RightScanCode EQU 77
         LeftScanCode EQU 75
         EnterScanCode EQU 28
+        SpaceScanCode EQU 57
         EscScanCode EQU 1 
     ; ------------------------------------------------ Test Messages -------------------------------------------- ;
         mesSelCom db 10,'You have selected Command #', '$'
@@ -507,14 +516,27 @@
 		InitialPointsP2 DB 0
 		CHOSEN  DB     1    ; CHOSEN CHOICE IN THE MAIN SCREEN 
 	; ----------------------------------------------- GUI Variables --------------------------------------------- ;
-		; Define the variables
-		X2position db 9
-		Xposition db 8
-		inputKey db ?
-		Xbullet db 8
-		Ybullet db 18
-		X_Arr db 2,2,3,3,5,5,6,6
-		; Y_Arr db 6 dup(?)
+		 ; Define the variables
+            SerialData DB ?
+            X2position db 9
+            XpositionShooter1 db 8
+            XpositionShooter2 db 32
+            inputKey db ?
+            XbulletShooter1 db 8
+            YbulletShooter1 db 18
+            XbulletShooter2 db 32
+            YbulletShooter2 db 18
+            X_Arr db 2,2,24,24
+            red_pt db '1'
+            blue_pt db '1'
+            yellow_pt db '1'
+            ball_colr db 0ch
+            X db 0
+            Y db 1
+            x_axis db ?
+            y_axis db ?
+            text db 'string$'
+
         InstructionMsg db 10,      'Use Up/Down Arrows to navigate between commands.        ', '$'
         ExecutionFailed db 10,     'Invalid Command. Press Enter to continue.               ', '$'
         ExecutedSuccesfully db 10, 'Command Executed Sucessfully. Press Enter to continue.  ', '$'
@@ -713,7 +735,7 @@
                 ourValCF db 0
 
             ; --------- Score and others --------;
-                Player1_Points DB 0
+                Player1_Points DB 8
                 Player2_Points DB 0
                 Player1_ForbidChar DB 0
 		        Player2_ForbidChar DB 'X'
@@ -1476,20 +1498,20 @@ Send    			endp
         cmp ah, LeftScanCode
         jz MoveLeft_P2Round
         cmp ah, 57
-        jz DrawBullet_P2Round
+        jz ourDrawBullet_P2Round
         cmp ah, EscScanCode
         jz Exit_P2Round
 
         jmp CheckKey_P2Round
 
-        DrawBullet_P2Round:
-            Call DrawBullet
+        ourDrawBullet_P2Round:
+            Call ourDrawBullet
             JMP CheckKey_P2Round
         MoveLeft_P2Round:
-            CALL MoveShooterLeft
+            CALL MoveShooter1Left
             JMP CheckKey_P2Round
         MoveRight_P2Round:
-            CALL MoveShooterRight
+            CALL MoveShooter1Right
             JMP CheckKey_P2Round
         Exit_P2Round:
             Call Terminate
@@ -1551,7 +1573,7 @@ Send    			endp
 
         GameLoop:
             CALL DrawGuiLayout
-            ; CALL DisplayGUIValues
+            ;CALL DisplayGUIValues
             CALL DrawFlyingObj
             CALL DrawShooter
             Set 21 0
@@ -1559,6 +1581,7 @@ Send    			endp
             CALL DisplayString
             CALL PowrUpMenu
             CALL ExecPwrUp
+            CALL ClearCommand
             CALL CommMenu
             CALL ClearCommand
             CALL PlayerTwoRound
@@ -1581,87 +1604,66 @@ Send    			endp
         ; Create the flying objects
 
         update_object: ; updating the position of the objects
-            set 13 X_Arr[1]
-            draw_obj 0ch
-            inc X_Arr[1]
+        
+        set 13 X_Arr[1]
+        draw_obj ball_colr
+        inc X_Arr[1]
+    
+        set 13 X_Arr[3]
+        draw_obj 0bh
+        inc X_Arr[3]
 
-            ; set 14 X_Arr[3]
-            ; draw_obj 0bh
-            ; inc X_Arr[3]
 
-            ; set 13 X_Arr[5]
-            ; draw_obj 0eh
-            ; inc X_Arr[5]
+        cmp X_Arr[1],15
+        jle clear_old_pos
+        jg dum2
 
-            ; set 14 X_Arr[7]
-            ; draw_obj 0ah
-            ; inc X_Arr[7]
+        dum2:
+        jmp set_object
 
-            cmp X_Arr[1],15
-            jle clear_old_pos
-            jg dum2
+        clear_old_pos:;clear the objects in the old positions
+        mov bx,60000
+        stop1:
+        dec bx
+        jnz stop1
+        mov bx,60000
+        stop2:
+        dec bx
+        jnz stop2
+        mov bx,60000
+        stop3:
+        dec bx
+        jnz stop3
+        set 13 X_Arr[0]
+        PrintChar_black 'o'
+        inc X_Arr[0] 
 
-            dum2:
-            jmp set_object
+        set 13 X_Arr[2]
+        PrintChar_black 'o'
+        inc X_Arr[2]
 
-            clear_old_pos:;clear the objects in the old positions
-            mov bx,60000
-            stop1:
-            dec bx
-            jnz stop1
-            mov bx,60000
-            stop2:
-            dec bx
-            jnz stop2
-            set 13 X_Arr[0]
-            PrintChar_black 'o'
-            inc X_Arr[0] 
+        RET
 
-            ; set 14 X_Arr[2]
-            ; PrintChar_black 'o'
-            ; inc X_Arr[2]
-
-            ; set 13 X_Arr[4]
-            ; PrintChar_black 'o'
-            ; inc X_Arr[4]
-
-            ; set 14 X_Arr[6]
-            ; PrintChar_black 'o'
-            ; inc X_Arr[6]
-
-            RET
-
-            ;jmp update_object
+        ;jmp update_object
 
         set_object: ; set the objects to be all cleared 
+        
             set 13 X_Arr[0]
             PrintChar_black 'o' 
             mov X_Arr[0],2
             mov X_Arr[1],2
 
-            ; set 14 X_Arr[2]
-            ; PrintChar_black 'o' 
-            ; mov X_Arr[2],3
-            ; mov X_Arr[3],3
+            set 13 X_Arr[2]
+            PrintChar_black 'o' 
+            mov X_Arr[2],24
+            mov X_Arr[3],24
 
-            ; set 13 X_Arr[4]
-            ; PrintChar_black 'o' 
-            ; mov X_Arr[4],5
-            ; mov X_Arr[5],5
-
-            ; set 14 X_Arr[6]
-            ; PrintChar_black 'o' 
-            ; mov X_Arr[6],6
-            ; mov X_Arr[7],6
-        
 
         RET
     ENDP
     DrawGuiLayout PROC FAR
 
-        
-
-        ; Drawing the layout
+            ; Drawing the layout
         ; draw the outer horzontal lines 
         mov cx,319
         Layout_horz:
@@ -1673,7 +1675,7 @@ Send    			endp
             mov DX,0a2h ; choose the row position
             INT 10H
             dec CX
-            jnz Layout_horz
+        jnz Layout_horz
 
         ; draw the outer vertical lines, and the middle line
         mov cx,152
@@ -1683,16 +1685,32 @@ Send    			endp
             mov AL,09h ; choose the blue color
             mov BH,0h  ; choose the page number
             push cx
-                mov Cx,319 ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,0  ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,160  ; choose the column position (which is constant)
-                INT 10H
+            mov Cx,319 ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,0  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,160  ; choose the column position (which is constant)
+            INT 10H
             pop cx
             inc DX
             dec CX
-            jnz Layout_vert
+        jnz Layout_vert
+
+        ;Draw the vertical line that seprates the chat from the commands
+
+        mov cx,38
+        mov dx,162
+        seprate_vert:
+            mov AH,0ch ; set for drawing a pixel
+            mov AL,09h ; choose the blue color
+            push cx
+            mov cx,200
+            INT 10H
+            pop Cx
+            inc dx
+            dec cx
+        jnz seprate_vert
+
 
         ;Draw the processors/////////////////////////////////////////////////////
         ;Draw the left processor horizontal lines
@@ -1706,7 +1724,7 @@ Send    			endp
             mov Dx,160 ; choose the row position
             INT 10H
             dec CX
-            jnz processor_1_horz
+        jnz processor_1_horz
 
         ;Draw the horizontal lines for the right processor
         mov cx,130
@@ -1715,15 +1733,15 @@ Send    			endp
             mov AH,0ch ; set for drawing a pixel
             mov AL,0eh ; choose the yellow color
             push cx
-                mov cx,bx
-                mov DX,0fh ; choose the row position
-                INT 10H
-                mov DX,160 ; choose the row position
-                INT 10H
+            mov cx,bx
+            mov DX,0fh ; choose the row position
+            INT 10H
+            mov DX,160 ; choose the row position
+            INT 10H
             pop cx
             inc bx
             dec CX
-            jnz process_2_horz
+        jnz process_2_horz
 
         ;Draw the vertical lines for both processors
         mov cx,0
@@ -1734,17 +1752,17 @@ Send    			endp
             mov AL,0dh ; choose the purble color
             mov BH,0h  ; choose the page number
             push cx
-                mov Cx,130  ; choose the column position (which is constant)
-                INT 10H
-                mov AL,0eh ; choose the yellow color
-                mov Cx,190  ; choose the column position (which is constant)
-                INT 10H
+            mov Cx,130  ; choose the column position (which is constant)
+            INT 10H
+            mov AL,0eh ; choose the yellow color
+            mov Cx,190  ; choose the column position (which is constant)
+            INT 10H
             pop cx
             inc DX
             dec CX
         jnz process_1_2
 
-        ; Draw the four registers in the two processors
+        ;Draw the four registers in the two processors
         ; draw the left ones horizontal lines
         mov bx,0
         mov cx,40
@@ -1753,19 +1771,19 @@ Send    			endp
             mov ah,0ch
             mov al,0dh ;choose purble color
             push cx  ; save the value of cx in stack
-                mov cx,bx
-                mov dx,1fh
-                INT 10h
-                mov cx,bx
-                mov dx,2fh
-                INT 10h
-                mov cx,bx
-                mov dx,3fh
-                INT 10h
-                mov dx,4fh
-                INT 10h
-                mov dx,5fh
-                INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
             pop cx  ; retrieve the value of cx
             inc bx
             dec cx
@@ -1779,19 +1797,19 @@ Send    			endp
             mov ah,0ch
             mov al,0eh ;choose yellow color
             push cx  ; save the value of cx in stack
-                mov cx,bx
-                mov dx,1fh
-                INT 10h
-                mov cx,bx
-                mov dx,2fh
-                INT 10h
-                mov cx,bx
-                mov dx,3fh
-                INT 10h
-                mov dx,4fh
-                INT 10h
-                mov dx,5fh
-                INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
             pop cx  ; retrieve the value of cx
             inc bx
             dec cx
@@ -1806,15 +1824,15 @@ Send    			endp
             mov AL,0dh ; choose the purble color
             mov BH,0h  ; choose the page number
             push cx
-                mov Cx,24  ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,64  ; choose the column position (which is constant)
-                INT 10H
-                mov al,0eh  ;choose yellow color
-                mov Cx,257  ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,296  ; choose the column position (which is constant)
-                INT 10H
+            mov Cx,24  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,64  ; choose the column position (which is constant)
+            INT 10H
+            mov al,0eh  ;choose yellow color
+            mov Cx,257  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,296  ; choose the column position (which is constant)
+            INT 10H
             pop cx
             inc DX
             dec CX
@@ -1830,19 +1848,19 @@ Send    			endp
             mov ah,0ch
             mov al,0dh ;choose purble color
             push cx  ; save the value of cx in stack
-                mov cx,bx
-                mov dx,1fh
-                INT 10h
-                mov cx,bx
-                mov dx,2fh
-                INT 10h
-                mov cx,bx
-                mov dx,3fh
-                INT 10h
-                mov dx,4fh
-                INT 10h
-                mov dx,5fh
-                INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
             pop cx  ; retrieve the value of cx
             inc bx
             dec cx
@@ -1857,19 +1875,19 @@ Send    			endp
             mov ah,0ch
             mov al,0eh ;choose yellow color
             push cx  ; save the value of cx in stack
-                mov cx,bx
-                mov dx,1fh
-                INT 10h
-                mov cx,bx
-                mov dx,2fh
-                INT 10h
-                mov cx,bx
-                mov dx,3fh
-                INT 10h
-                mov dx,4fh
-                INT 10h
-                mov dx,5fh
-                INT 10h
+            mov cx,bx
+            mov dx,1fh
+            INT 10h
+            mov cx,bx
+            mov dx,2fh
+            INT 10h
+            mov cx,bx
+            mov dx,3fh
+            INT 10h
+            mov dx,4fh
+            INT 10h
+            mov dx,5fh
+            INT 10h
             pop cx  ; retrieve the value of cx
             inc bx
             dec cx
@@ -1885,15 +1903,15 @@ Send    			endp
             mov AL,0dh ; choose the purble color
             mov BH,0h  ; choose the page number
             push cx
-                mov Cx,70  ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,108  ; choose the column position (which is constant)
-                INT 10H
-                mov al,0eh  ;choose yellow color
-                mov Cx,211  ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,249  ; choose the column position (which is constant)
-                INT 10H
+            mov Cx,70  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,108  ; choose the column position (which is constant)
+            INT 10H
+            mov al,0eh  ;choose yellow color
+            mov Cx,211  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,249  ; choose the column position (which is constant)
+            INT 10H
             pop cx
             inc DX
             dec CX
@@ -1908,9 +1926,9 @@ Send    			endp
             mov AH,0ch ; set for drawing a pixel
             mov AL,0dh ; choose the purble color
             push cx
-                mov cx,bx
-                mov DX,97 ; choose the row position
-                INT 10H
+            mov cx,bx
+            mov DX,97 ; choose the row position
+            INT 10H
             pop cx
             inc bx
             dec CX
@@ -1923,9 +1941,9 @@ Send    			endp
             mov AH,0ch ; set for drawing a pixel
             mov AL,0eh ; choose the yellow color
             push cx
-                mov cx,bx
-                mov DX,97 ; choose the row position
-                INT 10H
+            mov cx,bx
+            mov DX,97 ; choose the row position
+            INT 10H
             pop cx
             inc bx
             dec CX
@@ -1934,23 +1952,23 @@ Send    			endp
         ;Draw the memory////////////////////////
         mov cx,150
         mov DX,0bh ; choose the row position
-        DrawMemory:
+        memory_:
             mov AH,0ch ; set for drawing a pixel
             mov AL,0bh ; choose the blue color
             mov BH,0h  ; choose the page number
             push cx
-                mov Cx,135 ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,152  ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,167 ; choose the column position (which is constant)
-                INT 10H
-                mov Cx,185  ; choose the column position (which is constant)
-                INT 10H
+            mov Cx,135 ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,152  ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,167 ; choose the column position (which is constant)
+            INT 10H
+            mov Cx,185  ; choose the column position (which is constant)
+            INT 10H
             pop cx
             inc DX
             dec CX
-        jnz DrawMemory
+        jnz memory_
 
         ;Set the names of the registers///////////////////////////////////////////////////////////////////////////
             ;Disaplay the characters for the first processor
@@ -2037,55 +2055,135 @@ Send    			endp
             Set 10 38
             PrintChar 'I'
 
+            ;shooters names and points/////////////////////
+
+            ;mov dx,OFFSET text 
+            ;mov bl,0
+            ;mov bh,4
+            ;call ShowMsg 
+
+            ;for P1
+            Set 0 1
+            draw_point 'P', 0fh
+            Set 0 2
+            draw_point '1', 0fh
+            Set 0 3
+            draw_point ':', 0fh
+
+            ;for S1
+            Set 0 14
+            draw_point 'S', 0fh
+            Set 0 15
+            draw_point ':', 0fh
+            Set 0 16
+            draw_point Player1_Points, 0fh
+
+            ;for P2
+            Set 0 24
+            draw_point 'P', 0fh
+            Set 0 25
+            draw_point '2', 0fh
+            Set 0 26
+            draw_point ':', 0fh
+
+            ;for S1
+            Set 0 34
+            draw_point 'S', 0fh
+            Set 0 35
+            draw_point ':', 0fh
+            Set 0 36
+            draw_point Player2_Points, 0fh
+
         RET
     DrawGuiLayout ENDP
 
     DisplayGUIValues PROC FAR
 
-        P2_Registers:
+        P1_Registers:
             push ValRegAX
-            mov BH, p2_AX_X1        ; x1 POS
-            mov BL, p2_AX_Y         ; y1 pos
-            call DisplayHexanumber
+            mov BH, p1_AX_X1        ; x1 POS
+            mov BL, p1_AX_Y         ; y1 pos
+            call DisPlayNumber
 
-            push ValRegBX
-            mov BH, p2_BX_X1        ; x1 POS
-            mov BL, p2_BX_Y         ; y1 pos
-            call DisplayHexanumber
+            push  ValRegBX
+            mov BH, p1_BX_X1        ; x1 POS
+            mov BL, p1_BX_Y         ; y1 pos
+            call DisPlayNumber
 
             push ValRegCX
-            mov BH, p2_CX_X1        ; x1 POS
-            mov BL, p2_CX_Y         ; y1 pos
-            call DisplayHexanumber
+            mov BH, p1_CX_X1        ; x1 POS
+            mov BL, p1_CX_Y         ; y1 pos
+            call DisPlayNumber
 
             push ValRegDX
-            mov BH, p2_DX_X1        ; x1 POS
-            mov BL, p2_DX_Y         ; y1 pos
-            call DisplayHexanumber
+            mov BH, p1_DX_X1        ; x1 POS
+            mov BL, p1_DX_Y         ; y1 pos
+            call DisPlayNumber
 
             push ValRegBP
-            mov BH, p2_BP_X1        ; x1 POS
-            mov BL, p2_BP_Y         ; y1 pos
-            call DisplayHexanumber
+            mov BH, p1_BP_X1        ; x1 POS
+            mov BL, p1_BP_Y         ; y1 pos
+            call DisPlayNumber
 
             push ValRegSP
-            mov BH, p2_SP_X1        ; x1 POS
-            mov BL, p2_SP_Y         ; y1 pos
-            call DisplayHexanumber
+            mov BH, p1_SP_X1        ; x1 POS
+            mov BL, p1_SP_Y         ; y1 pos
+            call DisPlayNumber
 
             push ValRegSI
-            mov BH, p2_SI_X1        ; x1 POS
-            mov BL, p2_SI_Y         ; y1 pos
-            call DisplayHexanumber
+            mov BH, p1_SI_X1        ; x1 POS
+            mov BL, p1_SI_Y         ; y1 pos
+            call DisPlayNumber
 
             push ValRegDI
+            mov BH, p1_DI_X1        ; x1 POS
+            mov BL, p1_DI_Y         ; y1 pos
+            call DisPlayNumber
+
+        P2_Registers:
+            push ourValRegAX
+            mov BH, p2_AX_X1        ; x1 POS
+            mov BL, p2_AX_Y         ; y1 pos
+            call DisPlayNumber
+
+            push ourValRegBX
+            mov BH, p2_BX_X1        ; x1 POS
+            mov BL, p2_BX_Y         ; y1 pos
+            call DisPlayNumber
+
+            push ourValRegCX
+            mov BH, p2_CX_X1        ; x1 POS
+            mov BL, p2_CX_Y         ; y1 pos
+            call DisPlayNumber
+
+            push ourValRegDX
+            mov BH, p2_DX_X1        ; x1 POS
+            mov BL, p2_DX_Y         ; y1 pos
+            call DisPlayNumber
+
+            push ourValRegBP
+            mov BH, p2_BP_X1        ; x1 POS
+            mov BL, p2_BP_Y         ; y1 pos
+            call DisPlayNumber
+
+            push ourValRegSP
+            mov BH, p2_SP_X1        ; x1 POS
+            mov BL, p2_SP_Y         ; y1 pos
+            call DisPlayNumber
+
+            push ourValRegSI
+            mov BH, p2_SI_X1        ; x1 POS
+            mov BL, p2_SI_Y         ; y1 pos
+            call DisPlayNumber
+
+            push ourValRegDI
             mov BH, p2_DI_X1        ; x1 POS
             mov BL, p2_DI_Y         ; y1 pos
-            call DisplayHexanumber
+            call DisPlayNumber
         
-        P2_Memory:
-        P1_Registers:
         P1_Memory:
+
+        P2_Memory:
 
         Scores:
 
@@ -2288,30 +2386,28 @@ Send    			endp
         RET
     ENDP
     DrawShooter PROC FAR
-        ; Drawing the shoooter /////////////////////////////////////////////////////////////////////////////
             mov ax,0
         Draw_shooter:
-            Set 19 Xposition
+            Set 19 XpositionShooter1 
             PrintChar '^'
-            Set 19 32
+            Set 19 XpositionShooter2 
             PrintChar '^'
 
         RET
     ENDP
-    DrawBullet PROC FAR
+    ourDrawBullet PROC FAR
         Draw_bullet:
             push dx
                 mov ah,0
                 int 16h
-                
-                mov cl,Xposition
-                mov  Xbullet,cl
-                Set Ybullet Xbullet; move the bullet
-                PrintChar '.'
-        jmp update_bullet
+                mov cl,XpositionShooter1
+                mov  XbulletShooter1,cl
+            Set YbulletShooter1 XbulletShooter1; move the bullet
+            PrintChar '.'
+            jmp update_bullet
 
         set_bullet:
-            Set Ybullet Xbullet; move the bullet
+            Set YbulletShooter1 XbulletShooter1; move the bullet
             PrintChar '.'
             mov cx,5000
             delay1:
@@ -2328,85 +2424,184 @@ Send    			endp
         jmp update_bullet
 
         update_bullet:
-            Set Ybullet Xbullet ;clear the bullet
+            Set YbulletShooter1 XbulletShooter1 ;clear the bullet
             PrintChar_black '.'
-            dec Ybullet
+            dec YbulletShooter1
 
-        ; check if the bullet hits any flying object or the boundry
         chk_red:
             mov cl,X_Arr[0]
-            cmp Ybullet,13
+            cmp YbulletShooter1,13
             je chk_red_col
             jg chk_bound
         chk_red_col:
             mov cl,X_Arr[0]
-            cmp Xbullet,cl
+            cmp XbulletShooter1,cl
             je increment_red
 
         chk_bound:
-                cmp Ybullet,13; compare with the boundry
-                jg set_bullet
+            cmp YbulletShooter1,13; compare with the boundry
+            jg set_bullet
 
         back_to_update:
-                Set Ybullet Xbullet ;clear the bullet
-                PrintChar_black '.'
-                mov cl,Xposition
-                mov  Xbullet,cl
-                mov cl,17
-                mov Ybullet,cl
+            Set YbulletShooter1 XbulletShooter1 ;clear the bullet
+            PrintChar_black '.'
+            mov cl,XpositionShooter1
+            mov  XbulletShooter1,cl
+            mov cl,17
+            mov YbulletShooter1,cl
+
             POP Dx
             RET
 
             
         increment_red:; increment the red points
-        ; cmp red_pt,9
-        ; jl do_red
-        ; jge back_to_update
-        ; do_red:
-            inc red_pt
-            Set 0 8
-            draw_point red_pt, 0ch
+
+            inc Player1_Points
+            ;Set 0 16
+            ;draw_point Player1_Points, 0fh
+            jmp back_to_update
+    ENDP
+    opponentDrawBullet PROC FAR
+        Draw_bullet_Shooter2:
+            mov ah,0
+            int 16h
+            
+            mov cl,XpositionShooter2
+            mov  XbulletShooter2,cl
+            Set YbulletShooter2 XbulletShooter2; move the bullet
+            PrintChar '.'
+        jmp update_bullet_Shooter2
+
+        set_bullet_Shooter2:
+            Set YbulletShooter2 XbulletShooter2; move the bullet
+            PrintChar '.'
+            mov cx,5000
+            delay1_Sh2:
+            dec cx
+            jnz delay1_Sh2
+            mov cx,50000
+            delay2_Sh2:
+            dec cx
+            jnz delay2_Sh2
+            mov cx,50000
+            delay3_Sh2:
+            dec cx
+            jnz delay3_Sh2
+        jmp update_bullet_Shooter2
+
+        update_bullet_Shooter2:
+            Set YbulletShooter2 XbulletShooter2 ;clear the bullet
+            PrintChar_black '.'
+            dec YbulletShooter2
+
+
+        ;check if the bullet hits any flying object or the boundry
+        chk_red2:
+            mov cl,X_Arr[0]
+            cmp YbulletShooter2,13
+            je chk_red_col
+            jg chk_bound
+        chk_red_col2:
+            mov cl,X_Arr[0]
+            cmp XbulletShooter2,cl
+            je increment_red2
+
+
+        chk_bound2:
+            cmp YbulletShooter2,13; compare with the boundry
+            jg set_bullet_Shooter2
+
+
+
+        back_to_update2:
+            Set YbulletShooter2 XbulletShooter2 ;clear the bullet
+            PrintChar_black '.'
+            mov cl,XpositionShooter2
+            mov  XbulletShooter2,cl
+            mov cl,17
+            mov YbulletShooter2,cl
+
+            RET
+
+        increment_red2:; increment the red points
             jmp back_to_update
 
         RET
     ENDP
-    MoveShooterLeft PROC FAR
-        Is_smaller:  ; check the left boundry 
+    MoveShooter1Left PROC FAR
+        Is_smallerShooter1:  ; check the left boundry 
             ;mov ah,0
             ;int 16h
-            cmp Xposition,2
-            jl RETURN_MoveShooterLeft
-            jge moveleft
+            cmp XpositionShooter1, 2
+            jl RETURN_MoveShooter1Left
+            jge moveleftShooter1
 
-        moveleft:
+        moveleftShooter1:
             push dx
                 ;draw the shooter with the black color as im deleting it 
-                Set 19 Xposition
+                Set 19 XpositionShooter1
                 PrintChar_black '^'
-                dec Xposition
+                dec XpositionShooter1
             pop dx
 
-        RETURN_MoveShooterLeft:
+        RETURN_MoveShooter1Left:
             RET
     ENDP
-    MoveShooterRight PROC FAR
-        Is_greater:  ; check the right boundry
-            cmp Xposition,14
-            jg RETURN_MoveShooterRight
-            jle moveRight
+    MoveShooter1Right PROC FAR
+        Is_greaterShooter1:  ; check the right boundry
+            cmp XpositionShooter1, 14
+            jg RETURN_MoveShooter1Right
+            jle moveRightShooter1
 
-        moveRight:
+        moveRightShooter1:
             push dx
                 ;draw the shooter with the black color as im deleting it
-                Set 19 Xposition
+                Set 19 XpositionShooter1
                 PrintChar_black '^' 
-                inc Xposition
+                inc XpositionShooter1
             pop dx
         
-        RETURN_MoveShooterRight:
+        RETURN_MoveShooter1Right:
             RET
     ENDP
+    MoveShooter2Left PROC FAR
+        Is_smallerShooter2:  ; check the left boundry 
+            ;mov ah,0
+            ;int 16h
+            cmp XpositionShooter2, 26
+            jl RETURN_MoveShooter2Left
+            jge moveleftShooter2
 
+        moveleftShooter2:
+            push dx
+                ;draw the shooter with the black color as im deleting it 
+                Set 19 XpositionShooter2
+                PrintChar_black '^'
+                dec XpositionShooter2
+            pop dx
+
+        RETURN_MoveShooter2Left:
+            RET
+    ENDP
+    MoveShooter2Right PROC FAR
+        Is_greaterShooter2:  ; check the right boundry
+            cmp XpositionShooter2, 38
+            jg RETURN_MoveShooter2Right
+            jle moveRightShooter2
+
+        moveRightShooter2:
+            push dx
+                ;draw the shooter with the black color as im deleting it
+                Set 19 XpositionShooter2
+                PrintChar_black '^' 
+                inc XpositionShooter2
+            pop dx
+        
+        RETURN_MoveShooter2Right:
+            RET
+
+        RET
+    ENDP
     ; ================================================ COMMANDS PROCEDURE ===================================;
     CommMenu proc far
 
@@ -2552,31 +2747,18 @@ Send    			endp
                         CALL WaitKeyPress
 
                     Push ax
+                    PUSH DX
                         CALL ClearBuffer
+                    POP DX
                     pop ax
                     
                     cmp ah, EnterScanCode
                     jz CONT_INVALID
-                    cmp ah, RightScanCode
-                    jz MoveRight_Invalid
-                    cmp ah, LeftScanCode
-                    jz MoveLeft_Invalid
-                    cmp ah, 57
-                    jz DrawBullet_Invalid
                     cmp ah, EscScanCode
                     jz Exit_Invalid
 
                     jmp CheckKey_Invalid
 
-                    DrawBullet_Invalid:
-                        Call DrawBullet
-                        JMP CheckKey_Invalid
-                    MoveLeft_Invalid:
-                        CALL MoveShooterLeft
-                        JMP CheckKey_Invalid
-                    MoveRight_Invalid:
-                        CALL MoveShooterRight
-                        JMP CheckKey_Invalid
                     Exit_Invalid:
                         Call Terminate
                     CONT_INVALID:
@@ -2598,26 +2780,11 @@ Send    			endp
                     
                     cmp ah, EnterScanCode
                     jz CONT__Exit
-                    cmp ah, RightScanCode
-                    jz MoveRight__Exit
-                    cmp ah, LeftScanCode
-                    jz MoveLeft__Exit
-                    cmp ah, 57
-                    jz DrawBullet__Exit
                     cmp ah, EscScanCode
                     jz Exit__Exit
 
                     jmp CheckKey_Exit
 
-                    DrawBullet__Exit:
-                        Call DrawBullet
-                        JMP CheckKey_Exit
-                    MoveLeft__Exit:
-                        CALL MoveShooterLeft
-                        JMP CheckKey_Exit
-                    MoveRight__Exit:
-                        CALL MoveShooterRight
-                        JMP CheckKey_Exit
                     Exit__Exit:
                         Call Terminate
                     CONT__Exit:
@@ -3917,9 +4084,7 @@ Send    			endp
 
                 ; Display Command
                 DisplayComm:
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     mov ah, 9
                     mov dx, offset ADDcom
                     int 21h
@@ -3929,9 +4094,7 @@ Send    			endp
 
                 Push ax
                 PUSH dx 
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     ; Reset Cursor
                     mov ah,2
                     mov dx, MenmonicCursorLoc
@@ -3993,16 +4156,12 @@ Send    			endp
                 int 21h
 
                 CheckKeyOp1Type:
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     CALL WaitKeyPress
 
                 Push ax
                 PUSH dx 
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     ; Reset Cursor
                     mov ah,2
                     mov dx, Op1CursorLoc
@@ -4062,16 +4221,12 @@ Send    			endp
                 int 21h
 
                 CheckKey_Op2Type:
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     CALL WaitKeyPress
 
                 Push ax
                 PUSH dx 
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     ; Reset Cursor
                     mov ah,2
                     mov dx, Op2CursorLoc
@@ -4156,17 +4311,13 @@ Send    			endp
                     int 21h
 
                     CheckKeyRegType:
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         CALL WaitKeyPress
 
 
                     Push ax
                     PUSH dx 
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         ; Reset Cursor
                         mov ah,2
                         mov dx, Op1CursorLoc
@@ -4226,17 +4377,13 @@ Send    			endp
                     int 21h
 
                     CheckKey_AddReg:
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         CALL WaitKeyPress
 
 
                     Push ax
                     PUSH dx 
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         ; Reset Cursor
                         mov ah,2
                         mov dx, Op1CursorLoc
@@ -4297,17 +4444,13 @@ Send    			endp
                     int 21h
 
                     CheckKeyMemType:
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         CALL WaitKeyPress
 
 
                     Push ax
                     PUSH dx 
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         ; Reset Cursor
                         mov ah,2
                         mov dx, Op1CursorLoc
@@ -4369,9 +4512,7 @@ Send    			endp
                     mov dx, Op1CursorLoc
                     CALL SetCursor
 
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     
 
                     ; Takep2_Value as a String from User
@@ -4519,17 +4660,13 @@ Send    			endp
                     int 21h
 
                     CheckKey_RegType_Op2Menu:
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         CALL WaitKeyPress
 
 
                     Push ax
                     PUSH dx 
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         ; Reset Cursor
                         mov ah,2
                         mov dx, Op2CursorLoc
@@ -4589,17 +4726,13 @@ Send    			endp
                     int 21h
 
                     CheckKey_AddReg_Op2Menu:
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         CALL WaitKeyPress
 
 
                     Push ax
                     PUSH dx 
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         ; Reset Cursor
                         mov ah,2
                         mov dx, Op2CursorLoc
@@ -4660,17 +4793,13 @@ Send    			endp
                     int 21h
 
                     CheckKey_MemType_Op2Menu:
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         CALL WaitKeyPress
 
 
                     Push ax
                     PUSH dx 
-                        ; Clear buffer
-                        mov ah,07
-                        int 21h
+                        CALL ClearBuffer
                         ; Reset Cursor
                         mov ah,2
                         mov dx, Op2CursorLoc
@@ -4731,9 +4860,8 @@ Send    			endp
                     ; Reset Cursor
                     mov dx, Op2CursorLoc
                     CALL SetCursor
-                    ; Clear buffer
-                        mov ah,07
-                        int 21h
+
+                    CALL ClearBuffer
 
                     ; Takep2_Value as a String from User
                     mov ah,0Ah                   
@@ -4930,16 +5058,12 @@ Send    			endp
                 int 21h
 
                 CheckKeyOp1Type_DataIndex:
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     CALL WaitKeyPress
 
                 Push ax
                 PUSH dx 
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     ; Reset Cursor
                     mov ah,2
                     mov dx, PUPCursorLoc
@@ -5003,16 +5127,12 @@ Send    			endp
                 int 21h
 
                 CheckKeyOp1Type_StuckVal:
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     CALL WaitKeyPress
 
                 Push ax
                 PUSH dx 
-                    ; Clear buffer
-                    mov ah,07
-                    int 21h
+                    CALL ClearBuffer
                     ; Reset Cursor
                     mov ah,2
                     mov dx, PUPCursorLoc
@@ -6098,7 +6218,7 @@ Send    			endp
             CHECK:
                 PUSHA
                     CALL DrawGuiLayout
-                    ;CALL DisplayGUIValues
+                    ; CALL DisplayGUIValues
                     CALL DrawFlyingObj
                     CALL DrawShooter
                 POPA
@@ -6107,8 +6227,38 @@ Send    			endp
                 int 16h
             jz CHECK
 
+            CALL CheckShootingGame
             ret
         WaitKeyPress ENDP
+        CheckShootingGame PROC
+            PUSHA
+                cmp ah, RightScanCode
+                jz MoveRight_CheckShootingGame
+                cmp ah, LeftScanCode
+                jz MoveLeft_CheckShootingGame
+                cmp ah, SpaceScanCode
+                jz ourDrawBullet_CheckShootingGame
+                cmp ah, EscScanCode
+                jz Exit_CheckShootingGame
+
+                JMP Return_CheckShootingGame
+
+                ourDrawBullet_CheckShootingGame:
+                    Call ourDrawBullet
+                    JMP Return_CheckShootingGame
+                MoveLeft_CheckShootingGame:
+                    CALL MoveShooter1Left
+                    JMP Return_CheckShootingGame
+                MoveRight_CheckShootingGame:
+                    CALL MoveShooter1Right
+                    JMP Return_CheckShootingGame
+                Exit_CheckShootingGame:
+                    Call Terminate
+
+            Return_CheckShootingGame:
+                POPA
+                RET
+        ENDP
         CharToUpper PROC FAR    ; Convert Char in AL to upper Case
             ; Check if it's an alpapetic lower case
             CMP AL, 'a'
@@ -6175,7 +6325,104 @@ Send    			endp
             RET
 
         DisplayHexanumber ENDP
-        
+        DisPlayNumber PROC 
+            mov x_axis,bl
+            mov y_axis, bh
+            pop bp
+            pop ax
+            mov bx,ax
+
+            mov cx,a
+            div cx
+
+            ; display first digit
+            mov ah,2     ; display first digit
+            mov dl,al
+            cmp dl,0Ah 
+            jnl hexalet
+            add dl,30h
+            jmp hexanum
+            hexalet:
+            add dl,37h
+            ;sub dl,30h
+            sub dl,17h
+            hexanum:  
+            Set x_axis y_axis
+            ; cmp dl,41h
+            ; jnl catchit 
+            ; sub dl,7h 
+            ; catchit:
+            PrintChar dl
+
+
+            mov ah,0
+            mov cx,a
+            mul cx
+
+            sub bx,ax
+
+            mov cx,b
+            mov ax,bx
+            div cx
+
+            mov cl,ah
+
+            mov ah,2     ; display second digit
+            mov dl,al 
+            cmp dl,0Ah 
+            jnl hexalet2
+            add dl,30h
+            jmp hexanum2
+            hexalet2:
+            add dl,37h
+            hexanum2: 
+            inc y_axis  
+            Set x_axis y_axis
+            PrintChar dl
+
+            mov dl,c
+            mov al,bl
+            mov ah,0
+
+            div dl 
+
+            mov ah,2     ; display third digit
+            mov dl,al
+            cmp dl,0Ah 
+            jnl hexalet3
+            add dl,30h
+            jmp hexanum3
+            hexalet3:
+            add dl,37h
+            hexanum3:      
+            inc y_axis  
+            Set x_axis y_axis
+            PrintChar dl 
+
+            mov cl,c 
+            mov al,bl
+            mov ah,0
+            div cl
+            mov al,ah
+            mov ah,2     ; display fourth digit
+            mov dl,al 
+            cmp dl,0Ah 
+            jnl hexalet4
+            add dl,30h
+            jmp hexanum4
+            hexalet4:
+            add dl,37h
+            hexanum4:  
+            inc y_axis  
+            Set x_axis y_axis
+            PrintChar dl
+
+            PUSH BP
+
+            RET        
+
+        DisPlayNumber ENDP 
+
         ClearScreenTxtMode PROC far
             ; Change to text mode (clear screen)
             mov ah,0
