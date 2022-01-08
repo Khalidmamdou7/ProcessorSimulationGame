@@ -1808,6 +1808,12 @@ CommMenu ENDP
             CALL GetDst
             CALL GetSrcOp_8Bit
             mov cl,al
+            cmp selectedOp1Size,8
+            jne ROR_p1_16bit
+            ROR BYTE PTR [di],cl
+            call SetCF
+            jmp ROR_p2
+            ROR_p1_16bit:
             ROR [di],cl
             call SetCF
             jmp ROR_p2
@@ -1818,6 +1824,12 @@ CommMenu ENDP
             call GetDst
             call GetSrcOp_8Bit
             mov cl,AL
+            cmp selectedOp1Size,8
+            jne ROR_p2_16bit
+            ROR BYTE PTR [di],cl
+            call SetCF
+            jmp Return_ROR
+            ROR_p2_16bit:
             ROR [di],cl
             call SetCF
         Return_ROR:
@@ -1862,6 +1874,12 @@ CommMenu ENDP
             CALL GetDst
             CALL GetSrcOp_8Bit
             mov cl,al
+            cmp selectedOp1Size,8
+            jne ROL_p1_16bit
+            ROL BYTE PTR [di],cl
+            call SetCF
+            jmp ROL_p2
+            ROL_p1_16bit:
             ROL [di],cl
             call SetCF
             jmp ROL_p2
@@ -1872,6 +1890,12 @@ CommMenu ENDP
             call GetDst
             call GetSrcOp_8Bit
             mov cl,AL
+            cmp selectedOp1Size,8
+            jne ROL_p2_16bit
+            ROL BYTE PTR [di],cl
+            call SetCF
+            jmp Return_ROL
+            ROL_p2_16bit:
             ROL [di],cl
             call SetCF
         Return_ROL:
@@ -1916,6 +1940,12 @@ CommMenu ENDP
             CALL GetDst
             CALL GetSrcOp_8Bit
             mov cl,al
+            cmp selectedOp1Size,8
+            jne SHL_p1_16bit
+            SHL BYTE PTR [di],cl
+            call SetCF
+            jmp SHL_p2
+            SHL_p1_16bit:
             SHL [di],cl
             call SetCF
             jmp SHL_p2
@@ -1926,6 +1956,12 @@ CommMenu ENDP
             call GetDst
             call GetSrcOp_8Bit
             mov cl,AL
+            cmp selectedOp1Size,8
+            jne SHL_p2_16bit
+            SHL BYTE PTR [di],cl
+            call SetCF
+            jmp Return_SHL
+            SHL_p2_16bit:
             SHL [di],cl
             call SetCF
         Return_SHL:
@@ -1970,6 +2006,12 @@ CommMenu ENDP
             CALL GetDst
             CALL GetSrcOp_8Bit
             mov cl,al
+            cmp selectedOp1Size,8
+            jne SHR_p1_16bit
+            SHR BYTE PTR [di],cl
+            call SetCF
+            jmp SHR_p2
+            SHR_p1_16bit:
             SHR [di],cl
             call SetCF
             jmp SHR_p2
@@ -1980,6 +2022,12 @@ CommMenu ENDP
             call GetDst
             call GetSrcOp_8Bit
             mov cl,AL
+            cmp selectedOp1Size,8
+            jne SHR_p2_16bit
+            SHR BYTE PTR [di],cl
+            call SetCF
+            jmp Return_SHR
+            SHR_p2_16bit:
             SHR [di],cl
             call SetCF
         Return_SHR:
@@ -2024,6 +2072,13 @@ CommMenu ENDP
             CALL GetDst
             CALL GetSrcOp_8Bit
             mov cl,al
+            cmp selectedOp1Size,8
+            jne RCR_p1_16bit
+            call GetCF
+            RCR BYTE PTR [di],cl
+            call SetCF
+            jmp RCR_p2
+            RCR_p1_16bit:
             call GetCF
             RCR [di],cl
             call SetCF
@@ -2035,6 +2090,13 @@ CommMenu ENDP
             call GetDst
             call GetSrcOp_8Bit
             mov cl,AL
+            cmp selectedOp1Size,8
+            jne RCR_p2_16bit
+            call GetCF
+            RCR BYTE PTR [di],cl
+            call SetCF
+            jmp Return_RCR
+            RCR_p2_16bit:
             call GetCF
             RCR [di],cl
             call SetCF
@@ -2080,6 +2142,13 @@ CommMenu ENDP
             CALL GetDst
             CALL GetSrcOp_8Bit
             mov cl,al
+            cmp selectedOp1Size,8
+            jne RCL_p1_16bit
+            call GetCF
+            RCL BYTE PTR [di],cl
+            call SetCF
+            jmp RCL_p2
+            RCL_p1_16bit:
             call GetCF
             RCL [di],cl
             call SetCF
@@ -2091,13 +2160,20 @@ CommMenu ENDP
             call GetDst
             call GetSrcOp_8Bit
             mov cl,AL
+            cmp selectedOp1Size,8
+            jne RCL_p2_16bit
+            call GetCF
+            RCL BYTE PTR [di],cl
+            call SetCF
+            jmp Return_RCL
+            RCL_p2_16bit:
             call GetCF
             RCL [di],cl
             call SetCF
         Return_RCL:
         RET
     ENDP
-
+    
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
         MnemonicMenu PROC
