@@ -520,13 +520,13 @@ ENDM
         p2_ValRegCX dw 'CX'
         p2_ValRegDX dw 'DX'
         p2_ValRegBP dw 0
-        p2_ValRegSP dw 'SP'
+        p2_ValRegSP dw 1
         p2_ValRegSI dw 'SI'
         p2_ValRegDI dw 'DI'
 
         p2_ValMem db 16 dup('M'), '$'
-        p2_ValStack db 16 dup('S'), '$'
-        p2_ValStackPointer db 0
+        p2_ValStack DW 8 dup('Ss'), '$'
+        ;p2_ValStackPointer db 0
         p2_ValCF db 1
 
         ;OUR Regisesters
@@ -535,14 +535,14 @@ ENDM
         p1_ValRegCX dw 'CX'
         p1_ValRegDX dw 'DX'
         p1_ValRegBP dw 0
-        p1_ValRegSP dw 'SP'
+        p1_ValRegSP dw 1
         p1_ValRegSI dw 'SI'
         p1_ValRegDI dw 'DI' 
         p1_ValCF db 0
         p1_ValMem db 16 dup('M'), '$'
 
-        p1_ValStack db 16 dup('S'), '$'
-        p1_ValStackPointer db 0
+        p1_ValStack DW 8 dup('S'), '$'
+        ;p1_ValStackPointer db 0
     
 
     ; Operandp2_Value Needed Variables
@@ -610,7 +610,7 @@ ENDM
     
     ; Game Variables
     Player1Points dw 0
-    ForbidChar db 'N'
+    ForbidChar db 'l'
     isInvalidCommand db 0    ; 1 if Invalid
     p1_CpuEnabled db 0      ; 1 if command will run on it
     p2_CpuEnabled db 1      ; ..
@@ -625,6 +625,7 @@ ENDM
     ; Keys Scan Codes
     UpArrowScanCode EQU 72
     DownArrowScanCode EQU 80
+
     EnterScanCode EQU 28 
 
     ; Cursor Locations
@@ -732,18 +733,17 @@ CommMenu proc far
             CALL ADC_Comm_PROC
             JMP Exit
         PUSH_Comm:
-            ;CALL PUSH_Comm_PROC
-
+            CALL PUSH_Comm_PROC
+            JMP Exit
         POP_Comm:
-        
-
+            CALL POP_Comm_PROC
             JMP Exit
         INC_Comm:
-            
-
-        
+            CALL INC_Comm_PROC
+            JMP Exit
         DEC_Comm:
-
+            CALL DEC_Comm_PROC
+            JMP Exit
         MUL_Comm:
             CALL MUL_Comm_PROC
             jmp Exit
@@ -812,12 +812,6 @@ CommMenu proc far
             lea dx,p2_ValStack
             Call DisplayString
 
-            lea dx, mesStackPointer
-            CALL DisplayString
-            mov dl,p2_ValStackPointer
-            add dl, '0'
-            Call DisplayChar
-
             lea dx, mesVal
             CALL DisplayString
             mov dx, Op1Val
@@ -881,7 +875,7 @@ CommMenu proc far
             
             LEA DX, mesRegCF
             CALL DisplayString
-            mov dl,p2_ValCF
+            mov dl, p2_ValCF
             add dl, '0'
             CALL DisplayChar
 
@@ -1048,9 +1042,6 @@ CommMenu ENDP
                 CMP selectedOp2Size, 8
                 JZ p1_MovSrc_16_8BIT
 
-                MOV isInValidCommand, 1
-                RET
-
                 p1_MovSrc_16_16BIT:
                     CALL GetSrcOp
                     CMP isInvalidCommand, 1
@@ -1083,7 +1074,6 @@ CommMenu ENDP
             JZ p2_MovDst_16BIT
             CMP selectedOp1Size, 8
             JZ p2_MovDst_8BIT
-            JMP Mov_p2
 
             p2_MovDst_16BIT:
                 CMP selectedOp2Size, 16
@@ -1091,9 +1081,6 @@ CommMenu ENDP
                 CMP selectedOp2Size, 8
                 JZ p2_MovSrc_16_8BIT
 
-                
-                MOV isInValidCommand, 1
-                RET
 
                 p2_MovSrc_16_16BIT:
                     CALL GetSrcOp
@@ -1104,6 +1091,7 @@ CommMenu ENDP
                 
                 p2_MovSrc_16_8BIT:
                     CALL GetSrcOp_8Bit
+                    
                     CMP isInvalidCommand, 1
                     JZ Return_MovCom
                     Mov [DI], AL
@@ -1355,9 +1343,179 @@ CommMenu ENDP
             RET
     ENDP
     PUSH_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_PushCom
+
+        CMP selectedOp2Size, 8
+        JNZ ValidSize_Push
+
+        MOV isInvalidCommand, 1
+        JMP Return_PushCom
+
+        ValidSize_Push:
+            CMP p1_CpuEnabled, 1
+            JZ Push_p1
+            JMP Push_p2
+            Push_p1:
+                CALL GetSrcOp
+
+                CMP isInvalidCommand, 1
+                JZ Push_p2
+
+                Mov BX, p1_ValRegSP
+                MOV p1_ValStack[BX], AX
+                INC p1_ValRegSP
+                JMP Push_p2
+
+                
+
+            Push_p2:
+                MOV p1_CpuEnabled, 0
+                MOV isInvalidCommand, 0
+                CMP p2_CpuEnabled, 1
+                jnz Return_PushCom
+
+                CALL GetSrcOp
+
+                CMP isInvalidCommand, 1
+                JZ Return_PushCom
+
+                Mov BX, p2_ValRegSP
+                MOV p2_ValStack[BX], AX
+                INC p2_ValRegSP
+
+        Return_PushCom:
+            RET
         
+    ENDP
+    POP_Comm_PROC PROC FAR
+        CALL Op1Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_POPCom
+
+        CMP selectedOp1Size, 8
+        JNZ ValidSize_POP
         
-        RET
+        MOV isInvalidCommand, 1
+        JMP Return_POPCom
+
+        ValidSize_POP:
+            CMP p1_CpuEnabled, 1
+            JZ POP_p1
+            JMP POP_p2
+            POP_p1:
+                CALL GetDst
+
+                CMP isInvalidCommand, 1
+                JZ POP_p2
+
+                Mov BX, p1_ValRegSP
+                MOV DX, p1_ValStack[BX]
+                MOV [DI], DX
+                DEC p1_ValRegSP
+                JMP POP_p2
+
+            POP_p2:
+                MOV p1_CpuEnabled, 0
+                MOV isInvalidCommand, 0
+                CMP p2_CpuEnabled, 1
+                jnz Return_POPCom
+
+                CALL GetDst
+
+                CMP isInvalidCommand, 1
+                JZ Return_POPCom
+
+                Mov BX, p2_ValRegSP
+                MOV DX, p2_ValStack[BX]
+                MOV [DI], DX
+                DEC p2_ValRegSP
+
+        Return_POPCom:
+            RET
+
+    ENDP
+    INC_Comm_PROC PROC FAR
+        CALL Op1Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_IncCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Inc_p1
+        JMP Inc_p2
+        Inc_p1:
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Inc_p2
+
+            INC [DI]
+            
+            JMP Inc_p2
+
+        Inc_p2:
+            MOV p1_CpuEnabled, 0
+            MOV isInvalidCommand, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_IncCom
+
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Return_IncCom
+
+            
+            INC [DI]
+
+        Return_IncCom:
+            RET
+
+    ENDP
+    DEC_Comm_PROC PROC FAR
+        
+        CALL Op1Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_DecCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Dec_p1
+        JMP Dec_p2
+        Dec_p1:
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Dec_p2
+
+            DEC [DI]
+            
+            JMP Dec_p2
+
+        Dec_p2:
+            MOV p1_CpuEnabled, 0
+            MOV isInvalidCommand, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_DecCom
+
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Return_DecCom
+
+            
+            DEC [DI]
+
+        Return_DecCom:
+            RET
+
     ENDP
     MUL_Comm_PROC PROC FAR
         CALL Op2Menu
@@ -1947,7 +2105,7 @@ CommMenu ENDP
             ; Display Command
             DisplayComm:
                 mov ah, 9
-                mov dx, offset RORcom
+                mov dx, offset DECcom
                 int 21h
 
             CheckKeyComType:
@@ -3235,7 +3393,7 @@ CommMenu ENDP
                 RET
 
         GetSrcOp ENDP
-        GetSrcOp_8Bit PROC    ; Returnedp2_Value is saved in AL
+        GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
             ; Saving values of DI
                 PUSH DI
 
@@ -3373,13 +3531,12 @@ CommMenu ENDP
                 p1_SetCF:
                     MOV BL, 0
                     ADC BL, 0
-                    MOV p1_ValCF, bl
+                    MOV p1_ValCF, BL 
                     JMP Return_SetCF
                 p2_SetCF:
                     MOV BL, 0
                     ADC BL, 0
-                    MOV p2_ValCF, bl
-
+                    MOV p2_ValCF, Bl
             Return_SetCF:
                 POP BX
 
@@ -3435,18 +3592,16 @@ CommMenu ENDP
 
             CMP selectedOp1Type, RegIndex
             JZ CheckSizeOp2
-            CMP selectedOp1Type, ValIndex
-            JZ CheckSizeOp2
             RET
 
             CheckSizeOp2:
                 CMP selectedOp2Type, RegIndex
-                JZ CheckSizeMismatchLbl
+                JZ CheckSizeMismatch_Op2Reg
                 CMP selectedOp2Type, ValIndex
-                JZ CheckSizeMismatchLbl
+                JZ CheckSizeMismatch_Op2Val
                 RET
 
-                CheckSizeMismatchLbl:
+                CheckSizeMismatch_Op2Reg:
                     ; Saving values of ax
                         push ax
                     mov al, selectedOp1Size
@@ -3458,6 +3613,14 @@ CommMenu ENDP
                         MOV isInValidCommand, 1
                         POP AX
                         RET
+                CheckSizeMismatch_Op2Val:
+                    PUSH AX
+
+                    MOV AL, selectedOp1Size
+                    CMP AL, selectedOp2Size
+                    JB SizeMismatch
+                    POP AX
+                    RET
 
                     
 
@@ -3505,7 +3668,8 @@ CommMenu ENDP
                 jz ForbidCharOp1Mem
                 cmp selectedOp1Type, 3
                 jz ForbidCharOp1Val
-                ret
+                
+                JMP CheckForbidCharOp2
 
                 ForbidCharOp1Reg:
                     mov Ah, 0
@@ -3801,62 +3965,33 @@ CommMenu ENDP
         ENDP 
     
     ;; ------------------------- Other Helper prcoedures ------------------- ;;
-        LineStuckPwrUp PROC  FAR   ;p2_Value to be stucked is saved in AX/AL
+        LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
             PUSH BX
             PUSH CX
             PUSH DX
-            PUSH AX
-            CMP PwrUpStuckEnabled, 1
-            jnz NoTStuck
-                CMP PwrUpStuckVal, 0
-                JZ PwrUpZero
-                CMP PwrUpStuckVal, 1
-                JZ PwrupOne
-                JMP Return_LineStuckPwrUp
 
-                PwrUpZero:
-                    MOV BX, 0FFFEH
-                    mov cl,PwrUpDataLineIndex
-                    ROL BX, cl
-                    AND AX, BX
-                    mov PwrUpStuckEnabled,0
-                    JMP NoTStuck
-                PwrupOne:
-                    MOV BX, 1
-                    mov cl,PwrUpDataLineIndex
-                    ROL BX,cl
-                    OR AX, BX
-                    mov PwrUpStuckEnabled,0
-            NoTStuck:
-                cmp selectedPUPType,4
-                jne Return_LineStuckPwrUp
-                ;TODO Take 1 input from the user as thep2_Value to be stuck 0 or 1, and 1 input for the index of thep2_Value stuck
-                mov ah,1
-                int 21h
-                cmp al,31h
-                jg notvalid10 
-                sub al,30h
-                mov PwrUpStuckVal,al
-                mov ah,1
-                int 21h
-                sub al,30h
-                mov ah,0
-                mov cx,c
-                mul cx
-                mov dx,ax
-                mov ah,1
-                int 21h
-                sub al,30h 
-                mov ah,0
-                add dx,ax
-                mov PwrUpDataLineIndex,dl
-                cmp dx,15h
-                jg notvalid10
-                mov PwrUpStuckEnabled,1
-                notvalid10:
-                mov PwrUpStuckEnabled,0
-            Return_LineStuckPwrUp:
-            POP AX
+            CMP PwrUpStuckEnabled, 1
+            jnz NotStuck
+            CMP PwrUpStuckVal, 0
+            JZ PwrUpZero
+            CMP PwrUpStuckVal, 1
+            JZ PwrupOne
+
+            PwrUpZero:
+                MOV BX, 0FFFEH
+                mov cl, PwrUpDataLineIndex
+                ROL BX, cl
+                AND AX, BX
+                mov PwrUpStuckEnabled, 0
+                JMP NoTStuck
+            PwrupOne:
+                MOV BX, 1
+                mov cl, PwrUpDataLineIndex
+                ROL BX,cl
+                OR AX, BX
+                mov PwrUpStuckEnabled, 0
+            NotStuck:
+                
             POP DX
             POP CX
             POP BX
