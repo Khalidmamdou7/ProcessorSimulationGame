@@ -1,59 +1,227 @@
 ; Macros
+DstOpReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_DstValReg, p2_DstValReg
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_DstValReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_DstValReg
+    JMP RETURN_DstSrc
+
+    p1_DstValReg:
+        LEA DI, p1_Reg
+        JMP RETURN_DstSrc
+    p2_DstValReg:
+        LEA DI, p2_Reg   
+        JMP RETURN_DstSrc
+
+ENDM
+SrcOpReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcValReg, p2_SrcValReg
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcValReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcValReg
+    JMP RETURN_GetSrcOp
+
+    p1_SrcValReg:
+        mov AX, p1_Reg
+        JMP RETURN_GetSrcOp
+    p2_SrcValReg:
+        MOV AX, p2_Reg
+        JMP RETURN_GetSrcOp
+
+ENDM
+SrcOpReg_8bit MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcValReg, p2_SrcValReg
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcValReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcValReg
+    JMP RETURN_GetSrcOp_8Bit
+
+    p1_SrcValReg:
+        mov AL, BYTE PTR p1_Reg
+        JMP RETURN_GetSrcOp_8Bit
+    p2_SrcValReg:
+        
+        mov AL, BYTE PTR p2_Reg
+        JMP RETURN_GetSrcOp_8Bit
+
+ENDM
+DstOpAddReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_DstValAddReg, p2_DstValAddReg, p1_ValidAddress, p2_ValidAddress
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_DstValAddReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_DstValAddReg
+    JMP RETURN_DstSrc
+
+    p1_DstValAddReg:
+        MOV DX, p1_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ p1_ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_DstSrc
+
+        p1_ValidAddress:
+            MOV BX, p1_Reg
+            LEA DI, p1_ValMem[BX]
+            JMP RETURN_DstSrc
+    p2_DstValAddReg:
+        MOV DX, p2_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ p2_ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_DstSrc
+
+        p2_ValidAddress:
+            MOV BX, p2_Reg
+            LEA DI, p2_ValMem[BX]
+            JMP RETURN_DstSrc
+
+ENDM
+SrcOpAddReg MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcOpAddReg, p2_SrcOpAddReg, p1_ValidAddress, p2_ValidAddress
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcOpAddReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcOpAddReg
+    
+    
+    JMP RETURN_GetSrcOp
+
+    p1_SrcOpAddReg:
+        MOV DX, p1_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ p1_ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp
+
+        p1_ValidAddress:
+            MOV SI, p1_Reg
+            MOV AX, WORD PTR p1_ValMem[SI]
+            JMP RETURN_GetSrcOp
+    p2_SrcOpAddReg:
+        MOV DX, p2_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        
+        JNZ p2_ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp
+
+        p2_ValidAddress:
+            MOV SI, p2_Reg
+            MOV AX, WORD PTR p2_ValMem[SI]
+            JMP RETURN_GetSrcOp
+
+ENDM
+SrcOpAddReg_8bit MACRO p1_Reg, p2_Reg
+    LOCAL p1_SrcOpAddReg, p2_SrcOpAddReg, p1_ValidAddress, p2_ValidAddress
+
+    CMP p1_CpuEnabled, 1
+    JZ p1_SrcOpAddReg
+    CMP p2_CpuEnabled, 1
+    JZ p2_SrcOpAddReg
+    JMP RETURN_GetSrcOp_8Bit
+
+    p1_SrcOpAddReg:
+        MOV DX, p1_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ p1_ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp_8Bit
+
+        p1_ValidAddress:
+            MOV SI, p1_Reg
+            MOV AL, p1_ValMem[SI]
+            JMP RETURN_GetSrcOp_8Bit
+    p2_SrcOpAddReg:
+        MOV DX, p2_Reg
+        CALL CheckAddress
+        CMP BL, 1           ; Check Invalid address
+        JNZ p2_ValidAddress
+        MOV isInValidCommand, 1
+        JMP RETURN_GetSrcOp_8Bit
+
+        p2_ValidAddress:
+            MOV SI, p2_Reg
+            MOV AL, p2_ValMem[SI]
+            JMP RETURN_GetSrcOp_8Bit
+
+ENDM
 ExecPush MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
+    mov bl,p2_ValStackPointer
     mov ax, Op
-    lea di, ValStack
+    lea di,p2_ValStack
     mov [di][bx], ax
-    ADD ValStackPointer,2
+    ADD p2_ValStackPointer,2
 ENDM
 ourExecPush MACRO Op
     mov bh, 0
-    mov bl, ourValStackPointer
+    mov bl, p1_ValStackPointer
     mov ax, Op
-    lea di, ourValStack
+    lea di, p1_ValStack
     mov [di][bx], ax
-    ADD ourValStackPointer,2
+    ADD p1_ValStackPointer,2
 ENDM
 ExecPushMem MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
+    mov bl,p2_ValStackPointer
     mov ax, word ptr Op
-    lea di, ValStack
+    lea di,p2_ValStack
     mov [di][bx], ax
-    ADD ValStackPointer,2
+    ADD p2_ValStackPointer,2
+ENDM
+ourExecPushMem MACRO Op
+    mov bh, 0
+    mov bl, p1_ValStackPointer
+    mov ax, word ptr Op
+    lea di,p2_ValStack
+    mov [di][bx], ax
+    ADD p1_ValStackPointer,2
 ENDM
 ExecPop MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
-    lea di, ValStack
+    mov bl,p2_ValStackPointer
+    lea di,p2_ValStack
     mov ax, [di][bx]
     mov Op, ax
-    SUB ValStackPointer,2
+    SUB p2_ValStackPointer,2
 ENDM
 ourExecPop MACRO Op
     mov bh, 0
-    mov bl, ourValStackPointer
-    lea di, ourValStack
+    mov bl, p1_ValStackPointer
+    lea di, p1_ValStack
     mov ax, [di][bx]
     mov Op, ax
-    SUB ourValStackPointer,2
+    SUB p1_ValStackPointer,2
 ENDM
 ExecPopMem MACRO Op
     mov bh, 0
-    mov bl, ValStackPointer
-    lea di, ValStack
+    mov bl,p2_ValStackPointer
+    lea di,p2_ValStack
     mov ax, [di][bx]
     mov word ptr Op, ax
-    SUB ValStackPointer,2
+    SUB p2_ValStackPointer,2
 ENDM
 ourExecPopMem MACRO Op
     mov bh, 0
-    mov bl, ourValStackPointer
-    lea di, ourValStack
+    mov bl, p1_ValStackPointer
+    lea di, p1_ValStack
     mov ax, [di][bx]
     mov word ptr Op, ax
-    SUB ourValStackPointer,2
+    SUB p1_ValStackPointer,2
 ENDM
 ExecINC MACRO Op
     INC Op
@@ -61,15 +229,15 @@ ENDM
 ExecDEC MACRO Op
     DEC Op
 ENDM
-ExecAndReg MACRO ValReg, CF
+ExecAndReg MACRO p2_ValReg, CF
     CALL GetSrcOp
-    AND ValReg, AX
+    AND p2_ValReg, AX
     MOV CF, 0
-    JMP Exit
+    CALL ExitPROC
 ENDM
-ExecAndReg_8Bit MACRO ValReg, CF
+ExecAndReg_8Bit MACRO p2_ValReg, CF
     CALL GetSrcOp_8Bit
-    And BYTE PTR ValReg, AL
+    And BYTE PTR p2_ValReg, AL
     MOV CF, 0
     JMP Exit
 ENDM
@@ -141,85 +309,85 @@ ExecAdcMem MACRO Mem
         CALL SetCF
     JMP Exit
 ENDM
-ExecAndAddReg MACRO ValReg, Mem, CF
+ExecAndAddReg MACRO p2_ValReg, Mem, CF
     Local AndOp1AddReg_Op2_8Bit
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz AndOp1AddReg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     And WORD PTR Mem[SI], AX
     MOV CF, 0
-    JMP Exit
+    CALL ExitPROC
 
     AndOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         And Mem[SI], AL
         MOV CF, 0
-    JMP Exit
+    CALL ExitPROC
 ENDM
-ExecMovAddReg MACRO ValReg, Mem
+ExecMovAddReg MACRO p2_ValReg, Mem
     Local MOVOp1AddReg_Op2_8Bit 
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz MOVOp1AddReg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     MOV WORD PTR Mem[SI], AX
     JMP Exit
     MOVOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         MOV Mem[SI], AL
     JMP Exit
 ENDM
-ExecAddAddReg MACRO ValReg, Mem
+ExecAddAddReg MACRO p2_ValReg, Mem
     LOCAL AddOp1AddReg_Op2_8Bit
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz AddOp1AddReg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     CLC
     ADD WORD PTR Mem[SI], AX
     CALL SetCF
     JMP Exit
     AddOp1AddReg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         CLC
         ADD Mem[SI], AL
         CALL SetCF
     JMP Exit
 ENDM
-EexecAdcAddReg MACRO ValReg, Mem
+EexecAdcAddReg MACRO p2_ValReg, Mem
     LOCAL AdcOp1Addreg_Op2_8Bit
 
-    MOV dx, ValReg
+    MOV dx,p2_ValReg
     CALL CheckAddress
-    cmp bl, 1               ; Value is greater than 16
+    cmp bl, 1               ;p2_Value is greater than 16
     JZ InValidCommand
 
     CMP selectedOp2Size, 8
     jz AdcOp1Addreg_Op2_8Bit 
     CALL GetSrcOp
-    MOV SI, ValReg
+    MOV SI,p2_ValReg
     CLC
     CALL GetCF
     ADC WORD PTR Mem[SI], AX
@@ -227,7 +395,7 @@ EexecAdcAddReg MACRO ValReg, Mem
     JMP Exit
     AdcOp1Addreg_Op2_8Bit:
         CALL GetSrcOp_8Bit
-        MOV SI, ValReg
+        MOV SI,p2_ValReg
         CLC
         CALL GetCF
         ADC Mem[SI], AL
@@ -235,10 +403,13 @@ EexecAdcAddReg MACRO ValReg, Mem
     JMP Exit
 ENDM
 CheckForbidCharMacro MACRO comm
+    Local ValidCommand
     mov di, comm
     Call CheckForbidChar
     CMP bl, 1
-    jz InValidCommand
+    jnz ValidCommand
+    MOV isInvalidCommand, 1
+    ValidCommand:
 ENDM
 ;================================================================================================================    
 .Model Huge
@@ -246,132 +417,155 @@ ENDM
 .Stack 64
 ;================================================================================================================    
 .Data
-    NOPcom db 'NOP  ','$'   
-    CLCcom db 'CLC  ','$'   
-    MOVcom db 'MOV  ','$'   
-    ADDcom db 'ADD  ','$'  
-    ADCcom db 'ADC  ','$' 
-    ANDcom db 'AND  ','$'
-    PUSHcom db 'PUSH ','$'
-    POPcom db 'POP  ','$'
-    INCcom db 'INC  ','$'
-    DECcom db 'DEC  ','$'
-    MULcom db 'MUL  ','$'
-    DIVcom db 'DIV  ','$'
-    IMULcom db 'IMUL ','$'
-    IDIVcom db 'IDIV ','$'
-    RORcom db 'ROR  ','$'
-    ROLcom db 'ROL  ','$'
-    RCRcom db 'RCR  ','$'
-    RCLcom db 'RCL  ','$'
-    SHLcom db 'SHL  ','$'
-    SHRcom db 'SHR  ','$'
+    ;; ----------------------------------  Menus Strings ----------------------------------- ;;
+        NOPcom db 'NOP  ','$'   
+        CLCcom db 'CLC  ','$'   
+        MOVcom db 'MOV  ','$'   
+        ADDcom db 'ADD  ','$'  
+        ADCcom db 'ADC  ','$' 
+        ANDcom db 'AND  ','$'
+        PUSHcom db 'PUSH ','$'
+        POPcom db 'POP  ','$'
+        INCcom db 'INC  ','$'
+        DECcom db 'DEC  ','$'
+        MULcom db 'MUL  ','$'
+        DIVcom db 'DIV  ','$'
+        IMULcom db 'IMUL ','$'
+        IDIVcom db 'IDIV ','$'
+        RORcom db 'ROR  ','$'
+        ROLcom db 'ROL  ','$'
+        RCRcom db 'RCR  ','$'
+        RCLcom db 'RCL  ','$'
+        SHLcom db 'SHL  ','$'
+        SHRcom db 'SHR  ','$'
 
-    Reg    db 'REG  ','$'
-    AddReg db '[REG]', '$'
-    Memory db 'MEM  ','$'
-    Value  db 'VAL  ','$'
-    RegIndex    EQU 0
-    AddRegIndex EQU 1
-    MemIndex    EQU 2
-    ValIndex    EQU 3 
+        Reg    db 'REG  ','$'
+        AddReg db '[REG]', '$'
+        Memory db 'MEM  ','$'
+        Value  db 'VAL  ','$'
+        RegIndex    EQU 0
+        AddRegIndex EQU 1
+        MemIndex    EQU 2
+        ValIndex    EQU 3 
+        
+
+        RegAX db 'AX   ','$' ;0
+        RegAL db 'AL   ','$' ;1
+        RegAH db 'AH   ','$' ;2
+        RegBX db 'BX   ','$' ;3
+        RegBL db 'BL   ','$' ;4
+        RegBH db 'BH   ','$' ;5
+        RegCX db 'CX   ','$' ;6
+        RegCL db 'CL   ','$' ;7
+        RegCH db 'CH   ','$' ;8
+        RegDX db 'DX   ','$' ;9
+        RegDL db 'DL   ','$' ;10
+        RegDH db 'DH   ','$' ;11
+        RegSX db 'SX   ','$' ;12
+        RegSL db 'SL   ','$' ;13
+        RegSH db 'SH   ','$' ;14
+        RegBP db 'BP   ','$' ;15
+        RegSP db 'SP   ','$' ;16
+        RegSI db 'SI   ','$' ;17
+        RegDI db 'DI   ','$' ;18
+
+        
+        AddRegAX db '[AX] ','$' ;0
+        AddRegAL db '[AL] ','$' ;1
+        AddRegAH db '[AH] ','$' ;2                
+        AddRegBX db '[BX] ','$' ;3  
+        AddRegBL db '[BL] ','$' ;4   
+        AddRegBH db '[BH] ','$' ;5
+        AddRegCX db '[CX] ','$' ;6               
+        AddRegCL db '[CL] ','$' ;7 
+        AddRegCH db '[CH] ','$' ;8  
+        AddRegDX db '[DX] ','$' ;9
+        AddRegDL db '[DL] ','$' ;10
+        AddRegDH db '[DH] ','$' ;11                
+        AddRegSX db '[SX] ','$' ;12  
+        AddRegSL db '[SL] ','$' ;13  
+        AddRegSH db '[SH] ','$' ;14
+        AddRegBP db '[BP] ','$' ;15
+        AddRegSP db '[SP] ','$'
+        AddRegSI db '[SI] ','$'
+        AddRegDI db '[DI] ','$'
+
+        Mem0 db '[0]  ','$'
+        Mem1 db '[1]  ','$'
+        Mem2 db '[2]  ','$'
+        Mem3 db '[3]  ','$'
+        Mem4 db '[4]  ','$'
+        Mem5 db '[5]  ','$'
+        Mem6 db '[6]  ','$'
+        Mem7 db '[7]  ','$'
+        Mem8 db '[8]  ','$'
+        Mem9 db '[9]  ','$'
+        Mem10 db '[A]  ','$'
+        Mem11 db '[B]  ','$'
+        Mem12 db '[C]  ','$'
+        Mem13 db '[D]  ','$'
+        Mem14 db '[E]  ','$'
+        Mem15 db '[F]  ','$'
+
+        NOPUP db 'NoPo ','$'
+        PUP1 db 'PUp1 ','$'
+        PUP2 db 'PUp2 ','$'
+        PUP3 db 'PUp3 ','$'
+        PUP4 db 'PUp4 ','$'
+        PUP5 db 'PUp5 ','$'
+
+        DataIndex0 db  'Data Line 0 ','$'
+        DataIndex1 db  'Data Line 1 ','$'
+        DataIndex2 db  'Data Line 2 ','$'
+        DataIndex3 db  'Data Line 3 ','$'
+        DataIndex4 db  'Data Line 4 ','$'
+        DataIndex5 db  'Data Line 5 ','$'
+        DataIndex6 db  'Data Line 6 ','$'
+        DataIndex7 db  'Data Line 7 ','$'
+        DataIndex8 db  'Data Line 8 ','$'
+        DataIndex9 db  'Data Line 9 ','$'
+        DataIndex10 db 'Data Line 10','$'
+        DataIndex11 db 'Data Line 11','$'
+        DataIndex12 db 'Data Line 12','$'
+        DataIndex13 db 'Data Line 13','$'
+        DataIndex14 db 'Data Line 14','$'
+        DataIndex15 db 'Data Line 15','$'
+
+        StuckVal0 db   'Stuck Val: 0', '$'
+        StuckVal1 db   'Stuck Val: 1', '$'
+
+    ;; -------------------------------------- Player's Data ------------------------------ ;;
+        p2_ValRegAX dw 'AX'
+        p2_ValRegBX dw 'BX'
+        p2_ValRegCX dw 'CX'
+        p2_ValRegDX dw 'DX'
+        p2_ValRegBP dw 0
+        p2_ValRegSP dw 1
+        p2_ValRegSI dw 'SI'
+        p2_ValRegDI dw 'DI'
+
+        p2_ValMem db 16 dup('M'), '$'
+        p2_ValStack DW 8 dup('Ss'), '$'
+        ;p2_ValStackPointer db 0
+        p2_ValCF db 1
+
+        ;OUR Regisesters
+        p1_ValRegAX dw 'AX'
+        p1_ValRegBX dw 'BX'
+        p1_ValRegCX dw 'CX'
+        p1_ValRegDX dw 'DX'
+        p1_ValRegBP dw 0
+        p1_ValRegSP dw 1
+        p1_ValRegSI dw 'SI'
+        p1_ValRegDI dw 'DI' 
+        p1_ValCF db 0
+        p1_ValMem db 16 dup('M'), '$'
+
+        p1_ValStack DW 8 dup('S'), '$'
+        ;p1_ValStackPointer db 0
     
 
-    RegAX db 'AX   ','$' ;0
-    RegAL db 'AL   ','$' ;1
-    RegAH db 'AH   ','$' ;2
-    RegBX db 'BX   ','$' ;3
-    RegBL db 'BL   ','$' ;4
-    RegBH db 'BH   ','$' ;5
-    RegCX db 'CX   ','$' ;6
-    RegCL db 'CL   ','$' ;7
-    RegCH db 'CH   ','$' ;8
-    RegDX db 'DX   ','$' ;9
-    RegDL db 'DL   ','$' ;10
-    RegDH db 'DH   ','$' ;11
-    RegSX db 'SX   ','$' ;12
-    RegSL db 'SL   ','$' ;13
-    RegSH db 'SH   ','$' ;14
-    RegBP db 'BP   ','$' ;15
-    RegSP db 'SP   ','$' ;16
-    RegSI db 'SI   ','$' ;17
-    RegDI db 'DI   ','$' ;18
-
-    ValRegAX dw 'AX'
-    ValRegBX dw 'BX'
-    ValRegCX dw 'CX'
-    ValRegDX dw 'DX'
-    ValRegBP dw 'BP'
-    ValRegSP dw 'SP'
-    ValRegSI dw 'SI'
-    ValRegDI dw 'DI'
-    
-    AddRegAX db '[AX] ','$'
-    AddRegAL db '[AL] ','$'                
-    AddRegBP db '[BP] ','$'  
-    AddRegBX db '[BX] ','$'   
-    AddRegBL db '[BL] ','$'    
-    AddRegBH db '[BH] ','$'
-    AddRegCX db '[CX] ','$'                
-    AddRegCL db '[CL] ','$'  
-    AddRegCH db '[CH] ','$'   
-    AddRegDX db '[DX] ','$'
-    AddRegDL db '[DL] ','$'
-    AddRegDH db '[DH] ','$'                
-    AddRegSX db '[SX] ','$'  
-    AddRegSL db '[SL] ','$'   
-    AddRegSH db '[SH] ','$'
-    AddRegAH db '[AH] ','$'
-    AddRegSP db '[SP] ','$'
-    AddRegSI db '[SI] ','$'
-    AddRegDI db '[DI] ','$'
-
-    Mem0 db '[0]  ','$'
-    Mem1 db '[1]  ','$'
-    Mem2 db '[2]  ','$'
-    Mem3 db '[3]  ','$'
-    Mem4 db '[4]  ','$'
-    Mem5 db '[5]  ','$'
-    Mem6 db '[6]  ','$'
-    Mem7 db '[7]  ','$'
-    Mem8 db '[8]  ','$'
-    Mem9 db '[9]  ','$'
-    Mem10 db '[A]  ','$'
-    Mem11 db '[B]  ','$'
-    Mem12 db '[C]  ','$'
-    Mem13 db '[D]  ','$'
-    Mem14 db '[E]  ','$'
-    Mem15 db '[F]  ','$'
-
-    NOPUP db 'NoPo ','$'
-    PUP1 db 'PUp1 ','$'
-    PUP2 db 'PUp2 ','$'
-    PUP3 db 'PUp3 ','$'
-    PUP4 db 'PUp4 ','$'
-    PUP5 db 'PUp5 ','$'
-
-    ValMem db 16 dup('M'), '$'
-    ValStack db 16 dup('S'), '$'
-    ValStackPointer db 0
-    ValCF db 1
-
-    ;OUR Regisesters
-    ourValRegAX dw 'AX'
-    ourValRegBX dw 'BX'
-    ourValRegCX dw 'CX'
-    ourValRegDX dw 'DX'
-    ourValRegBP dw 'BP'
-    ourValRegSP dw 'SP'
-    ourValRegSI dw 'SI'
-    ourValRegDI dw 'DI' 
-    ourValCF db 0
-    ourValMem db 16 dup('M'), '$'
-
-    ourValStack db 16 dup('S'), '$'
-    ourValStackPointer db 0
-    
-
-    ; Operand Value Needed Variables
+    ; Operandp2_Value Needed Variables
     ClearSpace db '     ', '$'
     num db 30,?,30 DUP(?)       
     StrSize db ?
@@ -383,6 +577,7 @@ ENDM
 
     ; Variables Memory Locations and data
     CommStringSize EQU  6
+    SubPwrUpSize EQU 13
 
 
     ; Test Messages
@@ -390,7 +585,7 @@ ENDM
     mesOp1Type db 10,'You have selected Operand 1 of Type #', '$'
     mesReg db 10, 'You have selected Reg #', '$'
     ;mesMem db 10, 'You have selected Mem #', '$'
-    mesVal db 10, 'You Entered value: ', '$'
+    mesVal db 10, 'You Enteredp2_Value: ', '$'
     mesMem db 10, 'Values in memory as Ascii: ', 10, '$'
     mesStack db 10, 'Values in stack as Ascii: ', 10, '$'
     mesStackPointer db 10,  'Value of stack pointer: ', 10 ,  '$'
@@ -404,6 +599,12 @@ ENDM
     mesRegSP db 10, 'Value of SP: ', '$'
     mesRegCF db 10, 'Value of CF: ', '$'
     error db 13,10,"Error Input",'$'
+
+    tstmsg db 13, 10, "Test ", '$'
+    ChangeForbidMsg db 10, 'Press the new forbidden char: ', '$'
+    LineStuckIndexMsg db 10, 'Enter the number of the stuck data line (0-15): ', '$'
+    LineStuckValMsg db 10, 'Enter the value to be stuck at (0/1): ', '$'
+    NoAvailablePointsMsg db 10, 'No Available points.', '$'
 
 
 
@@ -434,19 +635,27 @@ ENDM
     
     ; Game Variables
     Player1Points dw 0
-    ForbidChar db 'N'
-    ForbidCommand db 0    ; 1 if forbidden
+    ForbidChar db 'l'
+    isInvalidCommand db 0    ; 1 if Invalid
+    p1_CpuEnabled db 0      ; 1 if command will run on it
+    p2_CpuEnabled db 1      ; ..
 
     ; Power Up Variables
-    UsedBeforeOrNot db 1    ;Chance to use forbiden power up
-    PwrUpDataLineIndex db 0
-    PwrUpStuckVal db 0
-    PwrUpStuckEnabled db 1
+    isPwrUp3Used db 0    ;Chance to use forbiden power up
+    isPwrUp5Used db 0
+    ourPwrUpDataLineIndex db 1
+    ourPwrUpStuckVal db 1
+    ourPwrUpStuckEnabled db 0
+
+    opponentPwrUpDataLineIndex db 0
+    opponentPwrUpStuckVal      db 0
+    opponentPwrUpStuckEnabled  db 0
 
 
     ; Keys Scan Codes
     UpArrowScanCode EQU 72
     DownArrowScanCode EQU 80
+
     EnterScanCode EQU 28 
 
     ; Cursor Locations
@@ -466,9 +675,11 @@ CommMenu proc far
     mov ax, @Data
     mov ds, ax
     mov es, ax
-    CALL ClearScreen
+    CALL ClearScreenTxtMode
 
     Start:
+    CALL PowrUpMenu
+    CALL ExecPwrUp
     
     CALL MnemonicMenu
     ; SelectedMenmonic index is saved, Call operands according to each operation (Menmonic)
@@ -514,11541 +725,3767 @@ CommMenu proc far
     cmp selectedComm, 19
     JZ SHR_Comm
 
-    JMP TODO_Comm
+    ;JMP TODO_Comm
     ; Continue comparing for all operations
 
     ; Commands (operations) Labels
-    NOP_Comm:
-        CALL CheckForbidCharProc         
-        call  PowerUpeMenu ; to choose power up
-        cmp selectedPUPType,1 ;command on your own processor  
-        jne notthispower1_nop   ;-5 points
-        NOP      
-        sub Player1Points,5 
-        jmp Exit
-        notthispower1_nop:
-
-        cmp selectedPUPType,2 ;command on your processor and your opponent processor at the same time 
-        jne notthispower2_nop  ;-3 points
-        NOP        
-        sub Player1Points,3
-        jmp Exit
-        notthispower2_nop:
-
-        NOP
-
-    
-
-    JMP Exit
-    
-    CLC_Comm:
-        CALL CheckForbidCharProc
-        call  PowerUpeMenu ; to choose power up
-        MOV ValCF, 0
-        JMP Exit
-    AND_Comm:
-
-        CALL Op1Menu
-        mov DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        CMP selectedOp1Type, 0
-        JZ AndOp1Reg
-        CMP selectedOp1Type, 1
-        JZ AndOp1AddReg
-        CMP selectedOp1Type, 2
-        JZ AndOp1Mem
-        JMP InValidCommand
-
-        AndOp1Reg:
-            CMP selectedOp1Reg, 0
-            JZ AndOp1RegAX
-            CMP selectedOp1Reg, 1
-            JZ AndOp1RegAL
-            CMP selectedOp1Reg, 2
-            JZ AndOp1RegAH
-            CMP selectedOp1Reg, 3
-            JZ AndOp1RegBX
-            CMP selectedOp1Reg, 4
-            JZ AndOp1RegBL
-            CMP selectedOp1Reg, 5
-            JZ AndOp1RegBH
-            CMP selectedOp1Reg, 6
-            JZ AndOp1RegCX
-            CMP selectedOp1Reg, 7
-            JZ AndOp1RegCL
-            CMP selectedOp1Reg, 8
-            JZ AndOp1RegCH
-            CMP selectedOp1Reg, 9
-            JZ AndOp1RegDX
-            CMP selectedOp1Reg, 10
-            JZ AndOp1RegDL
-            CMP selectedOp1Reg, 11
-            JZ AndOp1RegDH
-
-            CMP selectedOp1Reg, 15
-            JZ AndOp1RegBP
-            CMP selectedOp1Reg, 16
-            JZ AndOp1RegSP
-            CMP selectedOp1Reg, 17
-            JZ AndOp1RegSI
-            CMP selectedOp1Reg, 18
-            JZ AndOp1RegDI
-            
-
-            JMP InValidCommand
-
-            AndOp1RegAX: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegAX, ValCF
-            AndOp1RegAL:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegAX, ValCF
-            AndOp1RegAH:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegAX+1, ValCF
-            AndOp1RegBX:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegBX, ValCF
-            AndOp1RegBL:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegBX, ValCF
-            AndOp1RegBH:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegBX+1, ValCF
-            AndOp1RegCX:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegCX, ValCF
-            AndOp1RegCL:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegCX, ValCF
-            AndOp1RegCH:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegCX+1, ValCF
-            AndOp1RegDX:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegDX, ValCF
-            AndOp1RegDL:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegDX, ValCF
-            AndOp1RegDH:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg_8Bit ValRegDX+1, ValCF
-            AndOp1RegBP:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegBP, ValCF
-            AndOp1RegSP:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegSP, ValCF
-            AndOp1RegSI:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegSI, ValCF
-            AndOp1RegDI:
-                ; TODO - ADD Pwr Up Check here
-                ExecAndReg ValRegDI, ValCF
-
-        AndOp1AddReg:
-
-            ; Check Memory-to-Memory operations
-            CMP selectedOp2Type, 1
-            JZ InValidCommand
-            CMP selectedOp2Type, 2
-            jz InValidCommand
-
-            CMP selectedOp1AddReg, 3
-            JZ AndOp1AddRegBX
-            CMP selectedOp1AddReg, 15
-            JZ AndOp1AddRegBP
-            CMP selectedOp1AddReg, 17
-            JZ AndOp1AddRegSI
-            CMP selectedOp1AddReg, 18
-            JZ AndOp1AddRegDI
-            JMP InValidCommand
-
-            AndOp1AddRegBX:
-                ; TODO - ADD Check Power Up here    
-                ExecAndAddReg ValRegBX, ValMem, ValCF
-            AndOp1AddRegBP:
-                ; TODO - ADD Check Power Up here
-                ExecAndAddReg ValRegBP, ValMem, ValCF
-            AndOp1AddRegSI:
-                ; TODO - ADD Check Power Up here
-                ExecAndAddReg ValRegSI, ValMem, ValCF
-            AndOp1AddRegDI:
-                ; TODO - ADD Check Power Up here
-                ExecAndAddReg ValRegDI, ValMem, ValCF
-
-        AndOp1Mem:
-            
-            CMP selectedOp1Mem, 0
-            JZ AndOp1Mem0
-            CMP selectedOp1Mem, 1
-            JZ AndOp1Mem1
-            CMP selectedOp1Mem, 2
-            JZ AndOp1Mem2
-            CMP selectedOp1Mem, 3
-            JZ AndOp1Mem3
-            CMP selectedOp1Mem, 4
-            JZ AndOp1Mem4
-            CMP selectedOp1Mem, 5
-            JZ AndOp1Mem5
-            CMP selectedOp1Mem, 6
-            JZ AndOp1Mem6
-            CMP selectedOp1Mem, 7
-            JZ AndOp1Mem7
-            CMP selectedOp1Mem, 8
-            JZ AndOp1Mem8
-            CMP selectedOp1Mem, 9
-            JZ AndOp1Mem9
-            CMP selectedOp1Mem, 10
-            JZ AndOp1Mem10
-            CMP selectedOp1Mem, 11
-            JZ AndOp1Mem11
-            CMP selectedOp1Mem, 12
-            JZ AndOp1Mem12
-            CMP selectedOp1Mem, 13
-            JZ AndOp1Mem13
-            CMP selectedOp1Mem, 14
-            JZ AndOp1Mem14
-            CMP selectedOp1Mem, 15
-            JZ AndOp1Mem15
-            JMP InValidCommand
-            
-            AndOp1Mem0:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+0, ValCF
-            AndOp1Mem1:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+1, ValCF
-            AndOp1Mem2:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+2, ValCF
-            AndOp1Mem3:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+3, ValCF
-            AndOp1Mem4:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+4, ValCF
-            AndOp1Mem5:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+5, ValCF
-            AndOp1Mem6:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+6, ValCF
-            AndOp1Mem7:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+7, ValCF
-            AndOp1Mem8:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+8, ValCF
-            AndOp1Mem9:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+9, ValCF
-            AndOp1Mem10:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+10, ValCF
-            AndOp1Mem11:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+11, ValCF
-            AndOp1Mem12:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+12, ValCF
-            AndOp1Mem13:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+13, ValCF
-            AndOp1Mem14:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+14, ValCF
-            AndOp1Mem15:
-                ; TODO - Add Power Up here
-                ExecAndMem ValMem+15, ValCF
-
-        
-        JMP Exit
-    MOV_Comm:
-
-        CALL Op1Menu
-        mov DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        CALL PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        CMP selectedOp1Type, 0
-        JZ MOVOp1Reg
-        CMP selectedOp1Type, 1
-        JZ MOVOp1AddReg
-        CMP selectedOp1Type, 2
-        JZ MOVOp1Mem
-        JMP InValidCommand
-
-        MOVOp1Reg:
-            CMP selectedOp1Reg, 0
-            JZ MOVOp1RegAX
-            CMP selectedOp1Reg, 1
-            JZ MOVOp1RegAL
-            CMP selectedOp1Reg, 2
-            JZ MOVOp1RegAH
-            CMP selectedOp1Reg, 3
-            JZ MOVOp1RegBX
-            CMP selectedOp1Reg, 4
-            JZ MOVOp1RegBL
-            CMP selectedOp1Reg, 5
-            JZ MOVOp1RegBH
-            CMP selectedOp1Reg, 6
-            JZ MOVOp1RegCX
-            CMP selectedOp1Reg, 7
-            JZ MOVOp1RegCL
-            CMP selectedOp1Reg, 8
-            JZ MOVOp1RegCH
-            CMP selectedOp1Reg, 9
-            JZ MOVOp1RegDX
-            CMP selectedOp1Reg, 10
-            JZ MOVOp1RegDL
-            CMP selectedOp1Reg, 11
-            JZ MOVOp1RegDH
-
-            CMP selectedOp1Reg, 15
-            JZ MOVOp1RegBP
-            CMP selectedOp1Reg, 16
-            JZ MOVOp1RegSP
-            CMP selectedOp1Reg, 17
-            JZ MOVOp1RegSI
-            CMP selectedOp1Reg, 18
-            JZ MOVOp1RegDI
-            
-
-            JMP InValidCommand
-
-            MOVOp1RegAX:
-                ; Delete this lineAX
-                CALL GetSrcOp
-                MOV ValRegAX, AX
-                JMP Exit
-            MOVOp1RegAL:
-                ; Delete this lineAL
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegAX, AL
-                JMP Exit
-            MOVOp1RegAH:
-                ; Delete this lineAH
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegAX+1, AL
-                JMP Exit
-            MOVOp1RegBX:
-                ; Delete this lineBX
-                CALL GetSrcOp
-                MOV ValRegBX, AX
-                JMP Exit
-            MOVOp1RegBL:
-                ; Delete this lineBL
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegBX, AL
-                JMP Exit
-            MOVOp1RegBH:
-                ; Delete this lineBH
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegBX+1, AL
-                JMP Exit
-            MOVOp1RegCX:
-                ; Delete this lineCX
-                CALL GetSrcOp
-                MOV ValRegCX, AX
-                JMP Exit
-            MOVOp1RegCL:
-                ; Delete this lineCL
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegCX, AL
-                JMP Exit
-            MOVOp1RegCH:
-                ; Delete this lineCH
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegCX+1, AL
-                JMP Exit
-            MOVOp1RegDX:
-                ; Delete this lineDX
-                CALL GetSrcOp
-                MOV ValRegDX, AX
-                JMP Exit
-            MOVOp1RegDL:
-                ; Delete this lineDL
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegDX, AL
-                JMP Exit
-            MOVOp1RegDH:
-                ; Delete this lineDH
-                CALL GetSrcOp_8Bit
-                MOV BYTE PTR ValRegDX+1, AL
-                JMP Exit
-            MOVOp1RegBP:
-                ; Delete this lineBP
-                CALL GetSrcOp
-                MOV ValRegBP, AX
-                JMP Exit
-            MOVOp1RegSP:
-                ; Delete this lineSP
-                CALL GetSrcOp
-                MOV ValRegSP, AX
-                JMP Exit
-            MOVOp1RegSI:
-                ; Delete this lineSI
-                CALL GetSrcOp
-                MOV ValRegSI, AX
-                JMP Exit
-            MOVOp1RegDI:
-                ; Delete this lineDI
-                CALL GetSrcOp
-                MOV ValRegDI, AX
-                JMP Exit
-
-        MOVOp1AddReg:
-
-            ; Check Memory-to-Memory operations
-            CMP selectedOp2Type, 1
-            JZ InValidCommand
-            CMP selectedOp2Type, 2
-            jz InValidCommand
-
-            CMP selectedOp1AddReg, 3
-            JZ MOVOp1AddRegBX
-            CMP selectedOp1AddReg, 15
-            JZ MOVOp1AddRegBP
-            CMP selectedOp1AddReg, 17
-            JZ MOVOp1AddRegSI
-            CMP selectedOp1AddReg, 18
-            JZ MOVOp1AddRegDI
-            JMP InValidCommand
-
-            MOVOp1AddRegBX:
-                ; TODO - Add Power up check here
-                ExecMovAddReg ValRegBX, ValMem
-            MOVOp1AddRegBP:
-                ; TODO - Add Power up check here
-                ExecMovAddReg ValRegBP, ValMem
-            MOVOp1AddRegSI:
-                ; TODO - Add Power up check here
-                ExecMovAddReg ValRegSI, ValMem
-            MOVOp1AddRegDI:
-                ; TODO - Add Power up check here
-                ExecMovAddReg ValRegDI, ValMem
-
-        MOVOp1Mem:
-            
-            CMP selectedOp1Mem, 0
-            JZ MOVOp1Mem0
-            CMP selectedOp1Mem, 1
-            JZ MOVOp1Mem1
-            CMP selectedOp1Mem, 2
-            JZ MOVOp1Mem2
-            CMP selectedOp1Mem, 3
-            JZ MOVOp1Mem3
-            CMP selectedOp1Mem, 4
-            JZ MOVOp1Mem4
-            CMP selectedOp1Mem, 5
-            JZ MOVOp1Mem5
-            CMP selectedOp1Mem, 6
-            JZ MOVOp1Mem6
-            CMP selectedOp1Mem, 7
-            JZ MOVOp1Mem7
-            CMP selectedOp1Mem, 8
-            JZ MOVOp1Mem8
-            CMP selectedOp1Mem, 9
-            JZ MOVOp1Mem9
-            CMP selectedOp1Mem, 10
-            JZ MOVOp1Mem10
-            CMP selectedOp1Mem, 11
-            JZ MOVOp1Mem11
-            CMP selectedOp1Mem, 12
-            JZ MOVOp1Mem12
-            CMP selectedOp1Mem, 13
-            JZ MOVOp1Mem13
-            CMP selectedOp1Mem, 14
-            JZ MOVOp1Mem14
-            CMP selectedOp1Mem, 15
-            JZ MOVOp1Mem15
-            JMP InValidCommand
-            
-            MOVOp1Mem0:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+0
-            MOVOp1Mem1:                    
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+1
-            MOVOp1Mem2:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+2
-            MOVOp1Mem3:                    
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+3
-            MOVOp1Mem4:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+4
-            MOVOp1Mem5:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+5
-            MOVOp1Mem6:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+6
-            MOVOp1Mem7:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+7
-            MOVOp1Mem8:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+8
-            MOVOp1Mem9:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+9
-            MOVOp1Mem10:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+10
-            MOVOp1Mem11:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+11
-            MOVOp1Mem12:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+12
-            MOVOp1Mem13:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+13
-            MOVOp1Mem14:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+14
-            MOVOp1Mem15:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecMovMem ValMem+15
-
-        
-        JMP Exit
-    
-
-    ADD_Comm:
-
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        CALL CheckForbidCharProc
-
-        call  PowerUpeMenu ; to choose power up
-
-        CMP selectedOp1Type, 0
-        JZ AddOp1Reg
-        CMP selectedOp1Type, 1
-        JZ AddOp1AddReg
-        CMP selectedOp1Type, 2
-        JZ AddOp1Mem
-        JMP InValidCommand
-
-        AddOp1Reg:
-            CMP selectedOp1Reg, 0
-            JZ AddOp1RegAX
-            CMP selectedOp1Reg, 1
-            JZ AddOp1RegAL
-            CMP selectedOp1Reg, 2
-            JZ AddOp1RegAH
-            CMP selectedOp1Reg, 3
-            JZ AddOp1RegBX
-            CMP selectedOp1Reg, 4
-            JZ AddOp1RegBL
-            CMP selectedOp1Reg, 5
-            JZ AddOp1RegBH
-            CMP selectedOp1Reg, 6
-            JZ AddOp1RegCX
-            CMP selectedOp1Reg, 7
-            JZ AddOp1RegCL
-            CMP selectedOp1Reg, 8
-            JZ AddOp1RegCH
-            CMP selectedOp1Reg, 9
-            JZ AddOp1RegDX
-            CMP selectedOp1Reg, 10
-            JZ AddOp1RegDL
-            CMP selectedOp1Reg, 11
-            JZ AddOp1RegDH
-
-            CMP selectedOp1Reg, 15
-            JZ AddOp1RegBP
-            CMP selectedOp1Reg, 16
-            JZ AddOp1RegSP
-            CMP selectedOp1Reg, 17
-            JZ AddOp1RegSI
-            CMP selectedOp1Reg, 18
-            JZ AddOp1RegDI
-            
-
-            JMP InValidCommand
-
-            AddOp1RegAX:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegAX, AX
-                CALL SetCF
-                JMP Exit
-            AddOp1RegAL:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegAX, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegAH:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegAX+1, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegBX:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegBX, AX
-                CALL SetCF
-                JMP Exit
-            AddOp1RegBL:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegBX, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegBH:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegBX+1, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegCX:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegCX, AX
-                CALL SetCF
-                JMP Exit
-            AddOp1RegCL:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegCX, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegCH:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegCX+1, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegDX:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegDX, AX
-                CALL SetCF
-                JMP Exit
-            AddOp1RegDL:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegDX, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegDH:
-                CALL GetSrcOp_8Bit
-                CLC
-                ADD BYTE PTR ValRegDX+1, AL
-                CALL SetCF
-                JMP Exit
-            AddOp1RegBP:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegBP, AX
-                CALL SetCF
-                JMP Exit
-            AddOp1RegSP:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegSP, AX
-                CALL SetCF
-                JMP Exit
-            AddOp1RegSI:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegSI, AX
-                CALL SetCF
-                JMP Exit
-            AddOp1RegDI:
-                CALL GetSrcOp
-                CLC
-                ADD ValRegDI, AX
-                CALL SetCF
-                JMP Exit
-
-        AddOp1AddReg:
-
-            ; Check Memory-to-Memory operations
-            CMP selectedOp2Type, 1
-            JZ InValidCommand
-            CMP selectedOp2Type, 2
-            jz InValidCommand
-
-            CMP selectedOp1AddReg, 3
-            JZ AddOp1AddRegBX
-            CMP selectedOp1AddReg, 15
-            JZ AddOp1AddRegBP
-            CMP selectedOp1AddReg, 17
-            JZ AddOp1AddRegSI
-            CMP selectedOp1AddReg, 18
-            JZ AddOp1AddRegDI
-            JMP InValidCommand
-
-            AddOp1AddRegBX:
-                ; TODO - ADD Pwr Up check here
-                ExecAddAddReg ValRegBx, ValMem
-            AddOp1AddRegBP:
-                ; TODO - ADD Pwr Up check here
-                ExecAddAddReg ValRegBP, ValMem
-            AddOp1AddRegSI:
-                ; TODO - ADD Pwr Up check here
-                ExecAddAddReg ValRegSI, ValMem
-            AddOp1AddRegDI:
-                ; TODO - ADD Pwr Up check here
-                ExecAddAddReg ValRegDI, ValMem
-
-        AddOp1Mem:
-            
-            CMP selectedOp1Mem, 0
-            JZ AddOp1Mem0
-            CMP selectedOp1Mem, 1
-            JZ AddOp1Mem1
-            CMP selectedOp1Mem, 2
-            JZ AddOp1Mem2
-            CMP selectedOp1Mem, 3
-            JZ AddOp1Mem3
-            CMP selectedOp1Mem, 4
-            JZ AddOp1Mem4
-            CMP selectedOp1Mem, 5
-            JZ AddOp1Mem5
-            CMP selectedOp1Mem, 6
-            JZ AddOp1Mem6
-            CMP selectedOp1Mem, 7
-            JZ AddOp1Mem7
-            CMP selectedOp1Mem, 8
-            JZ AddOp1Mem8
-            CMP selectedOp1Mem, 9
-            JZ AddOp1Mem9
-            CMP selectedOp1Mem, 10
-            JZ AddOp1Mem10
-            CMP selectedOp1Mem, 11
-            JZ AddOp1Mem11
-            CMP selectedOp1Mem, 12
-            JZ AddOp1Mem12
-            CMP selectedOp1Mem, 13
-            JZ AddOp1Mem13
-            CMP selectedOp1Mem, 14
-            JZ AddOp1Mem14
-            CMP selectedOp1Mem, 15
-            JZ AddOp1Mem15
-            JMP InValidCommand
-            
-            AddOp1Mem0:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+0
-            AddOp1Mem1:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+1
-            AddOp1Mem2:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+2
-            AddOp1Mem3:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+3
-            AddOp1Mem4:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+4
-            AddOp1Mem5:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+5
-            AddOp1Mem6:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+6
-            AddOp1Mem7:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+7
-            AddOp1Mem8:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+8
-            AddOp1Mem9:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+9
-            AddOp1Mem10:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+10
-            AddOp1Mem11:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+11
-            AddOp1Mem12:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+12
-            AddOp1Mem13:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+13
-            AddOp1Mem14:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+14
-            AddOp1Mem15:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAddMem ValMem+15
-
-        
-        JMP Exit
-
-    ADC_Comm:
-        
-        CALL Op1Menu
-        mov DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        CALL CheckForbidCharProc
-        call  PowerUpeMenu ; to choose power up
-
-        CMP selectedOp1Type, 0
-        JZ AdcOp1Reg
-        CMP selectedOp1Type, 1
-        JZ AdcOp1Addreg
-        CMP selectedOp1Type, 2
-        JZ AdcOp1Mem
-        JMP InValidCommand
-
-        AdcOp1Reg:
-            CMP selectedOp1Reg, 0
-            JZ AdcOp1RegAX
-            CMP selectedOp1Reg, 1
-            JZ AdcOp1RegAL
-            CMP selectedOp1Reg, 2
-            JZ AdcOp1RegAH
-            CMP selectedOp1Reg, 3
-            JZ AdcOp1RegBX
-            CMP selectedOp1Reg, 4
-            JZ AdcOp1RegBL
-            CMP selectedOp1Reg, 5
-            JZ AdcOp1RegBH
-            CMP selectedOp1Reg, 6
-            JZ AdcOp1RegCX
-            CMP selectedOp1Reg, 7
-            JZ AdcOp1RegCL
-            CMP selectedOp1Reg, 8
-            JZ AdcOp1RegCH
-            CMP selectedOp1Reg, 9
-            JZ AdcOp1RegDX
-            CMP selectedOp1Reg, 10
-            JZ AdcOp1RegDL
-            CMP selectedOp1Reg, 11
-            JZ AdcOp1RegDH
-
-            CMP selectedOp1Reg, 15
-            JZ AdcOp1RegBP
-            CMP selectedOp1Reg, 16
-            JZ AdcOp1RegSP
-            CMP selectedOp1Reg, 17
-            JZ AdcOp1RegSI
-            CMP selectedOp1Reg, 18
-            JZ AdcOp1RegDI
-            
-
-            JMP InValidCommand
-
-            AdcOp1RegAX:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegAX, AX
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegAL:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegAX, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegAH:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegAX+1, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegBX:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegBX, AX
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegBL:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegBX, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegBH:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegBX+1, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegCX:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegCX, AX
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegCL:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegCX, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegCH:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegCX+1, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegDX:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegDX, AX
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegDL:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegDX, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegDH:
-                CALL GetSrcOp_8Bit
-                CLC
-                CALL GetCF
-                ADC BYTE PTR ValRegDX+1, AL
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegBP:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegBP, AX
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegSP:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegSP, AX
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegSI:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegSI, AX
-                CALL SetCF
-                JMP Exit
-            AdcOp1RegDI:
-                CALL GetSrcOp
-                CLC
-                CALL GetCF
-                ADC ValRegDI, AX
-                CALL SetCF
-                JMP Exit
-
-        AdcOp1AddReg:
-
-            ; Check Memory-to-Memory operations
-            CMP selectedOp2Type, 1
-            JZ InValidCommand
-            CMP selectedOp2Type, 2
-            jz InValidCommand
-
-            CMP selectedOp1AddReg, 3
-            JZ AdcOp1AddRegBX
-            CMP selectedOp1AddReg, 15
-            JZ AdcOp1AddRegBP
-            CMP selectedOp1AddReg, 17
-            JZ AdcOp1AddRegSI
-            CMP selectedOp1AddReg, 18
-            JZ AdcOp1AddRegDI
-            JMP InValidCommand
-
-            AdcOp1AddregBX:
-                ; TODO - ADD PWR UP CHECK HERE
-                EexecAdcAddReg ValRegBX, ValMem
-            AdcOp1AddregBP:
-                ; TODO - ADD PWR UP CHECK HERE
-                EexecAdcAddReg ValRegBP, ValMem
-            AdcOp1AddregSI:
-                ; TODO - ADD PWR UP CHECK HERE
-                EexecAdcAddReg ValRegSI, ValMem
-            AdcOp1AddregDI:
-                ; TODO - ADD PWR UP CHECK HERE
-                EexecAdcAddReg ValRegDI, ValMem
-        AdcOp1Mem:
-
-            CMP selectedOp1Mem, 0
-            JZ AdcOp1Mem0
-            CMP selectedOp1Mem, 1
-            JZ AdcOp1Mem1
-            CMP selectedOp1Mem, 2
-            JZ AdcOp1Mem2
-            CMP selectedOp1Mem, 3
-            JZ AdcOp1Mem3
-            CMP selectedOp1Mem, 4
-            JZ AdcOp1Mem4
-            CMP selectedOp1Mem, 5
-            JZ AdcOp1Mem5
-            CMP selectedOp1Mem, 6
-            JZ AdcOp1Mem6
-            CMP selectedOp1Mem, 7
-            JZ AdcOp1Mem7
-            CMP selectedOp1Mem, 8
-            JZ AdcOp1Mem8
-            CMP selectedOp1Mem, 9
-            JZ AdcOp1Mem9
-            CMP selectedOp1Mem, 10
-            JZ AdcOp1Mem10
-            CMP selectedOp1Mem, 11
-            JZ AdcOp1Mem11
-            CMP selectedOp1Mem, 12
-            JZ AdcOp1Mem12
-            CMP selectedOp1Mem, 13
-            JZ AdcOp1Mem13
-            CMP selectedOp1Mem, 14
-            JZ AdcOp1Mem14
-            CMP selectedOp1Mem, 15
-            JZ AdcOp1Mem15
-            JMP InValidCommand
-            
-            AdcOp1Mem0:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+0
-            AdcOp1Mem1:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+1
-            AdcOp1Mem2:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+2
-            AdcOp1Mem3:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+3
-            AdcOp1Mem4:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+4
-            AdcOp1Mem5:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+5
-            AdcOp1Mem6:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+6
-            AdcOp1Mem7:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+7
-            AdcOp1Mem8:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+8
-            AdcOp1Mem9:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+9
-            AdcOp1Mem10:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+10
-            AdcOp1Mem11:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+11
-            AdcOp1Mem12:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+12
-            AdcOp1Mem13:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+13
-            AdcOp1Mem14:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+14
-            AdcOp1Mem15:
-                ; TODO - ADD PWR UP CHECK HERE
-                ExecAdcMem ValMem+15
-
-        
-        JMP Exit
-    PUSH_Comm:
-
-        CALL Op1Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        ; Todo - CHECK VALIDATIONS
-        CMP selectedOp1Size, 8
-        JZ InValidCommand
-        CMP selectedOp1Type, 0
-        JZ PushOpReg
-        CMP selectedOp1Type, 1
-        JZ PushOpAddReg
-        CMP selectedOp1Type, 2
-        JZ PushOpMem
-        CMP selectedOp1Type, 3
-        JZ PushOpVal
-        
-
-        ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
-        ; Reg as operands
-        PushOpReg:
-            
-            CMP selectedOp1Reg, 0
-            JZ PushOpRegAX
-            CMP selectedOp1Reg, 3
-            JZ PushOpRegBX
-            CMP selectedOp1Reg, 6
-            JZ PushOpRegCX
-            CMP selectedOp1Reg, 9
-            JZ PushOpRegDX
-            CMP selectedOp1Reg, 15
-            JZ PushOpRegBP
-            CMP selectedOp1Reg, 16
-            JZ PushOpRegSP
-            CMP selectedOp1Reg, 17
-            JZ PushOpRegSI
-            CMP selectedOp1Reg, 18
-            JZ PushOpRegDI
-            JMP InValidCommand
-
-
-            
-            PushOpRegAX:
-                ; Delete this lineAX
-                ExecPush ValRegAX
-                JMP Exit
-            PushOpRegBX:
-                ; Delete this lineBX
-                ExecPush ValRegBX
-                JMP Exit
-            PushOpRegCX:
-                ; Delete this lineCX
-                ExecPush ValRegCX
-                JMP Exit
-            PushOpRegDX:
-                ; Delete this lineDX
-                ExecPush ValRegDX
-                JMP Exit
-            PushOpRegBP:
-                ; Delete this lineBP
-                ExecPush ValRegBP
-                JMP Exit
-            PushOpRegSP:
-                ; Delete this lineSP
-                ExecPush ValRegSP
-                JMP Exit
-            PushOpRegSI:
-                ; Delete this lineSI
-                ExecPush ValRegSI
-                JMP Exit
-            PushOpRegDI:
-                ; Delete this lineDI
-                ExecPush ValRegDI
-                JMP Exit
-
-        ; Mem as operand
-        PushOpMem:
-
-            CMP selectedOp1Mem, 0
-            JZ PushOpMem0
-            CMP selectedOp1Mem, 1
-            JZ PushOpMem1
-            CMP selectedOp1Mem, 2
-            JZ PushOpMem2
-            CMP selectedOp1Mem, 3
-            JZ PushOpMem3
-            CMP selectedOp1Mem, 4
-            JZ PushOpMem4
-            CMP selectedOp1Mem, 5
-            JZ PushOpMem5
-            CMP selectedOp1Mem, 6
-            JZ PushOpMem6
-            CMP selectedOp1Mem, 7
-            JZ PushOpMem7
-            CMP selectedOp1Mem, 8
-            JZ PushOpMem8
-            CMP selectedOp1Mem, 9
-            JZ PushOpMem9
-            CMP selectedOp1Mem, 10
-            JZ PushOpMem10
-            CMP selectedOp1Mem, 11
-            JZ PushOpMem11
-            CMP selectedOp1Mem, 12
-            JZ PushOpMem12
-            CMP selectedOp1Mem, 13
-            JZ PushOpMem13
-            CMP selectedOp1Mem, 14
-            JZ PushOpMem14
-            CMP selectedOp1Mem, 15
-            JZ PushOpMem15
-            JMP InValidCommand
-            
-            PushOpMem0:
-                ; Delete this line0
-                ExecPushMem ValMem
-                JMP Exit
-            PushOpMem1:
-                ; Delete this line1
-                ExecPushMem ValMem+1
-                JMP Exit
-            PushOpMem2:
-                ; Delete this line2
-                ExecPushMem ValMem+2
-                JMP Exit
-            PushOpMem3:
-                ; Delete this line3
-                ExecPushMem ValMem+3
-                JMP Exit
-            PushOpMem4:
-                ; Delete this line4
-                ExecPushMem ValMem+4
-                JMP Exit
-            PushOpMem5:
-                ; Delete this line5
-                ExecPushMem ValMem+5
-                JMP Exit
-            PushOpMem6:
-                ; Delete this line6
-                ExecPushMem ValMem+6
-                JMP Exit
-            PushOpMem7:
-                ; Delete this line7
-                ExecPushMem ValMem+7
-                JMP Exit
-            PushOpMem8:
-                ; Delete this line8
-                ExecPushMem ValMem+8
-                JMP Exit
-            PushOpMem9:
-                ; Delete this line9
-                ExecPushMem ValMem+9
-                JMP Exit
-            PushOpMem10:
-                ; Delete this line10
-                ExecPushMem ValMem+10
-                JMP Exit
-            PushOpMem11:
-                ; Delete this line11
-                ExecPushMem ValMem+11
-                JMP Exit
-            PushOpMem12:
-                ; Delete this line12
-                ExecPushMem ValMem+12
-                JMP Exit
-            PushOpMem13:
-                ; Delete this line13
-                ExecPushMem ValMem+13
-                JMP Exit
-            PushOpMem14:
-                ; Delete this line14
-                ExecPushMem ValMem+14
-                JMP Exit
-            PushOpMem15:
-                ; Delete this line15
-                ExecPushMem ValMem+15
-                JMP Exit
-
-        
-        ; Address reg as operands
-        PushOpAddReg:
-
-            CMP selectedOp1AddReg, 3
-            JZ PushOpAddRegBX
-            CMP selectedOp1AddReg, 15
-            JZ PushOpAddRegBP
-            CMP selectedOp1AddReg, 17
-            JZ PushOpAddRegSI
-            CMP selectedOp1AddReg, 18
-            JZ PushOpAddRegDI
-            JMP InValidCommand
-
-            PushOpAddRegBX:
-                ; Delete this lineRegBX
-
-                mov dx, ValRegBX
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegBX
-                ExecPushMem ValMem[SI]
-                JMP Exit
-            PushOpAddRegBP:
-
-                mov dx, ValRegBP
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegBP
-                ExecPushMem ValMem[SI]
-                JMP Exit
-
-            PushOpAddRegSI:
-                mov dx, ValRegSI
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegSI
-                ExecPushMem ValMem[SI]
-                JMP Exit
-            
-            PushOpAddRegDI:
-                mov dx, ValRegDI
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegDI
-                ExecPushMem ValMem[SI]
-                JMP Exit
-
-
-        ; Value as operand
-        PushOpVal:
-            CMP Op1Valid, 0
-            jz InValidCommand
-
-            ExecPush Op1Val
+        NOP_Comm:
+            CALL CheckForbidCharProc
             JMP Exit
         
-        JMP Exit
-
-    POP_Comm:
-        CALL Op1Menu
-        CALL CheckForbidCharProc
-
-        call  PowerUpeMenu ; to choose power up
-
-        ; Todo - CHECK VALIDATIONS
-        CMP selectedOp1Type, 0
-        JZ PopOpReg
-        CMP selectedOp1Type, 1
-        JZ PopOpAddReg
-        CMP selectedOp1Type, 2
-        JZ PopOpMem
-        JMP InValidCommand
-        
-
-        ; TODO - EXECUTE COMMAND WITH DIFFERENT OPERANDS
-        ; Reg as operands
-        PopOpReg:
-            
-            CMP selectedOp1Reg, 0
-            JZ PopOpRegAX
-            CMP selectedOp1Reg, 3
-            JZ PopOpRegBX
-            CMP selectedOp1Reg, 6
-            JZ PopOpRegCX
-            CMP selectedOp1Reg, 9
-            JZ PopOpRegDX
-            CMP selectedOp1Reg, 15
-            JZ PopOpRegBP
-            CMP selectedOp1Reg, 16
-            JZ PopOpRegSP
-            CMP selectedOp1Reg, 17
-            JZ PopOpRegSI
-            CMP selectedOp1Reg, 18
-            JZ PopOpRegDI
-            JMP InValidCommand
-
-
-            
-            PopOpRegAX:
-                ExecPop ValRegAX
-                JMP Exit
-            PopOpRegBX:
-                ExecPop ValRegBX
-                JMP Exit
-            PopOpRegCX:
-                ExecPop ValRegCX
-                JMP Exit
-            PopOpRegDX:
-                ExecPop ValRegDX
-                JMP Exit
-            PopOpRegBP:
-                ExecPop ValRegBP
-                JMP Exit
-            PopOpRegSP:
-                ExecPop ValRegSP
-                JMP Exit
-            PopOpRegSI:
-                ExecPop ValRegSI
-                JMP Exit
-            PopOpRegDI:
-                ExecPop ValRegDI
-                JMP Exit
-
-        ; TODO - Mem as operand
-        PopOpMem:
-
-            CMP selectedOp1Mem, 0
-            JZ PopOpMem0
-            CMP selectedOp1Mem, 1
-            JZ PopOpMem1
-            CMP selectedOp1Mem, 2
-            JZ PopOpMem2
-            CMP selectedOp1Mem, 3
-            JZ PopOpMem3
-            CMP selectedOp1Mem, 4
-            JZ PopOpMem4
-            CMP selectedOp1Mem, 5
-            JZ PopOpMem5
-            CMP selectedOp1Mem, 6
-            JZ PopOpMem6
-            CMP selectedOp1Mem, 7
-            JZ PopOpMem7
-            CMP selectedOp1Mem, 8
-            JZ PopOpMem8
-            CMP selectedOp1Mem, 9
-            JZ PopOpMem9
-            CMP selectedOp1Mem, 10
-            JZ PopOpMem10
-            CMP selectedOp1Mem, 11
-            JZ PopOpMem11
-            CMP selectedOp1Mem, 12
-            JZ PopOpMem12
-            CMP selectedOp1Mem, 13
-            JZ PopOpMem13
-            CMP selectedOp1Mem, 14
-            JZ PopOpMem14
-            CMP selectedOp1Mem, 15
-            JZ PopOpMem15
-            JMP InValidCommand
-            
-            PopOpMem0:
-                ExecPopMem ValMem
-                JMP Exit
-            PopOpMem1:
-                ExecPopMem ValMem+1
-                JMP Exit
-            PopOpMem2:
-                ExecPopMem ValMem+2
-                JMP Exit
-            PopOpMem3:
-                ExecPopMem ValMem+3
-                JMP Exit
-            PopOpMem4:
-                ExecPopMem ValMem+4
-                JMP Exit
-            PopOpMem5:
-                ExecPopMem ValMem+5
-                JMP Exit
-            PopOpMem6:
-                ExecPopMem ValMem+6
-                JMP Exit
-            PopOpMem7:
-                ExecPopMem ValMem+7
-                JMP Exit
-            PopOpMem8:
-                ExecPopMem ValMem+8
-                JMP Exit
-            PopOpMem9:
-                ExecPopMem ValMem+9
-                JMP Exit
-            PopOpMem10:
-                ExecPopMem ValMem+10
-                JMP Exit
-            PopOpMem11:
-                ExecPopMem ValMem+11
-                JMP Exit
-            PopOpMem12:
-                ExecPopMem ValMem+12
-                JMP Exit
-            PopOpMem13:
-                ExecPopMem ValMem+13
-                JMP Exit
-            PopOpMem14:
-                ExecPopMem ValMem+14
-                JMP Exit
-            PopOpMem15:
-                ExecPopMem ValMem+15
-                JMP Exit
-
-        
-        ; TODO - address reg as operands
-        PopOpAddReg:
-
-            CMP selectedOp1AddReg, 3
-            JZ PopOpAddRegBX
-            CMP selectedOp1AddReg, 15
-            JZ PopOpAddRegBP
-            CMP selectedOp1AddReg, 17
-            JZ PopOpAddRegSI
-            CMP selectedOp1AddReg, 18
-            JZ PopOpAddRegDI
-            JMP InValidCommand
-
-            PopOpAddRegBX:
-                mov dx, ValRegBX
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegBX
-                ExecPopMem ValMem[SI]
-                JMP Exit
-            PopOpAddRegBP:
-                mov dx, ValRegBP
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegBP
-                ExecPopMem ValMem[SI]
-                JMP Exit
-
-            PopOpAddRegSI:
-                mov dx, ValRegSI
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegSI
-                ExecPopMem ValMem[SI]
-                JMP Exit
-            
-            PopOpAddRegDI:
-                mov dx, ValRegDI
-                CALL CheckAddress
-                cmp bl, 1               ; Value is greater than 16
-                JZ InValidCommand
-                mov SI, ValRegDI
-                ExecPopMem ValMem[SI]
-                JMP Exit
-
-
-        
-
-        JMP Exit
-    
-    INC_Comm:
-        CALL Op1Menu
-        CALL CheckForbidCharProc
-        
-        call  PowerUpeMenu ; to choose power up
-
-        CMP selectedOp1Type, 0
-        JZ IncOpReg
-        CMP selectedOp1Type, 1
-        JZ IncOpAddReg
-        CMP selectedOp1Type, 2
-        JZ IncOpMem
-        JMP InValidCommand
-
-        IncOpReg:
-
-            CMP selectedOp1Reg, 0
-            JZ IncOpRegAX
-            CMP selectedOp1Reg, 1
-            JZ IncOpRegAL
-            CMP selectedOp1Reg, 2
-            JZ IncOpRegAH
-            CMP selectedOp1Reg, 3
-            JZ IncOpRegBX
-            CMP selectedOp1Reg, 4
-            JZ IncOpRegBL
-            CMP selectedOp1Reg, 5
-            JZ IncOpRegBH
-            CMP selectedOp1Reg, 6
-            JZ IncOpRegCX
-            CMP selectedOp1Reg, 7
-            JZ IncOpRegCL
-            CMP selectedOp1Reg, 8
-            JZ IncOpRegCH
-            CMP selectedOp1Reg, 9
-            JZ IncOpRegDX
-            CMP selectedOp1Reg, 10
-            JZ IncOpRegDL
-            CMP selectedOp1Reg, 11
-            JZ IncOpRegDH
-            
-            CMP selectedOp1Reg, 15
-            JZ IncOpRegBP
-            CMP selectedOp1Reg, 16
-            JZ IncOpRegSP
-            CMP selectedOp1Reg, 17
-            JZ IncOpRegSI
-            CMP selectedOp1Reg, 18
-            JZ IncOpRegDI
-            JMP InValidCommand
-
-
-            
-            IncOpRegAX:
-                ExecINC ValRegAX
-                JMP Exit
-            IncOpRegAL:
-                ExecINC ValRegAX
-                JMP Exit
-            IncOpRegAH:
-                ExecINC ValRegAX+1
-                JMP Exit
-            IncOpRegBX:
-                ExecINC ValRegBX
-                JMP Exit
-            IncOpRegBL:
-                ExecINC ValRegBX
-                JMP Exit
-            IncOpRegBH:
-                ExecINC ValRegBX+1
-                JMP Exit
-            IncOpRegCX:
-                ExecINC ValRegCX
-                JMP Exit
-            IncOpRegCL:
-                ExecINC ValRegCX
-                JMP Exit
-            IncOpRegCH:
-                ExecINC ValRegCX+1
-                JMP Exit
-            IncOpRegDX:
-                ExecINC ValRegDX
-                JMP Exit
-            IncOpRegDL:
-                ExecINC ValRegDX
-                JMP Exit
-            IncOpRegDH:
-                ExecINC ValRegDX+1
-                JMP Exit
-            IncOpRegBP:
-                ExecINC ValRegBP
-                JMP Exit
-            IncOpRegSP:
-                ExecINC ValRegSP
-                JMP Exit
-            IncOpRegSI:
-                ExecINC ValRegSI
-                JMP Exit
-            IncOpRegDI:
-                ExecINC ValRegDI
-                JMP Exit
-
-        IncOpAddReg:
-
-            CMP selectedOp1Reg, 3
-            JZ IncOpAddRegBX
-            CMP selectedOp1Reg, 15
-            JZ IncOpAddRegBP
-            
-            CMP selectedOp1Reg, 17
-            JZ IncOpAddRegSI
-            CMP selectedOp1Reg, 18
-            JZ IncOpAddRegDI
-            JMP InValidCommand
-
-
-            
-            
-            IncOpAddRegBX:
-                mov dx, ValRegBX
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegBX
-                ExecINC ValMem[di]
-                JMP Exit
-            IncOpAddRegBP:
-                mov dx, ValRegBP
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegBP
-                ExecINC ValMem[di]
-                JMP Exit
-            IncOpAddRegSP:
-                mov dx, ValRegSP
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegSP
-                ExecINC ValMem[di]
-                JMP Exit
-            IncOpAddRegSI:
-                mov dx, ValRegSI
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegSI
-                ExecINC ValMem[di]
-                JMP Exit
-            IncOpAddRegDI:
-                mov dx, ValRegDI
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegDI
-                ExecINC ValMem[di]
-                JMP Exit
-
-        IncOpMem:
-
-            CMP selectedOp1Mem, 0
-            JZ IncOpMem0
-            CMP selectedOp1Mem, 1
-            JZ IncOpMem1
-            CMP selectedOp1Mem, 2
-            JZ IncOpMem2
-            CMP selectedOp1Mem, 3
-            JZ IncOpMem3
-            CMP selectedOp1Mem, 4
-            JZ IncOpMem4
-            CMP selectedOp1Mem, 5
-            JZ IncOpMem5
-            CMP selectedOp1Mem, 6
-            JZ IncOpMem6
-            CMP selectedOp1Mem, 7
-            JZ IncOpMem7
-            CMP selectedOp1Mem, 8
-            JZ IncOpMem8
-            CMP selectedOp1Mem, 9
-            JZ IncOpMem9
-            CMP selectedOp1Mem, 10
-            JZ IncOpMem10
-            CMP selectedOp1Mem, 11
-            JZ IncOpMem11
-            CMP selectedOp1Mem, 12
-            JZ IncOpMem12
-            CMP selectedOp1Mem, 13
-            JZ IncOpMem13
-            CMP selectedOp1Mem, 14
-            JZ IncOpMem14
-            CMP selectedOp1Mem, 15
-            JZ IncOpMem15
-            JMP InValidCommand
-
-            IncOpMem0:
-                ExecINC ValMem
-                JMP Exit
-            IncOpMem1:
-                ExecINC ValMem+1
-                JMP Exit
-            IncOpMem2:
-                ExecINC ValMem+2
-                JMP Exit
-            IncOpMem3:
-                ExecINC ValMem+3
-                JMP Exit
-            IncOpMem4:
-                ExecINC ValMem+4
-                JMP Exit
-            IncOpMem5:
-                ExecINC ValMem+5
-                JMP Exit
-            IncOpMem6:
-                ExecINC ValMem+6
-                JMP Exit
-            IncOpMem7:
-                ExecINC ValMem+7
-                JMP Exit
-            IncOpMem8:
-                ExecINC ValMem+8
-                JMP Exit
-            IncOpMem9:
-                ExecINC ValMem+9
-                JMP Exit
-            IncOpMem10:
-                ExecINC ValMem+10
-                JMP Exit
-            IncOpMem11:
-                ExecINC ValMem+11
-                JMP Exit
-            IncOpMem12:
-                ExecINC ValMem+12
-                JMP Exit
-            IncOpMem13:
-                ExecINC ValMem+13
-                JMP Exit
-            IncOpMem14:
-                ExecINC ValMem+14
-                JMP Exit
-            IncOpMem15:
-                ExecINC ValMem+15
-                JMP Exit
-
-        JMP Exit
-    
-    DEC_Comm:
-        CALL Op1Menu
-        CALL CheckForbidCharProc
-
-        call  PowerUpeMenu ; to choose power up
-
-        CMP selectedOp1Type, 0
-        JZ DecOpReg
-        CMP selectedOp1Type, 1
-        JZ DecOpAddReg
-        CMP selectedOp1Type, 2
-        JZ DecOpMem
-        JMP InValidCommand
-
-        DecOpReg:
-
-            CMP selectedOp1Reg, 0
-            JZ DecOpRegAX
-            CMP selectedOp1Reg, 1
-            JZ DecOpRegAL
-            CMP selectedOp1Reg, 2
-            JZ DecOpRegAH
-            CMP selectedOp1Reg, 3
-            JZ DecOpRegBX
-            CMP selectedOp1Reg, 4
-            JZ DecOpRegBL
-            CMP selectedOp1Reg, 5
-            JZ DecOpRegBH
-            CMP selectedOp1Reg, 6
-            JZ DecOpRegCX
-            CMP selectedOp1Reg, 7
-            JZ DecOpRegCL
-            CMP selectedOp1Reg, 8
-            JZ DecOpRegCH
-            CMP selectedOp1Reg, 9
-            JZ DecOpRegDX
-            CMP selectedOp1Reg, 10
-            JZ DecOpRegDL
-            CMP selectedOp1Reg, 11
-            JZ DecOpRegDH
-            
-            CMP selectedOp1Reg, 15
-            JZ DecOpRegBP
-            CMP selectedOp1Reg, 16
-            JZ DecOpRegSP
-            CMP selectedOp1Reg, 17
-            JZ DecOpRegSI
-            CMP selectedOp1Reg, 18
-            JZ DecOpRegDI
-            JMP InValidCommand
-
-
-            
-            DecOpRegAX:
-                ExecDec ValRegAX
-                JMP Exit
-            DecOpRegAL:
-                ExecDec ValRegAX
-                JMP Exit
-            DecOpRegAH:
-                ExecDec ValRegAX+1
-                JMP Exit
-            DecOpRegBX:
-                ExecDec ValRegBX
-                JMP Exit
-            DecOpRegBL:
-                ExecDec ValRegBX
-                JMP Exit
-            DecOpRegBH:
-                ExecDec ValRegBX+1
-                JMP Exit
-            DecOpRegCX:
-                ExecDec ValRegCX
-                JMP Exit
-            DecOpRegCL:
-                ExecDec ValRegCX
-                JMP Exit
-            DecOpRegCH:
-                ExecDec ValRegCX+1
-                JMP Exit
-            DecOpRegDX:
-                ExecDec ValRegDX
-                JMP Exit
-            DecOpRegDL:
-                ExecDec ValRegDX
-                JMP Exit
-            DecOpRegDH:
-                ExecDec ValRegDX+1
-                JMP Exit
-            DecOpRegBP:
-                ExecDec ValRegBP
-                JMP Exit
-            DecOpRegSP:
-                ExecDec ValRegSP
-                JMP Exit
-            DecOpRegSI:
-                ExecDec ValRegSI
-                JMP Exit
-            DecOpRegDI:
-                ExecDec ValRegDI
-                JMP Exit
-
-        DecOpAddReg:
-
-            CMP selectedOp1Reg, 3
-            JZ DecOpAddRegBX
-            CMP selectedOp1Reg, 15
-            JZ DecOpAddRegBP
-            
-            CMP selectedOp1Reg, 17
-            JZ DecOpAddRegSI
-            CMP selectedOp1Reg, 18
-            JZ DecOpAddRegDI
-            JMP InValidCommand
-
-
-            
-            
-            DecOpAddRegBX:
-                mov dx, ValRegBX
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegBX
-                ExecDec ValMem[di]
-                JMP Exit
-            DecOpAddRegBP:
-                mov dx, ValRegBP
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegBP
-                ExecDec ValMem[di]
-                JMP Exit
-            DecOpAddRegSP:
-                mov dx, ValRegSP
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegSP
-                ExecDec ValMem[di]
-                JMP Exit
-            DecOpAddRegSI:
-                mov dx, ValRegSI
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegSI
-                ExecDec ValMem[di]
-                JMP Exit
-            DecOpAddRegDI:
-                mov dx, ValRegDI
-                CALL CheckAddress
-                cmp bl, 1
-                jz InValidCommand
-                mov di, ValRegDI
-                ExecDec ValMem[di]
-                JMP Exit
-
-        DecOpMem:
-
-            CMP selectedOp1Mem, 0
-            JZ DecOpMem0
-            CMP selectedOp1Mem, 1
-            JZ DecOpMem1
-            CMP selectedOp1Mem, 2
-            JZ DecOpMem2
-            CMP selectedOp1Mem, 3
-            JZ DecOpMem3
-            CMP selectedOp1Mem, 4
-            JZ DecOpMem4
-            CMP selectedOp1Mem, 5
-            JZ DecOpMem5
-            CMP selectedOp1Mem, 6
-            JZ DecOpMem6
-            CMP selectedOp1Mem, 7
-            JZ DecOpMem7
-            CMP selectedOp1Mem, 8
-            JZ DecOpMem8
-            CMP selectedOp1Mem, 9
-            JZ DecOpMem9
-            CMP selectedOp1Mem, 10
-            JZ DecOpMem10
-            CMP selectedOp1Mem, 11
-            JZ DecOpMem11
-            CMP selectedOp1Mem, 12
-            JZ DecOpMem12
-            CMP selectedOp1Mem, 13
-            JZ DecOpMem13
-            CMP selectedOp1Mem, 14
-            JZ DecOpMem14
-            CMP selectedOp1Mem, 15
-            JZ DecOpMem15
-            JMP InValidCommand
-
-            DecOpMem0:
-                ExecDec ValMem
-                JMP Exit
-            DecOpMem1:
-                ExecDec ValMem+1
-                JMP Exit
-            DecOpMem2:
-                ExecDec ValMem+2
-                JMP Exit
-            DecOpMem3:
-                ExecDec ValMem+3
-                JMP Exit
-            DecOpMem4:
-                ExecDec ValMem+4
-                JMP Exit
-            DecOpMem5:
-                ExecDec ValMem+5
-                JMP Exit
-            DecOpMem6:
-                ExecDec ValMem+6
-                JMP Exit
-            DecOpMem7:
-                ExecDec ValMem+7
-                JMP Exit
-            DecOpMem8:
-                ExecDec ValMem+8
-                JMP Exit
-            DecOpMem9:
-                ExecDec ValMem+9
-                JMP Exit
-            DecOpMem10:
-                ExecDec ValMem+10
-                JMP Exit
-            DecOpMem11:
-                ExecDec ValMem+11
-                JMP Exit
-            DecOpMem12:
-                ExecDec ValMem+12
-                JMP Exit
-            DecOpMem13:
-                ExecDec ValMem+13
-                JMP Exit
-            DecOpMem14:
-                ExecDec ValMem+14
-                JMP Exit
-            DecOpMem15:
-                ExecDec ValMem+15
-                JMP Exit
-
-        JMP Exit
-    
-    MUL_Comm:
-        CALL Op1Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type, 0
-        je Mul_Reg
-        cmp selectedOp1Type, 1
-        je Mul_AddMem
-        cmp selectedOp1Type, 2
-        je Mul_Mem
-        cmp selectedOp1Type, 3
-        je Mul_invalid
-        Mul_Reg:
-            cmp selectedOp1Reg, 0
-            je Mul_Ax
-            cmp selectedOp1Reg, 1
-            je Mul_Al
-            cmp selectedOp1Reg, 2
-            je Mul_Ah
-            cmp selectedOp1Reg, 3
-            je Mul_Bx
-            cmp selectedOp1Reg, 4
-            je Mul_Bl
-            cmp selectedOp1Reg, 5
-            je Mul_Bh
-            cmp selectedOp1Reg, 6
-            je Mul_Cx
-            cmp selectedOp1Reg, 7
-            je Mul_Cl
-            cmp selectedOp1Reg, 8
-            je Mul_Ch
-            cmp selectedOp1Reg, 9
-            je Mul_Dx
-            cmp selectedOp1Reg, 10
-            je Mul_Dl
-            cmp selectedOp1Reg, 11
-            je Mul_Dh
-            cmp selectedOp1Reg, 15
-            je Mul_Bp
-            cmp selectedOp1Reg, 16
-            je Mul_Sp
-            cmp selectedOp1Reg, 17
-            je Mul_Si
-            cmp selectedOp1Reg, 18
-            je Mul_Di
-            jmp Mul_invalid
-            Mul_Ax:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ax
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Al:
-                mov ax,ValRegAX
-                Mul al
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Ah:
-                mov ax,ValRegAX
-                Mul ah
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Bx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                Mul bx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Bl:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                Mul bl
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Bh:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                Mul bh
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Cx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov cx,ValRegBX
-                Mul cx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Cl:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                Mul cl
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Ch:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                Mul ch
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Dx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul dx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Dl:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                Mul dl
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Dh:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                Mul dh
-                mov ValRegAX,ax
-                jmp Exit
-            Mul_Bp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBX
-                Mul bp
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Sp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov SP,ValRegBX
-                Mul SP
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Si:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                Mul si
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_di:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                Mul di
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        Mul_AddMem:
-            cmp selectedOp1AddReg, 3
-            je Mul_AddBx
-            cmp selectedOp1AddReg, 15
-            je Mul_AddBp
-            cmp selectedOp1AddReg, 17
-            je Mul_AddSi
-            cmp selectedOp1AddReg, 18
-            je Mul_AddDi
-            jmp Mul_invalid
-            Mul_AddBx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                cmp bx,15d
-                ja Mul_invalid
-                Mul ValMem[bx]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_AddBp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBP
-                cmp bp,15d
-                ja Mul_invalid
-                Mul ValMem[bp]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_AddSi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                cmp si,15d
-                ja Mul_invalid
-                Mul ValMem[si]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_AddDi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                cmp di,15d
-                ja Mul_invalid
-                Mul ValMem[di]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        Mul_Mem:
-            cmp selectedOp1Mem,0
-            je Mul_Mem0
-            cmp selectedOp1Mem,1
-            je Mul_Mem1
-            cmp selectedOp1Mem,2
-            je Mul_Mem2
-            cmp selectedOp1Mem,3
-            je Mul_Mem3
-            cmp selectedOp1Mem,4
-            je Mul_Mem4
-            cmp selectedOp1Mem,5
-            je Mul_Mem5
-            cmp selectedOp1Mem,6
-            je Mul_Mem6
-            cmp selectedOp1Mem,7
-            je Mul_Mem7
-            cmp selectedOp1Mem,8
-            je Mul_Mem8
-            cmp selectedOp1Mem,9
-            je Mul_Mem9
-            cmp selectedOp1Mem,10
-            je Mul_Mem10
-            cmp selectedOp1Mem,11
-            je Mul_Mem11
-            cmp selectedOp1Mem,12
-            je Mul_Mem12
-            cmp selectedOp1Mem,13
-            je Mul_Mem13
-            cmp selectedOp1Mem,14
-            je Mul_Mem14
-            cmp selectedOp1Mem,15
-            je Mul_Mem15
-            Mul_Mem0:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[0]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem1:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[1]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem2:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[2]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem3:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[3]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem4:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[4]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem5:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[5]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem6:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[6]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem7:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[7]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem8:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[8]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem9:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[9]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem10:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[10]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem11:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[11]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem12:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[12]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem13:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[13]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem14:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[14]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Mul_Mem15:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                Mul ValMem[15]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        Mul_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    DIV_Comm:
-        CALL Op1Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type, 0
-        je Div_Reg
-        cmp selectedOp1Type, 1
-        je Div_AddMem
-        cmp selectedOp1Type, 2
-        je Div_Mem
-        cmp selectedOp1Type, 3
-        je Div_invalid
-        Div_Reg:
-            cmp selectedOp1Reg, 0
-            je Div_Ax
-            cmp selectedOp1Reg, 1
-            je Div_Al
-            cmp selectedOp1Reg, 2
-            je Div_Ah
-            cmp selectedOp1Reg, 3
-            je Div_Bx
-            cmp selectedOp1Reg, 4
-            je Div_Bl
-            cmp selectedOp1Reg, 5
-            je Div_Bh
-            cmp selectedOp1Reg, 6
-            je Div_Cx
-            cmp selectedOp1Reg, 7
-            je Div_Cl
-            cmp selectedOp1Reg, 8
-            je Div_Ch
-            cmp selectedOp1Reg, 9
-            je Div_Dx
-            cmp selectedOp1Reg, 10
-            je Div_Dl
-            cmp selectedOp1Reg, 11
-            je Div_Dh
-            cmp selectedOp1Reg, 15
-            je Div_Bp
-            cmp selectedOp1Reg, 16
-            je Div_Sp
-            cmp selectedOp1Reg, 17
-            je Div_Si
-            cmp selectedOp1Reg, 18
-            je Div_Di
-            jmp Div_invalid
-            Div_Ax:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ax
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Al:
-                mov ax,ValRegAX
-                div al
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Ah:
-                mov ax,ValRegAX
-                div ah
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Bx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                div bx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Bl:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                div bl
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Bh:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                div bh
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Cx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov cx,ValRegBX
-                div cx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Cl:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                div cl
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Ch:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                div ch
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Dx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div dx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Dl:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                div dl
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Dh:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                div dh
-                mov ValRegAX,ax
-                jmp Exit
-            Div_Bp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBX
-                div bp
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Sp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov SP,ValRegBX
-                div SP
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Si:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                div si
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_di:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                div di
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        Div_AddMem:
-            cmp selectedOp1AddReg, 3
-            je Div_AddBx
-            cmp selectedOp1AddReg, 15
-            je Div_AddBp
-            cmp selectedOp1AddReg, 17
-            je Div_AddSi
-            cmp selectedOp1AddReg, 18
-            je Div_AddDi
-            jmp Div_invalid
-            Div_AddBx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                cmp bx,15d
-                ja Div_invalid
-                div ValMem[bx]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_AddBp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBP
-                cmp bp,15d
-                ja Div_invalid
-                div ValMem[bp]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_AddSi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                cmp si,15d
-                ja Div_invalid
-                div ValMem[si]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_AddDi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                cmp di,15d
-                ja Div_invalid
-                div ValMem[di]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        Div_Mem:
-            cmp selectedOp1Mem,0
-            je Div_Mem0
-            cmp selectedOp1Mem,1
-            je Div_Mem1
-            cmp selectedOp1Mem,2
-            je Div_Mem2
-            cmp selectedOp1Mem,3
-            je Div_Mem3
-            cmp selectedOp1Mem,4
-            je Div_Mem4
-            cmp selectedOp1Mem,5
-            je Div_Mem5
-            cmp selectedOp1Mem,6
-            je Div_Mem6
-            cmp selectedOp1Mem,7
-            je Div_Mem7
-            cmp selectedOp1Mem,8
-            je Div_Mem8
-            cmp selectedOp1Mem,9
-            je Div_Mem9
-            cmp selectedOp1Mem,10
-            je Div_Mem10
-            cmp selectedOp1Mem,11
-            je Div_Mem11
-            cmp selectedOp1Mem,12
-            je Div_Mem12
-            cmp selectedOp1Mem,13
-            je Div_Mem13
-            cmp selectedOp1Mem,14
-            je Div_Mem14
-            cmp selectedOp1Mem,15
-            je Div_Mem15
-            Div_Mem0:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[0]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem1:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[1]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem2:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[2]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem3:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[3]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem4:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[4]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem5:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[5]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem6:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[6]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem7:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[7]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem8:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[8]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem9:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[9]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem10:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[10]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem11:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[11]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem12:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[12]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem13:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[13]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem14:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[14]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            Div_Mem15:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                div ValMem[15]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        Div_invalid:
-        jmp InValidCommand
-        JMP Exit
-    IMul_Comm:
-        CALL Op1Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type, 0
-        je IMul_Reg
-        cmp selectedOp1Type, 1
-        je IMul_AddMem
-        cmp selectedOp1Type, 2
-        je IMul_Mem
-        cmp selectedOp1Type, 3
-        je IMul_invalid
-        IMul_Reg:
-            cmp selectedOp1Reg, 0
-            je IMul_Ax
-            cmp selectedOp1Reg, 1
-            je IMul_Al
-            cmp selectedOp1Reg, 2
-            je IMul_Ah
-            cmp selectedOp1Reg, 3
-            je IMul_Bx
-            cmp selectedOp1Reg, 4
-            je IMul_Bl
-            cmp selectedOp1Reg, 5
-            je IMul_Bh
-            cmp selectedOp1Reg, 6
-            je IMul_Cx
-            cmp selectedOp1Reg, 7
-            je IMul_Cl
-            cmp selectedOp1Reg, 8
-            je IMul_Ch
-            cmp selectedOp1Reg, 9
-            je IMul_Dx
-            cmp selectedOp1Reg, 10
-            je IMul_Dl
-            cmp selectedOp1Reg, 11
-            je IMul_Dh
-            cmp selectedOp1Reg, 15
-            je IMul_Bp
-            cmp selectedOp1Reg, 16
-            je IMul_Sp
-            cmp selectedOp1Reg, 17
-            je IMul_Si
-            cmp selectedOp1Reg, 18
-            je IMul_Di
-            jmp IMul_invalid
-            IMul_Ax:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ax
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Al:
-                mov ax,ValRegAX
-                IMul al
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Ah:
-                mov ax,ValRegAX
-                IMul ah
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Bx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                IMul bx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Bl:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                IMul bl
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Bh:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                IMul bh
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Cx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov cx,ValRegBX
-                IMul cx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Cl:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                IMul cl
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Ch:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                IMul ch
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Dx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul dx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Dl:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                IMul dl
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Dh:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                IMul dh
-                mov ValRegAX,ax
-                jmp Exit
-            IMul_Bp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBX
-                IMul bp
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Sp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov SP,ValRegBX
-                IMul SP
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Si:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                IMul si
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_di:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                IMul di
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        IMul_AddMem:
-            cmp selectedOp1AddReg, 3
-            je IMul_AddBx
-            cmp selectedOp1AddReg, 15
-            je IMul_AddBp
-            cmp selectedOp1AddReg, 17
-            je IMul_AddSi
-            cmp selectedOp1AddReg, 18
-            je IMul_AddDi
-            jmp IMul_invalid
-            IMul_AddBx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                cmp bx,15d
-                ja IMul_invalid
-                IMul ValMem[bx]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_AddBp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBX
-                cmp bp,15d
-                ja IMul_invalid
-                IMul ValMem[bp]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_AddSi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                cmp si,15d
-                ja IMul_invalid
-                IMul ValMem[si]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_AddDi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                cmp di,15d
-                ja IMul_invalid
-                IMul ValMem[di]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        IMul_Mem:
-            cmp selectedOp1Mem,0
-            je IMul_Mem0
-            cmp selectedOp1Mem,1
-            je IMul_Mem1
-            cmp selectedOp1Mem,2
-            je IMul_Mem2
-            cmp selectedOp1Mem,3
-            je IMul_Mem3
-            cmp selectedOp1Mem,4
-            je IMul_Mem4
-            cmp selectedOp1Mem,5
-            je IMul_Mem5
-            cmp selectedOp1Mem,6
-            je IMul_Mem6
-            cmp selectedOp1Mem,7
-            je IMul_Mem7
-            cmp selectedOp1Mem,8
-            je IMul_Mem8
-            cmp selectedOp1Mem,9
-            je IMul_Mem9
-            cmp selectedOp1Mem,10
-            je IMul_Mem10
-            cmp selectedOp1Mem,11
-            je IMul_Mem11
-            cmp selectedOp1Mem,12
-            je IMul_Mem12
-            cmp selectedOp1Mem,13
-            je IMul_Mem13
-            cmp selectedOp1Mem,14
-            je IMul_Mem14
-            cmp selectedOp1Mem,15
-            je IMul_Mem15
-            IMul_Mem0:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[0]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem1:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[1]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem2:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[2]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem3:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[3]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem4:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[4]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem5:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[5]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem6:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[6]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem7:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[7]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem8:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[8]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem9:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[9]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem10:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[10]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem11:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[11]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem12:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[12]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem13:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[13]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem14:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[14]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IMul_Mem15:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IMul ValMem[15]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        IMul_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    IDiv_Comm:
-        CALL Op1Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type, 0
-        je IDiv_Reg
-        cmp selectedOp1Type, 1
-        je IDiv_AddMem
-        cmp selectedOp1Type, 2
-        je IDiv_Mem
-        cmp selectedOp1Type, 3
-        je IDiv_invalid
-        IDiv_Reg:
-            cmp selectedOp1Reg, 0
-            je IDiv_Ax
-            cmp selectedOp1Reg, 1
-            je IDiv_Al
-            cmp selectedOp1Reg, 2
-            je IDiv_Ah
-            cmp selectedOp1Reg, 3
-            je IDiv_Bx
-            cmp selectedOp1Reg, 4
-            je IDiv_Bl
-            cmp selectedOp1Reg, 5
-            je IDiv_Bh
-            cmp selectedOp1Reg, 6
-            je IDiv_Cx
-            cmp selectedOp1Reg, 7
-            je IDiv_Cl
-            cmp selectedOp1Reg, 8
-            je IDiv_Ch
-            cmp selectedOp1Reg, 9
-            je IDiv_Dx
-            cmp selectedOp1Reg, 10
-            je IDiv_Dl
-            cmp selectedOp1Reg, 11
-            je IDiv_Dh
-            cmp selectedOp1Reg, 15
-            je IDiv_Bp
-            cmp selectedOp1Reg, 16
-            je IDiv_Sp
-            cmp selectedOp1Reg, 17
-            je IDiv_Si
-            cmp selectedOp1Reg, 18
-            je IDiv_Di
-            jmp IDiv_invalid
-            IDiv_Ax:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ax
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Al:
-                mov ax,ValRegAX
-                IDiv al
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Ah:
-                mov ax,ValRegAX
-                IDiv ah
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Bx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                IDiv bx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Bl:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                IDiv bl
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Bh:
-                mov ax,ValRegAX
-                mov bx,ValRegBX
-                IDiv bh
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Cx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov cx,ValRegBX
-                IDiv cx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Cl:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                IDiv cl
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Ch:
-                mov ax,ValRegAX
-                mov cx,ValRegBX
-                IDiv ch
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Dx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv dx
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Dl:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                IDiv dl
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Dh:
-                mov ax,ValRegAX
-                mov dx,ValRegBX
-                IDiv dh
-                mov ValRegAX,ax
-                jmp Exit
-            IDiv_Bp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBX
-                IDiv bp
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Sp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov SP,ValRegBX
-                IDiv SP
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Si:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                IDiv si
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_di:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                IDiv di
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        IDiv_AddMem:
-            cmp selectedOp1AddReg, 3
-            je IDiv_AddBx
-            cmp selectedOp1AddReg, 15
-            je IDiv_AddBp
-            cmp selectedOp1AddReg, 17
-            je IDiv_AddSi
-            cmp selectedOp1AddReg, 18
-            je IDiv_AddDi
-            jmp IDiv_invalid
-            IDiv_AddBx:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bx,ValRegBX
-                cmp bx,15d
-                ja IDiv_invalid
-                IDiv ValMem[bx]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_AddBp:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov bp,ValRegBP
-                cmp bp,15d
-                ja IDiv_invalid
-                IDiv ValMem[bp]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_AddSi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov si,ValRegBX
-                cmp si,15d
-                ja IDiv_invalid
-                IDiv ValMem[si]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_AddDi:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                mov di,ValRegBX
-                cmp di,15d
-                ja IDiv_invalid
-                IDiv ValMem[di]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        IDiv_Mem:
-            cmp selectedOp1Mem,0
-            je IDiv_Mem0
-            cmp selectedOp1Mem,1
-            je IDiv_Mem1
-            cmp selectedOp1Mem,2
-            je IDiv_Mem2
-            cmp selectedOp1Mem,3
-            je IDiv_Mem3
-            cmp selectedOp1Mem,4
-            je IDiv_Mem4
-            cmp selectedOp1Mem,5
-            je IDiv_Mem5
-            cmp selectedOp1Mem,6
-            je IDiv_Mem6
-            cmp selectedOp1Mem,7
-            je IDiv_Mem7
-            cmp selectedOp1Mem,8
-            je IDiv_Mem8
-            cmp selectedOp1Mem,9
-            je IDiv_Mem9
-            cmp selectedOp1Mem,10
-            je IDiv_Mem10
-            cmp selectedOp1Mem,11
-            je IDiv_Mem11
-            cmp selectedOp1Mem,12
-            je IDiv_Mem12
-            cmp selectedOp1Mem,13
-            je IDiv_Mem13
-            cmp selectedOp1Mem,14
-            je IDiv_Mem14
-            cmp selectedOp1Mem,15
-            je IDiv_Mem15
-            IDiv_Mem0:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[0]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem1:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[1]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem2:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[2]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem3:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[3]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem4:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[4]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem5:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[5]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem6:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[6]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem7:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[7]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem8:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[8]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem9:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[9]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem10:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[10]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem11:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[11]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem12:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[12]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem13:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[13]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem14:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[14]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-            IDiv_Mem15:
-                mov ax,ValRegAX
-                mov dx,ValRegDX
-                IDiv ValMem[15]
-                mov ValRegAX,ax
-                mov ValRegDX,dx
-                jmp Exit
-        IDiv_invalid:
-        jmp InValidCommand
-        JMP Exit
-    ROR_Comm:
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type,0
-        je ROR_Reg
-        cmp selectedOp1Type,1
-        je ROR_AddReg
-        cmp selectedOp1Type,2
-        je ROR_Mem
-        cmp selectedOp1Type,3
-        je ROR_invalid
-
-        ROR_Reg:
-            cmp selectedOp1Reg,0
-            je ROR_Ax
-            cmp selectedOp1Reg,1
-            je ROR_Al
-            cmp selectedOp1Reg,2
-            je ROR_Ah
-            cmp selectedOp1Reg,3
-            je ROR_bx
-            cmp selectedOp1Reg,4
-            je ROR_Bl
-            cmp selectedOp1Reg,5
-            je ROR_Bh
-            cmp selectedOp1Reg,6
-            je ROR_Cx
-            cmp selectedOp1Reg,7
-            je ROR_Cl
-            cmp selectedOp1Reg,8
-            je ROR_Ch
-            cmp selectedOp1Reg,9
-            je ROR_Dx
-            cmp selectedOp1Reg,10
-            je ROR_Dl
-            cmp selectedOp1Reg,11
-            je ROR_Dh
-            cmp selectedOp1Reg,15
-            je ROR_Bp
-            cmp selectedOp1Reg,16
-            je ROR_Sp
-            cmp selectedOp1Reg,17
-            je ROR_Si
-            cmp selectedOp1Reg,18
-            je ROR_Di
-            jmp ROR_invalid
-            ROR_Ax:
-                cmp selectedOp2Type,0
-                je ROR_Ax_Reg
-                cmp selectedOp2Type,3
-                je ROR_Ax_Val
-                jmp ROR_invalid
-                ROR_Ax_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    ror Ax,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-                ROR_Ax_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    ror ax,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-            ROR_Al:
-                cmp selectedOp2Type,0
-                je ROR_Al_Reg
-                cmp selectedOp2Type,3
-                je ROR_Al_Val
-                jmp ROR_invalid
-                ROR_Al_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    ror Al,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-                ROR_Al_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    ror al,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-            ROR_Ah:
-                cmp selectedOp2Type,0
-                je ROR_Ah_Reg
-                cmp selectedOp2Type,3
-                je ROR_Ah_Val
-                jmp ROR_invalid
-                ROR_Ah_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    ror Ah,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-                ROR_Ah_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    ror ah,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-            ROR_Bx:
-                cmp selectedOp2Type,0
-                je ROR_Bx_Reg
-                cmp selectedOp2Type,3
-                je ROR_Bx_Val
-                jmp ROR_invalid
-                ROR_Bx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    ror Bx,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROR_Bx_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    ror Bx,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROR_Bl:
-                cmp selectedOp2Type,0
-                je ROR_Bl_Reg
-                cmp selectedOp2Type,3
-                je ROR_Bl_Val
-                jmp ROR_invalid
-                ROR_Bl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    ror Bl,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROR_Bl_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    ror Bl,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROR_Bh:
-                cmp selectedOp2Type,0
-                je ROR_Bh_Reg
-                cmp selectedOp2Type,3
-                je ROR_Bh_Val
-                jmp ROR_invalid
-                ROR_Bh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    ror Bh,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROR_Bh_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    ror Bh,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROR_Cx:
-                cmp selectedOp2Type,0
-                je ROR_Cx_Reg
-                cmp selectedOp2Type,3
-                je ROR_Cx_Val
-                jmp ROR_invalid
-                ROR_Cx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Cx,ValRegCx
-                    mov cx,ValRegCX
-                    ror Cx,cl
-                    mov ValRegCx,Cx
-                    jmp Exit
-                ROR_Cx_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov bx,ValRegCx
-                    mov cx,Op2Val
-                    ror bx,cl
-                    mov ValRegCx,bx
-                    jmp Exit
-            ROR_Cl:
-                cmp selectedOp2Type,0
-                je ROR_Cl_Reg
-                cmp selectedOp2Type,3
-                je ROR_Cl_Val
-                jmp ROR_invalid
-                ROR_Cl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    ror Cl,cl
-                    mov ValRegCX,Cx
-                    jmp Exit
-                ROR_Cl_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    ror Bl,cl
-                    mov ValRegCX,Bx
-                    jmp Exit
-            ROR_Ch:
-                cmp selectedOp2Type,0
-                je ROR_Ch_Reg
-                cmp selectedOp2Type,3
-                je ROR_Ch_Val
-                jmp ROR_invalid
-                ROR_Ch_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    ror Ch,cl
-                    mov ValRegCX,Cx
-                    jmp Exit
-                ROR_Ch_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    ror bh,cl
-                    mov ValRegCX,Bx
-                    jmp Exit
-            ROR_Dx:
-                cmp selectedOp2Type,0
-                je ROR_Dx_Reg
-                cmp selectedOp2Type,3
-                je ROR_Dx_Val
-                jmp ROR_invalid
-                ROR_Dx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    ror Dx,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-                ROR_Dx_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    ror Dx,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-            ROR_Dl:
-                cmp selectedOp2Type,0
-                je ROR_Dl_Reg
-                cmp selectedOp2Type,3
-                je ROR_Dl_Val
-                jmp ROR_invalid
-                ROR_Dl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    ror Dl,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-                ROR_Dl_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    ror Dl,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-            ROR_Dh:
-                cmp selectedOp2Type,0
-                je ROR_Dh_Reg
-                cmp selectedOp2Type,3
-                je ROR_Dh_Val
-                jmp ROR_invalid
-                ROR_Dh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    ror Dh,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-                ROR_Dh_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    ror Dh,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-            ROR_Bp:
-                cmp selectedOp2Type,0
-                je ROR_Bp_Reg
-                cmp selectedOp2Type,3
-                je ROR_Bp_Val
-                jmp ROR_invalid
-                ROR_Bp_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Bp,ValRegBP
-                    mov cx,ValRegCX
-                    ror BP,cl
-                    mov ValRegBP,BP
-                    jmp Exit
-                ROR_BP_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov BP,ValRegBP
-                    mov cx,Op2Val
-                    ror BP,cl
-                    mov ValRegBP,BP
-                    jmp Exit
-            ROR_Sp:
-                cmp selectedOp2Type,0
-                je ROR_SP_Reg
-                cmp selectedOp2Type,3
-                je ROR_SP_Val
-                jmp ROR_invalid
-                ROR_SP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov SP,ValRegSP
-                    mov cx,ValRegCX
-                    ror SP,cl
-                    mov ValRegSP,SP
-                    jmp Exit
-                ROR_SP_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov SP,ValRegSP
-                    mov cx,Op2Val
-                    ror SP,cl
-                    mov ValRegSP,SP
-                    jmp Exit
-            ROR_Si:
-                cmp selectedOp2Type,0
-                je ROR_SI_Reg
-                cmp selectedOp2Type,3
-                je ROR_SI_Val
-                jmp ROR_invalid
-                ROR_SI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov SI,ValRegSI
-                    mov cx,ValRegCX
-                    ror SI,cl
-                    mov ValRegSI,SI
-                    jmp Exit
-                ROR_SI_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov SI,ValRegSI
-                    mov cx,Op2Val
-                    ror SI,cl
-                    mov ValRegSI,SI
-                    jmp Exit
-            ROR_Di:
-                cmp selectedOp2Type,0
-                je ROR_DI_Reg
-                cmp selectedOp2Type,3
-                je ROR_DI_Val
-                jmp ROR_invalid
-                ROR_DI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov DI,ValRegDI
-                    mov cx,ValRegCX
-                    ror DI,cl
-                    mov ValRegDI,DI
-                    jmp Exit
-                ROR_DI_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov DI,ValRegDI
-                    mov cx,Op2Val
-                    ror DI,cl
-                    mov ValRegDI,DI
-                    jmp Exit
-        ROR_AddReg:
-            cmp selectedOp1AddReg,3
-            je ROR_AddBx
-            cmp selectedOp1AddReg,15
-            je ROR_AddBp
-            cmp selectedOp1AddReg,17
-            je ROR_AddSi
-            cmp selectedOp1AddReg,18
-            je ROR_AddDi
-            jmp ROR_invalid
-            ROR_AddBx:
-                cmp selectedOp2Type,0
-                je ROR_AddBx_Reg
-                cmp selectedOp2Type,3
-                je ROR_AddBx_Val
-                jmp ROR_invalid
-                ROR_AddBx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja ROR_invalid
-                    mov cx,ValRegCX
-                    ror ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROR_AddBx_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROR_AddBp:
-                cmp selectedOp2Type,0
-                je ROR_AddBP_Reg
-                cmp selectedOp2Type,3
-                je ROR_AddBP_Val
-                jmp ROR_invalid
-                ROR_AddBP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja ROR_invalid
-                    mov cx,ValRegCX
-                    ror ValMem[BP],cl
-                    mov ValRegBP,BP
-                    jmp Exit
-                ROR_AddBP_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[BP],cl
-                    mov ValRegBP,BP
-                    jmp Exit
-            ROR_AddSi:
-                cmp selectedOp2Type,0
-                je ROR_AddSi_Reg
-                cmp selectedOp2Type,3
-                je ROR_AddSi_Val
-                jmp ROR_invalid
-                ROR_AddSi_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja ROR_invalid
-                    mov cx,ValRegCX
-                    ror ValMem[Si],cl
-                    mov ValRegSI,Si
-                    jmp Exit
-                ROR_AddSi_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[Si],cl
-                    mov ValRegSI,Si
-                    jmp Exit
-            ROR_AddDi:
-                cmp selectedOp2Type,0
-                je ROR_AddDI_Reg
-                cmp selectedOp2Type,3
-                je ROR_AddDI_Val
-                jmp ROR_invalid
-                ROR_AddDI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja ROR_invalid
-                    mov cx,ValRegCX
-                    ror ValMem[DI],cl
-                    mov ValRegDI,DI
-                    jmp Exit
-                ROR_AddDI_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[DI],cl
-                    mov ValRegDI,DI
-                    jmp Exit
-        ROR_Mem:
-            cmp selectedOp1Mem,0
-            je ROR_Mem0
-            cmp selectedOp1Mem,1
-            je ROR_Mem1
-            cmp selectedOp1Mem,2
-            je ROR_Mem2
-            cmp selectedOp1Mem,3
-            je ROR_Mem3
-            cmp selectedOp1Mem,4
-            je ROR_Mem4
-            cmp selectedOp1Mem,5
-            je ROR_Mem5
-            cmp selectedOp1Mem,6
-            je ROR_Mem6
-            cmp selectedOp1Mem,7
-            je ROR_Mem7
-            cmp selectedOp1Mem,8
-            je ROR_Mem8
-            cmp selectedOp1Mem,9
-            je ROR_Mem9
-            cmp selectedOp1Mem,10
-            je ROR_Mem10
-            cmp selectedOp1Mem,11
-            je ROR_Mem11
-            cmp selectedOp1Mem,12
-            je ROR_Mem12
-            cmp selectedOp1Mem,13
-            je ROR_Mem13
-            cmp selectedOp1Mem,14
-            je ROR_Mem14
-            cmp selectedOp1Mem,15
-            je ROR_Mem15
-            jmp ROR_invalid
-            ROR_Mem0:
-                cmp selectedOp2Type,0
-                je ROR_Mem0_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem0_Val
-                jmp ROR_invalid
-                ROR_Mem0_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[0],cl
-                    jmp Exit
-                ROR_Mem0_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[0],cl
-                    jmp Exit
-            ROR_Mem1:
-                cmp selectedOp2Type,0
-                je ROR_Mem1_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem1_Val
-                jmp ROR_invalid
-                ROR_Mem1_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[1],cl
-                    jmp Exit
-                ROR_Mem1_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[1],cl
-                    jmp Exit
-            ROR_Mem2:
-                cmp selectedOp2Type,0
-                je ROR_Mem2_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem2_Val
-                jmp ROR_invalid
-                ROR_Mem2_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[2],cl
-                    jmp Exit
-                ROR_Mem2_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[2],cl
-                    jmp Exit
-            ROR_Mem3:
-                cmp selectedOp2Type,0
-                je ROR_Mem3_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem3_Val
-                jmp ROR_invalid
-                ROR_Mem3_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[3],cl
-                    jmp Exit
-                ROR_Mem3_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[3],cl
-                    jmp Exit
-            ROR_Mem4:
-                cmp selectedOp2Type,0
-                je ROR_Mem4_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem4_Val
-                jmp ROR_invalid
-                ROR_Mem4_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[4],cl
-                    jmp Exit
-                ROR_Mem4_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[4],cl
-                    jmp Exit
-            ROR_Mem5:
-                cmp selectedOp2Type,0
-                je ROR_Mem5_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem5_Val
-                jmp ROR_invalid
-                ROR_Mem5_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[5],cl
-                    jmp Exit
-                ROR_Mem5_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[5],cl
-                    jmp Exit
-            ROR_Mem6:
-                cmp selectedOp2Type,0
-                je ROR_Mem6_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem6_Val
-                jmp ROR_invalid
-                ROR_Mem6_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[6],cl
-                    jmp Exit
-                ROR_Mem6_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[6],cl
-                    jmp Exit
-            ROR_Mem7:
-                cmp selectedOp2Type,0
-                je ROR_Mem7_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem7_Val
-                jmp ROR_invalid
-                ROR_Mem7_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[7],cl
-                    jmp Exit
-                ROR_Mem7_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[7],cl
-                    jmp Exit
-            ROR_Mem8:
-                cmp selectedOp2Type,0
-                je ROR_Mem8_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem8_Val
-                jmp ROR_invalid
-                ROR_Mem8_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[8],cl
-                    jmp Exit
-                ROR_Mem8_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[8],cl
-                    jmp Exit
-            ROR_Mem9:
-                cmp selectedOp2Type,0
-                je ROR_Mem9_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem9_Val
-                jmp ROR_invalid
-                ROR_Mem9_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[9],cl
-                    jmp Exit
-                ROR_Mem9_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[9],cl
-                    jmp Exit
-            ROR_Mem10:
-                cmp selectedOp2Type,0
-                je ROR_Mem10_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem10_Val
-                jmp ROR_invalid
-                ROR_Mem10_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[10],cl
-                    jmp Exit
-                ROR_Mem10_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[10],cl
-                    jmp Exit
-            ROR_Mem11:
-                cmp selectedOp2Type,0
-                je ROR_Mem11_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem11_Val
-                jmp ROR_invalid
-                ROR_Mem11_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[11],cl
-                    jmp Exit
-                ROR_Mem11_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[11],cl
-                    jmp Exit
-            ROR_Mem12:
-                cmp selectedOp2Type,0
-                je ROR_Mem12_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem12_Val
-                jmp ROR_invalid
-                ROR_Mem12_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[12],cl
-                    jmp Exit
-                ROR_Mem12_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[12],cl
-                    jmp Exit
-            ROR_Mem13:
-                cmp selectedOp2Type,0
-                je ROR_Mem13_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem13_Val
-                jmp ROR_invalid
-                ROR_Mem13_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[13],cl
-                    jmp Exit
-                ROR_Mem13_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[13],cl
-                    jmp Exit
-            ROR_Mem14:
-                cmp selectedOp2Type,0
-                je ROR_Mem14_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem14_Val
-                jmp ROR_invalid
-                ROR_Mem14_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[14],cl
-                    jmp Exit
-                ROR_Mem14_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[14],cl
-                    jmp Exit
-            ROR_Mem15:
-                cmp selectedOp2Type,0
-                je ROR_Mem15_Reg
-                cmp selectedOp2Type,3
-                je ROR_Mem15_Val
-                jmp ROR_invalid
-                ROR_Mem15_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROR_invalid
-                    mov cx,ValRegCX
-                    Ror ValMem[15],cl
-                    jmp Exit
-                ROR_Mem15_Val:
-                    cmp Op2Val,255d
-                    ja ROR_invalid
-                    mov cx,Op2Val
-                    ror ValMem[15],cl
-                    jmp Exit
-        ROR_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    ROL_Comm:
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type,0
-        je ROL_Reg
-        cmp selectedOp1Type,1
-        je ROL_AddReg
-        cmp selectedOp1Type,2
-        je ROL_Mem
-        cmp selectedOp1Type,3
-        je ROL_invalid
-
-        ROL_Reg:
-            cmp selectedOp1Reg,0
-            je ROL_Ax
-            cmp selectedOp1Reg,1
-            je ROL_Al
-            cmp selectedOp1Reg,2
-            je ROL_Ah
-            cmp selectedOp1Reg,3
-            je ROL_bx
-            cmp selectedOp1Reg,4
-            je ROL_Bl
-            cmp selectedOp1Reg,5
-            je ROL_Bh
-            cmp selectedOp1Reg,6
-            je ROL_Cx
-            cmp selectedOp1Reg,7
-            je ROL_Cl
-            cmp selectedOp1Reg,8
-            je ROL_Ch
-            cmp selectedOp1Reg,9
-            je ROL_Dx
-            cmp selectedOp1Reg,10
-            je ROL_Dl
-            cmp selectedOp1Reg,11
-            je ROL_Dh
-            cmp selectedOp1Reg,15
-            je ROL_Bp
-            cmp selectedOp1Reg,16
-            je ROL_Sp
-            cmp selectedOp1Reg,17
-            je ROL_Si
-            cmp selectedOp1Reg,18
-            je ROL_Di
-            jmp ROL_invalid
-            ROL_Ax:
-                cmp selectedOp2Type,0
-                je ROL_Ax_Reg
-                cmp selectedOp2Type,3
-                je ROL_Ax_Val
-                jmp ROL_invalid
-                ROL_Ax_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    ROL Ax,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-                ROL_Ax_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    ROL ax,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-            ROL_Al:
-                cmp selectedOp2Type,0
-                je ROL_Al_Reg
-                cmp selectedOp2Type,3
-                je ROL_Al_Val
-                jmp ROL_invalid
-                ROL_Al_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    ROL Al,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-                ROL_Al_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    ROL al,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-            ROL_Ah:
-                cmp selectedOp2Type,0
-                je ROL_Ah_Reg
-                cmp selectedOp2Type,3
-                je ROL_Ah_Val
-                jmp ROL_invalid
-                ROL_Ah_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    ROL Ah,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-                ROL_Ah_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    ROL ah,cl
-                    mov ValRegAX,ax
-                    jmp Exit
-            ROL_Bx:
-                cmp selectedOp2Type,0
-                je ROL_Bx_Reg
-                cmp selectedOp2Type,3
-                je ROL_Bx_Val
-                jmp ROL_invalid
-                ROL_Bx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    ROL Bx,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROL_Bx_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    ROL Bx,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROL_Bl:
-                cmp selectedOp2Type,0
-                je ROL_Bl_Reg
-                cmp selectedOp2Type,3
-                je ROL_Bl_Val
-                jmp ROL_invalid
-                ROL_Bl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    ROL Bl,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROL_Bl_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    ROL Bl,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROL_Bh:
-                cmp selectedOp2Type,0
-                je ROL_Bh_Reg
-                cmp selectedOp2Type,3
-                je ROL_Bh_Val
-                jmp ROL_invalid
-                ROL_Bh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    ROL Bh,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROL_Bh_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    ROL Bh,cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROL_Cx:
-                cmp selectedOp2Type,0
-                je ROL_Cx_Reg
-                cmp selectedOp2Type,3
-                je ROL_Cx_Val
-                jmp ROL_invalid
-                ROL_Cx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Cx,ValRegCx
-                    mov cx,ValRegCX
-                    ROL Cx,cl
-                    mov ValRegCx,Cx
-                    jmp Exit
-                ROL_Cx_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov bx,ValRegCx
-                    mov cx,Op2Val
-                    ROL bx,cl
-                    mov ValRegCx,bx
-                    jmp Exit
-            ROL_Cl:
-                cmp selectedOp2Type,0
-                je ROL_Cl_Reg
-                cmp selectedOp2Type,3
-                je ROL_Cl_Val
-                jmp ROL_invalid
-                ROL_Cl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL Cl,cl
-                    mov ValRegCX,Cx
-                    jmp Exit
-                ROL_Cl_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    ROL Bl,cl
-                    mov ValRegCX,Bx
-                    jmp Exit
-            ROL_Ch:
-                cmp selectedOp2Type,0
-                je ROL_Ch_Reg
-                cmp selectedOp2Type,3
-                je ROL_Ch_Val
-                jmp ROL_invalid
-                ROL_Ch_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL Ch,cl
-                    mov ValRegCX,Cx
-                    jmp Exit
-                ROL_Ch_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    ROL bh,cl
-                    mov ValRegCX,Bx
-                    jmp Exit
-            ROL_Dx:
-                cmp selectedOp2Type,0
-                je ROL_Dx_Reg
-                cmp selectedOp2Type,3
-                je ROL_Dx_Val
-                jmp ROL_invalid
-                ROL_Dx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    ROL Dx,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-                ROL_Dx_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    ROL Dx,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-            ROL_Dl:
-                cmp selectedOp2Type,0
-                je ROL_Dl_Reg
-                cmp selectedOp2Type,3
-                je ROL_Dl_Val
-                jmp ROL_invalid
-                ROL_Dl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    ROL Dl,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-                ROL_Dl_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    ROL Dl,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-            ROL_Dh:
-                cmp selectedOp2Type,0
-                je ROL_Dh_Reg
-                cmp selectedOp2Type,3
-                je ROL_Dh_Val
-                jmp ROL_invalid
-                ROL_Dh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    ROL Dh,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-                ROL_Dh_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    ROL Dh,cl
-                    mov ValRegDX,Dx
-                    jmp Exit
-            ROL_Bp:
-                cmp selectedOp2Type,0
-                je ROL_Bp_Reg
-                cmp selectedOp2Type,3
-                je ROL_Bp_Val
-                jmp ROL_invalid
-                ROL_Bp_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Bp,ValRegBP
-                    mov cx,ValRegCX
-                    ROL BP,cl
-                    mov ValRegBP,BP
-                    jmp Exit
-                ROL_BP_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov BP,ValRegBP
-                    mov cx,Op2Val
-                    ROL BP,cl
-                    mov ValRegBP,BP
-                    jmp Exit
-            ROL_Sp:
-                cmp selectedOp2Type,0
-                je ROL_SP_Reg
-                cmp selectedOp2Type,3
-                je ROL_SP_Val
-                jmp ROL_invalid
-                ROL_SP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov SP,ValRegSP
-                    mov cx,ValRegCX
-                    ROL SP,cl
-                    mov ValRegSP,SP
-                    jmp Exit
-                ROL_SP_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov SP,ValRegSP
-                    mov cx,Op2Val
-                    ROL SP,cl
-                    mov ValRegSP,SP
-                    jmp Exit
-            ROL_Si:
-                cmp selectedOp2Type,0
-                je ROL_SI_Reg
-                cmp selectedOp2Type,3
-                je ROL_SI_Val
-                jmp ROL_invalid
-                ROL_SI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov SI,ValRegSI
-                    mov cx,ValRegCX
-                    ROL SI,cl
-                    mov ValRegSI,SI
-                    jmp Exit
-                ROL_SI_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov SI,ValRegSI
-                    mov cx,Op2Val
-                    ROL SI,cl
-                    mov ValRegSI,SI
-                    jmp Exit
-            ROL_Di:
-                cmp selectedOp2Type,0
-                je ROL_DI_Reg
-                cmp selectedOp2Type,3
-                je ROL_DI_Val
-                jmp ROL_invalid
-                ROL_DI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov DI,ValRegDI
-                    mov cx,ValRegCX
-                    ROL DI,cl
-                    mov ValRegDI,DI
-                    jmp Exit
-                ROL_DI_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov DI,ValRegDI
-                    mov cx,Op2Val
-                    ROL DI,cl
-                    mov ValRegDI,DI
-                    jmp Exit
-        ROL_AddReg:
-            cmp selectedOp1AddReg,3
-            je ROL_AddBx
-            cmp selectedOp1AddReg,15
-            je ROL_AddBp
-            cmp selectedOp1AddReg,17
-            je ROL_AddSi
-            cmp selectedOp1AddReg,18
-            je ROL_AddDi
-            jmp ROL_invalid
-            ROL_AddBx:
-                cmp selectedOp2Type,0
-                je ROL_AddBx_Reg
-                cmp selectedOp2Type,3
-                je ROL_AddBx_Val
-                jmp ROL_invalid
-                ROL_AddBx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-                ROL_AddBx_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    jmp Exit
-            ROL_AddBp:
-                cmp selectedOp2Type,0
-                je ROL_AddBP_Reg
-                cmp selectedOp2Type,3
-                je ROL_AddBP_Val
-                jmp ROL_invalid
-                ROL_AddBP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[BP],cl
-                    mov ValRegBP,BP
-                    jmp Exit
-                ROL_AddBP_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[BP],cl
-                    mov ValRegBP,BP
-                    jmp Exit
-            ROL_AddSi:
-                cmp selectedOp2Type,0
-                je ROL_AddSi_Reg
-                cmp selectedOp2Type,3
-                je ROL_AddSi_Val
-                jmp ROL_invalid
-                ROL_AddSi_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[Si],cl
-                    mov ValRegSI,Si
-                    jmp Exit
-                ROL_AddSi_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[Si],cl
-                    mov ValRegSI,Si
-                    jmp Exit
-            ROL_AddDi:
-                cmp selectedOp2Type,0
-                je ROL_AddDI_Reg
-                cmp selectedOp2Type,3
-                je ROL_AddDI_Val
-                jmp ROL_invalid
-                ROL_AddDI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[DI],cl
-                    mov ValRegDI,DI
-                    jmp Exit
-                ROL_AddDI_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[DI],cl
-                    mov ValRegDI,DI
-                    jmp Exit
-        ROL_Mem:
-            cmp selectedOp1Mem,0
-            je ROL_Mem0
-            cmp selectedOp1Mem,1
-            je ROL_Mem1
-            cmp selectedOp1Mem,2
-            je ROL_Mem2
-            cmp selectedOp1Mem,3
-            je ROL_Mem3
-            cmp selectedOp1Mem,4
-            je ROL_Mem4
-            cmp selectedOp1Mem,5
-            je ROL_Mem5
-            cmp selectedOp1Mem,6
-            je ROL_Mem6
-            cmp selectedOp1Mem,7
-            je ROL_Mem7
-            cmp selectedOp1Mem,8
-            je ROL_Mem8
-            cmp selectedOp1Mem,9
-            je ROL_Mem9
-            cmp selectedOp1Mem,10
-            je ROL_Mem10
-            cmp selectedOp1Mem,11
-            je ROL_Mem11
-            cmp selectedOp1Mem,12
-            je ROL_Mem12
-            cmp selectedOp1Mem,13
-            je ROL_Mem13
-            cmp selectedOp1Mem,14
-            je ROL_Mem14
-            cmp selectedOp1Mem,15
-            je ROL_Mem15
-            jmp ROL_invalid
-            ROL_Mem0:
-                cmp selectedOp2Type,0
-                je ROL_Mem0_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem0_Val
-                jmp ROL_invalid
-                ROL_Mem0_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[0],cl
-                    jmp Exit
-                ROL_Mem0_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[0],cl
-                    jmp Exit
-            ROL_Mem1:
-                cmp selectedOp2Type,0
-                je ROL_Mem1_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem1_Val
-                jmp ROL_invalid
-                ROL_Mem1_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[1],cl
-                    jmp Exit
-                ROL_Mem1_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[1],cl
-                    jmp Exit
-            ROL_Mem2:
-                cmp selectedOp2Type,0
-                je ROL_Mem2_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem2_Val
-                jmp ROL_invalid
-                ROL_Mem2_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[2],cl
-                    jmp Exit
-                ROL_Mem2_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[2],cl
-                    jmp Exit
-            ROL_Mem3:
-                cmp selectedOp2Type,0
-                je ROL_Mem3_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem3_Val
-                jmp ROL_invalid
-                ROL_Mem3_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[3],cl
-                    jmp Exit
-                ROL_Mem3_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[3],cl
-                    jmp Exit
-            ROL_Mem4:
-                cmp selectedOp2Type,0
-                je ROL_Mem4_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem4_Val
-                jmp ROL_invalid
-                ROL_Mem4_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[4],cl
-                    jmp Exit
-                ROL_Mem4_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[4],cl
-                    jmp Exit
-            ROL_Mem5:
-                cmp selectedOp2Type,0
-                je ROL_Mem5_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem5_Val
-                jmp ROL_invalid
-                ROL_Mem5_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[5],cl
-                    jmp Exit
-                ROL_Mem5_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[5],cl
-                    jmp Exit
-            ROL_Mem6:
-                cmp selectedOp2Type,0
-                je ROL_Mem6_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem6_Val
-                jmp ROL_invalid
-                ROL_Mem6_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[6],cl
-                    jmp Exit
-                ROL_Mem6_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[6],cl
-                    jmp Exit
-            ROL_Mem7:
-                cmp selectedOp2Type,0
-                je ROL_Mem7_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem7_Val
-                jmp ROL_invalid
-                ROL_Mem7_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[7],cl
-                    jmp Exit
-                ROL_Mem7_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[7],cl
-                    jmp Exit
-            ROL_Mem8:
-                cmp selectedOp2Type,0
-                je ROL_Mem8_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem8_Val
-                jmp ROL_invalid
-                ROL_Mem8_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[8],cl
-                    jmp Exit
-                ROL_Mem8_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[8],cl
-                    jmp Exit
-            ROL_Mem9:
-                cmp selectedOp2Type,0
-                je ROL_Mem9_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem9_Val
-                jmp ROL_invalid
-                ROL_Mem9_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[9],cl
-                    jmp Exit
-                ROL_Mem9_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[9],cl
-                    jmp Exit
-            ROL_Mem10:
-                cmp selectedOp2Type,0
-                je ROL_Mem10_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem10_Val
-                jmp ROL_invalid
-                ROL_Mem10_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[10],cl
-                    jmp Exit
-                ROL_Mem10_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[10],cl
-                    jmp Exit
-            ROL_Mem11:
-                cmp selectedOp2Type,0
-                je ROL_Mem11_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem11_Val
-                jmp ROL_invalid
-                ROL_Mem11_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[11],cl
-                    jmp Exit
-                ROL_Mem11_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[11],cl
-                    jmp Exit
-            ROL_Mem12:
-                cmp selectedOp2Type,0
-                je ROL_Mem12_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem12_Val
-                jmp ROL_invalid
-                ROL_Mem12_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[12],cl
-                    jmp Exit
-                ROL_Mem12_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[12],cl
-                    jmp Exit
-            ROL_Mem13:
-                cmp selectedOp2Type,0
-                je ROL_Mem13_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem13_Val
-                jmp ROL_invalid
-                ROL_Mem13_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[13],cl
-                    jmp Exit
-                ROL_Mem13_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[13],cl
-                    jmp Exit
-            ROL_Mem14:
-                cmp selectedOp2Type,0
-                je ROL_Mem14_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem14_Val
-                jmp ROL_invalid
-                ROL_Mem14_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[14],cl
-                    jmp Exit
-                ROL_Mem14_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[14],cl
-                    jmp Exit
-            ROL_Mem15:
-                cmp selectedOp2Type,0
-                je ROL_Mem15_Reg
-                cmp selectedOp2Type,3
-                je ROL_Mem15_Val
-                jmp ROL_invalid
-                ROL_Mem15_Reg:
-                    cmp selectedOp2Reg,7
-                    jne ROL_invalid
-                    mov cx,ValRegCX
-                    ROL ValMem[15],cl
-                    jmp Exit
-                ROL_Mem15_Val:
-                    cmp Op2Val,255d
-                    ja ROL_invalid
-                    mov cx,Op2Val
-                    ROL ValMem[15],cl
-                    jmp Exit
-        ROL_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    RCR_Comm:
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type,0
-        je RCR_Reg
-        cmp selectedOp1Type,1
-        je RCR_AddReg
-        cmp selectedOp1Type,2
-        je RCR_Mem
-        cmp selectedOp1Type,3
-        je RCR_invalid
-
-        RCR_Reg:
-            cmp selectedOp1Reg,0
-            je RCR_Ax
-            cmp selectedOp1Reg,1
-            je RCR_Al
-            cmp selectedOp1Reg,2
-            je RCR_Ah
-            cmp selectedOp1Reg,3
-            je RCR_bx
-            cmp selectedOp1Reg,4
-            je RCR_Bl
-            cmp selectedOp1Reg,5
-            je RCR_Bh
-            cmp selectedOp1Reg,6
-            je RCR_Cx
-            cmp selectedOp1Reg,7
-            je RCR_Cl
-            cmp selectedOp1Reg,8
-            je RCR_Ch
-            cmp selectedOp1Reg,9
-            je RCR_Dx
-            cmp selectedOp1Reg,10
-            je RCR_Dl
-            cmp selectedOp1Reg,11
-            je RCR_Dh
-            cmp selectedOp1Reg,15
-            je RCR_Bp
-            cmp selectedOp1Reg,16
-            je RCR_Sp
-            cmp selectedOp1Reg,17
-            je RCR_Si
-            cmp selectedOp1Reg,18
-            je RCR_Di
-            jmp RCR_invalid
-            RCR_Ax:
-                cmp selectedOp2Type,0
-                je RCR_Ax_Reg
-                cmp selectedOp2Type,3
-                je RCR_Ax_Val
-                jmp RCR_invalid
-                RCR_Ax_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Ax_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Al:
-                cmp selectedOp2Type,0
-                je RCR_Al_Reg
-                cmp selectedOp2Type,3
-                je RCR_Al_Val
-                jmp RCR_invalid
-                RCR_Al_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Al_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Ah:
-                cmp selectedOp2Type,0
-                je RCR_Ah_Reg
-                cmp selectedOp2Type,3
-                je RCR_Ah_Val
-                jmp RCR_invalid
-                RCR_Ah_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Ah_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Bx:
-                cmp selectedOp2Type,0
-                je RCR_Bx_Reg
-                cmp selectedOp2Type,3
-                je RCR_Bx_Val
-                jmp RCR_invalid
-                RCR_Bx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Bx_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Bl:
-                cmp selectedOp2Type,0
-                je RCR_Bl_Reg
-                cmp selectedOp2Type,3
-                je RCR_Bl_Val
-                jmp RCR_invalid
-                RCR_Bl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Bl_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Bh:
-                cmp selectedOp2Type,0
-                je RCR_Bh_Reg
-                cmp selectedOp2Type,3
-                je RCR_Bh_Val
-                jmp RCR_invalid
-                RCR_Bh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Bh_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Cx:
-                cmp selectedOp2Type,0
-                je RCR_Cx_Reg
-                cmp selectedOp2Type,3
-                je RCR_Cx_Val
-                jmp RCR_invalid
-                RCR_Cx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Cx,ValRegCx
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Cx,cl
-                    mov ValRegCx,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Cx_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov bx,ValRegCx
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR bx,cl
-                    mov ValRegCx,bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Cl:
-                cmp selectedOp2Type,0
-                je RCR_Cl_Reg
-                cmp selectedOp2Type,3
-                je RCR_Cl_Val
-                jmp RCR_invalid
-                RCR_Cl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Cl,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Cl_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR Bl,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Ch:
-                cmp selectedOp2Type,0
-                je RCR_Ch_Reg
-                cmp selectedOp2Type,3
-                je RCR_Ch_Val
-                jmp RCR_invalid
-                RCR_Ch_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Ch,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Ch_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR bh,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Dx:
-                cmp selectedOp2Type,0
-                je RCR_Dx_Reg
-                cmp selectedOp2Type,3
-                je RCR_Dx_Val
-                jmp RCR_invalid
-                RCR_Dx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Dx_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Dl:
-                cmp selectedOp2Type,0
-                je RCR_Dl_Reg
-                cmp selectedOp2Type,3
-                je RCR_Dl_Val
-                jmp RCR_invalid
-                RCR_Dl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Dl_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Dh:
-                cmp selectedOp2Type,0
-                je RCR_Dh_Reg
-                cmp selectedOp2Type,3
-                je RCR_Dh_Val
-                jmp RCR_invalid
-                RCR_Dh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Dh_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Bp:
-                cmp selectedOp2Type,0
-                je RCR_Bp_Reg
-                cmp selectedOp2Type,3
-                je RCR_Bp_Val
-                jmp RCR_invalid
-                RCR_Bp_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Bp,ValRegBP
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_BP_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov BP,ValRegBP
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Sp:
-                cmp selectedOp2Type,0
-                je RCR_SP_Reg
-                cmp selectedOp2Type,3
-                je RCR_SP_Val
-                jmp RCR_invalid
-                RCR_SP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov SP,ValRegSP
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_SP_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov SP,ValRegSP
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Si:
-                cmp selectedOp2Type,0
-                je RCR_SI_Reg
-                cmp selectedOp2Type,3
-                je RCR_SI_Val
-                jmp RCR_invalid
-                RCR_SI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov SI,ValRegSI
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_SI_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov SI,ValRegSI
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Di:
-                cmp selectedOp2Type,0
-                je RCR_DI_Reg
-                cmp selectedOp2Type,3
-                je RCR_DI_Val
-                jmp RCR_invalid
-                RCR_DI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov DI,ValRegDI
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_DI_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov DI,ValRegDI
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        RCR_AddReg:
-            cmp selectedOp1AddReg,3
-            je RCR_AddBx
-            cmp selectedOp1AddReg,15
-            je RCR_AddBp
-            cmp selectedOp1AddReg,17
-            je RCR_AddSi
-            cmp selectedOp1AddReg,18
-            je RCR_AddDi
-            jmp RCR_invalid
-            RCR_AddBx:
-                cmp selectedOp2Type,0
-                je RCR_AddBx_Reg
-                cmp selectedOp2Type,3
-                je RCR_AddBx_Val
-                jmp RCR_invalid
-                RCR_AddBx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_AddBx_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_AddBp:
-                cmp selectedOp2Type,0
-                je RCR_AddBP_Reg
-                cmp selectedOp2Type,3
-                je RCR_AddBP_Val
-                jmp RCR_invalid
-                RCR_AddBP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_AddBP_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_AddSi:
-                cmp selectedOp2Type,0
-                je RCR_AddSi_Reg
-                cmp selectedOp2Type,3
-                je RCR_AddSi_Val
-                jmp RCR_invalid
-                RCR_AddSi_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_AddSi_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_AddDi:
-                cmp selectedOp2Type,0
-                je RCR_AddDI_Reg
-                cmp selectedOp2Type,3
-                je RCR_AddDI_Val
-                jmp RCR_invalid
-                RCR_AddDI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_AddDI_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        RCR_Mem:
-            cmp selectedOp1Mem,0
-            je RCR_Mem0
-            cmp selectedOp1Mem,1
-            je RCR_Mem1
-            cmp selectedOp1Mem,2
-            je RCR_Mem2
-            cmp selectedOp1Mem,3
-            je RCR_Mem3
-            cmp selectedOp1Mem,4
-            je RCR_Mem4
-            cmp selectedOp1Mem,5
-            je RCR_Mem5
-            cmp selectedOp1Mem,6
-            je RCR_Mem6
-            cmp selectedOp1Mem,7
-            je RCR_Mem7
-            cmp selectedOp1Mem,8
-            je RCR_Mem8
-            cmp selectedOp1Mem,9
-            je RCR_Mem9
-            cmp selectedOp1Mem,10
-            je RCR_Mem10
-            cmp selectedOp1Mem,11
-            je RCR_Mem11
-            cmp selectedOp1Mem,12
-            je RCR_Mem12
-            cmp selectedOp1Mem,13
-            je RCR_Mem13
-            cmp selectedOp1Mem,14
-            je RCR_Mem14
-            cmp selectedOp1Mem,15
-            je RCR_Mem15
-            jmp RCR_invalid
-            RCR_Mem0:
-                cmp selectedOp2Type,0
-                je RCR_Mem0_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem0_Val
-                jmp RCR_invalid
-                RCR_Mem0_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem0_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem1:
-                cmp selectedOp2Type,0
-                je RCR_Mem1_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem1_Val
-                jmp RCR_invalid
-                RCR_Mem1_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem1_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem2:
-                cmp selectedOp2Type,0
-                je RCR_Mem2_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem2_Val
-                jmp RCR_invalid
-                RCR_Mem2_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem2_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem3:
-                cmp selectedOp2Type,0
-                je RCR_Mem3_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem3_Val
-                jmp RCR_invalid
-                RCR_Mem3_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem3_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem4:
-                cmp selectedOp2Type,0
-                je RCR_Mem4_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem4_Val
-                jmp RCR_invalid
-                RCR_Mem4_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem4_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem5:
-                cmp selectedOp2Type,0
-                je RCR_Mem5_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem5_Val
-                jmp RCR_invalid
-                RCR_Mem5_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem5_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem6:
-                cmp selectedOp2Type,0
-                je RCR_Mem6_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem6_Val
-                jmp RCR_invalid
-                RCR_Mem6_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem6_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem7:
-                cmp selectedOp2Type,0
-                je RCR_Mem7_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem7_Val
-                jmp RCR_invalid
-                RCR_Mem7_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem7_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem8:
-                cmp selectedOp2Type,0
-                je RCR_Mem8_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem8_Val
-                jmp RCR_invalid
-                RCR_Mem8_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem8_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem9:
-                cmp selectedOp2Type,0
-                je RCR_Mem9_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem9_Val
-                jmp RCR_invalid
-                RCR_Mem9_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem9_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem10:
-                cmp selectedOp2Type,0
-                je RCR_Mem10_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem10_Val
-                jmp RCR_invalid
-                RCR_Mem10_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem10_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem11:
-                cmp selectedOp2Type,0
-                je RCR_Mem11_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem11_Val
-                jmp RCR_invalid
-                RCR_Mem11_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem11_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem12:
-                cmp selectedOp2Type,0
-                je RCR_Mem12_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem12_Val
-                jmp RCR_invalid
-                RCR_Mem12_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem12_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem13:
-                cmp selectedOp2Type,0
-                je RCR_Mem13_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem13_Val
-                jmp RCR_invalid
-                RCR_Mem13_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem13_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem14:
-                cmp selectedOp2Type,0
-                je RCR_Mem14_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem14_Val
-                jmp RCR_invalid
-                RCR_Mem14_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem14_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCR_Mem15:
-                cmp selectedOp2Type,0
-                je RCR_Mem15_Reg
-                cmp selectedOp2Type,3
-                je RCR_Mem15_Val
-                jmp RCR_invalid
-                RCR_Mem15_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCR_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCR ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCR_Mem15_Val:
-                    cmp Op2Val,255d
-                    ja RCR_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCR ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-        RCR_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    RCL_Comm:
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type,0
-        je RCL_Reg
-        cmp selectedOp1Type,1
-        je RCL_AddReg
-        cmp selectedOp1Type,2
-        je RCL_Mem
-        cmp selectedOp1Type,3
-        je RCL_invalid
-
-        RCL_Reg:
-            cmp selectedOp1Reg,0
-            je RCL_Ax
-            cmp selectedOp1Reg,1
-            je RCL_Al
-            cmp selectedOp1Reg,2
-            je RCL_Ah
-            cmp selectedOp1Reg,3
-            je RCL_bx
-            cmp selectedOp1Reg,4
-            je RCL_Bl
-            cmp selectedOp1Reg,5
-            je RCL_Bh
-            cmp selectedOp1Reg,6
-            je RCL_Cx
-            cmp selectedOp1Reg,7
-            je RCL_Cl
-            cmp selectedOp1Reg,8
-            je RCL_Ch
-            cmp selectedOp1Reg,9
-            je RCL_Dx
-            cmp selectedOp1Reg,10
-            je RCL_Dl
-            cmp selectedOp1Reg,11
-            je RCL_Dh
-            cmp selectedOp1Reg,15
-            je RCL_Bp
-            cmp selectedOp1Reg,16
-            je RCL_Sp
-            cmp selectedOp1Reg,17
-            je RCL_Si
-            cmp selectedOp1Reg,18
-            je RCL_Di
-            jmp RCL_invalid
-            RCL_Ax:
-                cmp selectedOp2Type,0
-                je RCL_Ax_Reg
-                cmp selectedOp2Type,3
-                je RCL_Ax_Val
-                jmp RCL_invalid
-                RCL_Ax_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Ax_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Al:
-                cmp selectedOp2Type,0
-                je RCL_Al_Reg
-                cmp selectedOp2Type,3
-                je RCL_Al_Val
-                jmp RCL_invalid
-                RCL_Al_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Al_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Ah:
-                cmp selectedOp2Type,0
-                je RCL_Ah_Reg
-                cmp selectedOp2Type,3
-                je RCL_Ah_Val
-                jmp RCL_invalid
-                RCL_Ah_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Ah_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Bx:
-                cmp selectedOp2Type,0
-                je RCL_Bx_Reg
-                cmp selectedOp2Type,3
-                je RCL_Bx_Val
-                jmp RCL_invalid
-                RCL_Bx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Bx_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Bl:
-                cmp selectedOp2Type,0
-                je RCL_Bl_Reg
-                cmp selectedOp2Type,3
-                je RCL_Bl_Val
-                jmp RCL_invalid
-                RCL_Bl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Bl_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Bh:
-                cmp selectedOp2Type,0
-                je RCL_Bh_Reg
-                cmp selectedOp2Type,3
-                je RCL_Bh_Val
-                jmp RCL_invalid
-                RCL_Bh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Bh_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Cx:
-                cmp selectedOp2Type,0
-                je RCL_Cx_Reg
-                cmp selectedOp2Type,3
-                je RCL_Cx_Val
-                jmp RCL_invalid
-                RCL_Cx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Cx,ValRegCx
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Cx,cl
-                    mov ValRegCx,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Cx_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov bx,ValRegCx
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL bx,cl
-                    mov ValRegCx,bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Cl:
-                cmp selectedOp2Type,0
-                je RCL_Cl_Reg
-                cmp selectedOp2Type,3
-                je RCL_Cl_Val
-                jmp RCL_invalid
-                RCL_Cl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Cl,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Cl_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL Bl,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Ch:
-                cmp selectedOp2Type,0
-                je RCL_Ch_Reg
-                cmp selectedOp2Type,3
-                je RCL_Ch_Val
-                jmp RCL_invalid
-                RCL_Ch_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Ch,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Ch_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL bh,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Dx:
-                cmp selectedOp2Type,0
-                je RCL_Dx_Reg
-                cmp selectedOp2Type,3
-                je RCL_Dx_Val
-                jmp RCL_invalid
-                RCL_Dx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Dx_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Dl:
-                cmp selectedOp2Type,0
-                je RCL_Dl_Reg
-                cmp selectedOp2Type,3
-                je RCL_Dl_Val
-                jmp RCL_invalid
-                RCL_Dl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Dl_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Dh:
-                cmp selectedOp2Type,0
-                je RCL_Dh_Reg
-                cmp selectedOp2Type,3
-                je RCL_Dh_Val
-                jmp RCL_invalid
-                RCL_Dh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Dh_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Bp:
-                cmp selectedOp2Type,0
-                je RCL_Bp_Reg
-                cmp selectedOp2Type,3
-                je RCL_Bp_Val
-                jmp RCL_invalid
-                RCL_Bp_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Bp,ValRegBP
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_BP_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov BP,ValRegBP
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Sp:
-                cmp selectedOp2Type,0
-                je RCL_SP_Reg
-                cmp selectedOp2Type,3
-                je RCL_SP_Val
-                jmp RCL_invalid
-                RCL_SP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov SP,ValRegSP
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_SP_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov SP,ValRegSP
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Si:
-                cmp selectedOp2Type,0
-                je RCL_SI_Reg
-                cmp selectedOp2Type,3
-                je RCL_SI_Val
-                jmp RCL_invalid
-                RCL_SI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov SI,ValRegSI
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_SI_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov SI,ValRegSI
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Di:
-                cmp selectedOp2Type,0
-                je RCL_DI_Reg
-                cmp selectedOp2Type,3
-                je RCL_DI_Val
-                jmp RCL_invalid
-                RCL_DI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov DI,ValRegDI
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_DI_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov DI,ValRegDI
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        RCL_AddReg:
-            cmp selectedOp1AddReg,3
-            je RCL_AddBx
-            cmp selectedOp1AddReg,15
-            je RCL_AddBp
-            cmp selectedOp1AddReg,17
-            je RCL_AddSi
-            cmp selectedOp1AddReg,18
-            je RCL_AddDi
-            jmp RCL_invalid
-            RCL_AddBx:
-                cmp selectedOp2Type,0
-                je RCL_AddBx_Reg
-                cmp selectedOp2Type,3
-                je RCL_AddBx_Val
-                jmp RCL_invalid
-                RCL_AddBx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_AddBx_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_AddBp:
-                cmp selectedOp2Type,0
-                je RCL_AddBP_Reg
-                cmp selectedOp2Type,3
-                je RCL_AddBP_Val
-                jmp RCL_invalid
-                RCL_AddBP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_AddBP_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_AddSi:
-                cmp selectedOp2Type,0
-                je RCL_AddSi_Reg
-                cmp selectedOp2Type,3
-                je RCL_AddSi_Val
-                jmp RCL_invalid
-                RCL_AddSi_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_AddSi_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_AddDi:
-                cmp selectedOp2Type,0
-                je RCL_AddDI_Reg
-                cmp selectedOp2Type,3
-                je RCL_AddDI_Val
-                jmp RCL_invalid
-                RCL_AddDI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_AddDI_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        RCL_Mem:
-            cmp selectedOp1Mem,0
-            je RCL_Mem0
-            cmp selectedOp1Mem,1
-            je RCL_Mem1
-            cmp selectedOp1Mem,2
-            je RCL_Mem2
-            cmp selectedOp1Mem,3
-            je RCL_Mem3
-            cmp selectedOp1Mem,4
-            je RCL_Mem4
-            cmp selectedOp1Mem,5
-            je RCL_Mem5
-            cmp selectedOp1Mem,6
-            je RCL_Mem6
-            cmp selectedOp1Mem,7
-            je RCL_Mem7
-            cmp selectedOp1Mem,8
-            je RCL_Mem8
-            cmp selectedOp1Mem,9
-            je RCL_Mem9
-            cmp selectedOp1Mem,10
-            je RCL_Mem10
-            cmp selectedOp1Mem,11
-            je RCL_Mem11
-            cmp selectedOp1Mem,12
-            je RCL_Mem12
-            cmp selectedOp1Mem,13
-            je RCL_Mem13
-            cmp selectedOp1Mem,14
-            je RCL_Mem14
-            cmp selectedOp1Mem,15
-            je RCL_Mem15
-            jmp RCL_invalid
-            RCL_Mem0:
-                cmp selectedOp2Type,0
-                je RCL_Mem0_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem0_Val
-                jmp RCL_invalid
-                RCL_Mem0_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem0_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem1:
-                cmp selectedOp2Type,0
-                je RCL_Mem1_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem1_Val
-                jmp RCL_invalid
-                RCL_Mem1_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem1_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem2:
-                cmp selectedOp2Type,0
-                je RCL_Mem2_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem2_Val
-                jmp RCL_invalid
-                RCL_Mem2_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem2_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem3:
-                cmp selectedOp2Type,0
-                je RCL_Mem3_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem3_Val
-                jmp RCL_invalid
-                RCL_Mem3_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem3_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem4:
-                cmp selectedOp2Type,0
-                je RCL_Mem4_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem4_Val
-                jmp RCL_invalid
-                RCL_Mem4_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem4_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem5:
-                cmp selectedOp2Type,0
-                je RCL_Mem5_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem5_Val
-                jmp RCL_invalid
-                RCL_Mem5_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem5_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem6:
-                cmp selectedOp2Type,0
-                je RCL_Mem6_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem6_Val
-                jmp RCL_invalid
-                RCL_Mem6_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem6_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem7:
-                cmp selectedOp2Type,0
-                je RCL_Mem7_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem7_Val
-                jmp RCL_invalid
-                RCL_Mem7_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem7_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem8:
-                cmp selectedOp2Type,0
-                je RCL_Mem8_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem8_Val
-                jmp RCL_invalid
-                RCL_Mem8_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem8_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem9:
-                cmp selectedOp2Type,0
-                je RCL_Mem9_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem9_Val
-                jmp RCL_invalid
-                RCL_Mem9_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem9_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem10:
-                cmp selectedOp2Type,0
-                je RCL_Mem10_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem10_Val
-                jmp RCL_invalid
-                RCL_Mem10_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem10_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem11:
-                cmp selectedOp2Type,0
-                je RCL_Mem11_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem11_Val
-                jmp RCL_invalid
-                RCL_Mem11_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem11_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem12:
-                cmp selectedOp2Type,0
-                je RCL_Mem12_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem12_Val
-                jmp RCL_invalid
-                RCL_Mem12_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem12_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem13:
-                cmp selectedOp2Type,0
-                je RCL_Mem13_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem13_Val
-                jmp RCL_invalid
-                RCL_Mem13_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem13_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem14:
-                cmp selectedOp2Type,0
-                je RCL_Mem14_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem14_Val
-                jmp RCL_invalid
-                RCL_Mem14_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem14_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-            RCL_Mem15:
-                cmp selectedOp2Type,0
-                je RCL_Mem15_Reg
-                cmp selectedOp2Type,3
-                je RCL_Mem15_Val
-                jmp RCL_invalid
-                RCL_Mem15_Reg:
-                    cmp selectedOp2Reg,7
-                    jne RCL_invalid
-                    mov cx,ValRegCX
-                    call GetCarryFlag
-                    RCL ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-                RCL_Mem15_Val:
-                    cmp Op2Val,255d
-                    ja RCL_invalid
-                    mov cx,Op2Val
-                    call GetCarryFlag
-                    RCL ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-        RCL_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    SHL_Comm:
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-        
-        cmp selectedOp1Type,0
-        je SHL_Reg
-        cmp selectedOp1Type,1
-        je SHL_AddReg
-        cmp selectedOp1Type,2
-        je SHL_Mem
-        cmp selectedOp1Type,3
-        je SHL_invalid
-
-        SHL_Reg:
-            cmp selectedOp1Reg,0
-            je SHL_Ax
-            cmp selectedOp1Reg,1
-            je SHL_Al
-            cmp selectedOp1Reg,2
-            je SHL_Ah
-            cmp selectedOp1Reg,3
-            je SHL_bx
-            cmp selectedOp1Reg,4
-            je SHL_Bl
-            cmp selectedOp1Reg,5
-            je SHL_Bh
-            cmp selectedOp1Reg,6
-            je SHL_Cx
-            cmp selectedOp1Reg,7
-            je SHL_Cl
-            cmp selectedOp1Reg,8
-            je SHL_Ch
-            cmp selectedOp1Reg,9
-            je SHL_Dx
-            cmp selectedOp1Reg,10
-            je SHL_Dl
-            cmp selectedOp1Reg,11
-            je SHL_Dh
-            cmp selectedOp1Reg,15
-            je SHL_Bp
-            cmp selectedOp1Reg,16
-            je SHL_Sp
-            cmp selectedOp1Reg,17
-            je SHL_Si
-            cmp selectedOp1Reg,18
-            je SHL_Di
-            jmp SHL_invalid
-            SHL_Ax:
-                cmp selectedOp2Type,0
-                je SHL_Ax_Reg
-                cmp selectedOp2Type,3
-                je SHL_Ax_Val
-                jmp SHL_invalid
-                SHL_Ax_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Ax_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    clc
-                    SHL ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Al:
-                cmp selectedOp2Type,0
-                je SHL_Al_Reg
-                cmp selectedOp2Type,3
-                je SHL_Al_Val
-                jmp SHL_invalid
-                SHL_Al_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Al_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    clc
-                    SHL al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Ah:
-                cmp selectedOp2Type,0
-                je SHL_Ah_Reg
-                cmp selectedOp2Type,3
-                je SHL_Ah_Val
-                jmp SHL_invalid
-                SHL_Ah_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Ah_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    clc
-                    SHL ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Bx:
-                cmp selectedOp2Type,0
-                je SHL_Bx_Reg
-                cmp selectedOp2Type,3
-                je SHL_Bx_Val
-                jmp SHL_invalid
-                SHL_Bx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Bx_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    clc
-                    SHL Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Bl:
-                cmp selectedOp2Type,0
-                je SHL_Bl_Reg
-                cmp selectedOp2Type,3
-                je SHL_Bl_Val
-                jmp SHL_invalid
-                SHL_Bl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Bl_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    clc
-                    SHL Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Bh:
-                cmp selectedOp2Type,0
-                je SHL_Bh_Reg
-                cmp selectedOp2Type,3
-                je SHL_Bh_Val
-                jmp SHL_invalid
-                SHL_Bh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Bh_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    clc
-                    SHL Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Cx:
-                cmp selectedOp2Type,0
-                je SHL_Cx_Reg
-                cmp selectedOp2Type,3
-                je SHL_Cx_Val
-                jmp SHL_invalid
-                SHL_Cx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Cx,ValRegCx
-                    mov cx,ValRegCX
-                    clc
-                    SHL Cx,cl
-                    mov ValRegCx,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Cx_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov bx,ValRegCx
-                    mov cx,Op2Val
-                    clc
-                    SHL bx,cl
-                    mov ValRegCx,bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Cl:
-                cmp selectedOp2Type,0
-                je SHL_Cl_Reg
-                cmp selectedOp2Type,3
-                je SHL_Cl_Val
-                jmp SHL_invalid
-                SHL_Cl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL Cl,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Cl_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    clc
-                    SHL Bl,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Ch:
-                cmp selectedOp2Type,0
-                je SHL_Ch_Reg
-                cmp selectedOp2Type,3
-                je SHL_Ch_Val
-                jmp SHL_invalid
-                SHL_Ch_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL Ch,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Ch_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    clc
-                    SHL bh,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Dx:
-                cmp selectedOp2Type,0
-                je SHL_Dx_Reg
-                cmp selectedOp2Type,3
-                je SHL_Dx_Val
-                jmp SHL_invalid
-                SHL_Dx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Dx_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    clc
-                    SHL Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Dl:
-                cmp selectedOp2Type,0
-                je SHL_Dl_Reg
-                cmp selectedOp2Type,3
-                je SHL_Dl_Val
-                jmp SHL_invalid
-                SHL_Dl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Dl_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    clc
-                    SHL Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Dh:
-                cmp selectedOp2Type,0
-                je SHL_Dh_Reg
-                cmp selectedOp2Type,3
-                je SHL_Dh_Val
-                jmp SHL_invalid
-                SHL_Dh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    clc
-                    SHL Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Dh_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    clc
-                    SHL Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Bp:
-                cmp selectedOp2Type,0
-                je SHL_Bp_Reg
-                cmp selectedOp2Type,3
-                je SHL_Bp_Val
-                jmp SHL_invalid
-                SHL_Bp_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Bp,ValRegBP
-                    mov cx,ValRegCX
-                    clc
-                    SHL BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_BP_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov BP,ValRegBP
-                    mov cx,Op2Val
-                    clc
-                    SHL BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Sp:
-                cmp selectedOp2Type,0
-                je SHL_SP_Reg
-                cmp selectedOp2Type,3
-                je SHL_SP_Val
-                jmp SHL_invalid
-                SHL_SP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov SP,ValRegSP
-                    mov cx,ValRegCX
-                    clc
-                    SHL SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_SP_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov SP,ValRegSP
-                    mov cx,Op2Val
-                    clc
-                    SHL SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Si:
-                cmp selectedOp2Type,0
-                je SHL_SI_Reg
-                cmp selectedOp2Type,3
-                je SHL_SI_Val
-                jmp SHL_invalid
-                SHL_SI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov SI,ValRegSI
-                    mov cx,ValRegCX
-                    clc
-                    SHL SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_SI_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov SI,ValRegSI
-                    mov cx,Op2Val
-                    clc
-                    SHL SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Di:
-                cmp selectedOp2Type,0
-                je SHL_DI_Reg
-                cmp selectedOp2Type,3
-                je SHL_DI_Val
-                jmp SHL_invalid
-                SHL_DI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov DI,ValRegDI
-                    mov cx,ValRegCX
-                    clc
-                    SHL DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_DI_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov DI,ValRegDI
-                    mov cx,Op2Val
-                    clc
-                    SHL DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        SHL_AddReg:
-            cmp selectedOp1AddReg,3
-            je SHL_AddBx
-            cmp selectedOp1AddReg,15
-            je SHL_AddBp
-            cmp selectedOp1AddReg,17
-            je SHL_AddSi
-            cmp selectedOp1AddReg,18
-            je SHL_AddDi
-            jmp SHL_invalid
-            SHL_AddBx:
-                cmp selectedOp2Type,0
-                je SHL_AddBx_Reg
-                cmp selectedOp2Type,3
-                je SHL_AddBx_Val
-                jmp SHL_invalid
-                SHL_AddBx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_AddBx_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_AddBp:
-                cmp selectedOp2Type,0
-                je SHL_AddBP_Reg
-                cmp selectedOp2Type,3
-                je SHL_AddBP_Val
-                jmp SHL_invalid
-                SHL_AddBP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_AddBP_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_AddSi:
-                cmp selectedOp2Type,0
-                je SHL_AddSi_Reg
-                cmp selectedOp2Type,3
-                je SHL_AddSi_Val
-                jmp SHL_invalid
-                SHL_AddSi_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_AddSi_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_AddDi:
-                cmp selectedOp2Type,0
-                je SHL_AddDI_Reg
-                cmp selectedOp2Type,3
-                je SHL_AddDI_Val
-                jmp SHL_invalid
-                SHL_AddDI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_AddDI_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        SHL_Mem:
-            cmp selectedOp1Mem,0
-            je SHL_Mem0
-            cmp selectedOp1Mem,1
-            je SHL_Mem1
-            cmp selectedOp1Mem,2
-            je SHL_Mem2
-            cmp selectedOp1Mem,3
-            je SHL_Mem3
-            cmp selectedOp1Mem,4
-            je SHL_Mem4
-            cmp selectedOp1Mem,5
-            je SHL_Mem5
-            cmp selectedOp1Mem,6
-            je SHL_Mem6
-            cmp selectedOp1Mem,7
-            je SHL_Mem7
-            cmp selectedOp1Mem,8
-            je SHL_Mem8
-            cmp selectedOp1Mem,9
-            je SHL_Mem9
-            cmp selectedOp1Mem,10
-            je SHL_Mem10
-            cmp selectedOp1Mem,11
-            je SHL_Mem11
-            cmp selectedOp1Mem,12
-            je SHL_Mem12
-            cmp selectedOp1Mem,13
-            je SHL_Mem13
-            cmp selectedOp1Mem,14
-            je SHL_Mem14
-            cmp selectedOp1Mem,15
-            je SHL_Mem15
-            jmp SHL_invalid
-            SHL_Mem0:
-                cmp selectedOp2Type,0
-                je SHL_Mem0_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem0_Val
-                jmp SHL_invalid
-                SHL_Mem0_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem0_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem1:
-                cmp selectedOp2Type,0
-                je SHL_Mem1_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem1_Val
-                jmp SHL_invalid
-                SHL_Mem1_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem1_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem2:
-                cmp selectedOp2Type,0
-                je SHL_Mem2_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem2_Val
-                jmp SHL_invalid
-                SHL_Mem2_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem2_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem3:
-                cmp selectedOp2Type,0
-                je SHL_Mem3_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem3_Val
-                jmp SHL_invalid
-                SHL_Mem3_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem3_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem4:
-                cmp selectedOp2Type,0
-                je SHL_Mem4_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem4_Val
-                jmp SHL_invalid
-                SHL_Mem4_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem4_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem5:
-                cmp selectedOp2Type,0
-                je SHL_Mem5_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem5_Val
-                jmp SHL_invalid
-                SHL_Mem5_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem5_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem6:
-                cmp selectedOp2Type,0
-                je SHL_Mem6_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem6_Val
-                jmp SHL_invalid
-                SHL_Mem6_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem6_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem7:
-                cmp selectedOp2Type,0
-                je SHL_Mem7_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem7_Val
-                jmp SHL_invalid
-                SHL_Mem7_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem7_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem8:
-                cmp selectedOp2Type,0
-                je SHL_Mem8_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem8_Val
-                jmp SHL_invalid
-                SHL_Mem8_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem8_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem9:
-                cmp selectedOp2Type,0
-                je SHL_Mem9_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem9_Val
-                jmp SHL_invalid
-                SHL_Mem9_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem9_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem10:
-                cmp selectedOp2Type,0
-                je SHL_Mem10_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem10_Val
-                jmp SHL_invalid
-                SHL_Mem10_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem10_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem11:
-                cmp selectedOp2Type,0
-                je SHL_Mem11_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem11_Val
-                jmp SHL_invalid
-                SHL_Mem11_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem11_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem12:
-                cmp selectedOp2Type,0
-                je SHL_Mem12_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem12_Val
-                jmp SHL_invalid
-                SHL_Mem12_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem12_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem13:
-                cmp selectedOp2Type,0
-                je SHL_Mem13_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem13_Val
-                jmp SHL_invalid
-                SHL_Mem13_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem13_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem14:
-                cmp selectedOp2Type,0
-                je SHL_Mem14_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem14_Val
-                jmp SHL_invalid
-                SHL_Mem14_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem14_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHL_Mem15:
-                cmp selectedOp2Type,0
-                je SHL_Mem15_Reg
-                cmp selectedOp2Type,3
-                je SHL_Mem15_Val
-                jmp SHL_invalid
-                SHL_Mem15_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHL_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHL ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHL_Mem15_Val:
-                    cmp Op2Val,255d
-                    ja SHL_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHL ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-        SHL_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    SHR_Comm:
-        CALL Op1Menu
-        MOV DX, CommaCursorLoc
-        CALL SetCursor
-        mov dl, ','
-        CALL DisplayChar
-        CALL Op2Menu
-
-        call  PowerUpeMenu ; to choose power up
-        CALL CheckForbidCharProc
-
-        cmp selectedOp1Type,0
-        je SHR_Reg
-        cmp selectedOp1Type,1
-        je SHR_AddReg
-        cmp selectedOp1Type,2
-        je SHR_Mem
-        cmp selectedOp1Type,3
-        je SHR_invalid
-
-        SHR_Reg:
-            cmp selectedOp1Reg,0
-            je SHR_Ax
-            cmp selectedOp1Reg,1
-            je SHR_Al
-            cmp selectedOp1Reg,2
-            je SHR_Ah
-            cmp selectedOp1Reg,3
-            je SHR_bx
-            cmp selectedOp1Reg,4
-            je SHR_Bl
-            cmp selectedOp1Reg,5
-            je SHR_Bh
-            cmp selectedOp1Reg,6
-            je SHR_Cx
-            cmp selectedOp1Reg,7
-            je SHR_Cl
-            cmp selectedOp1Reg,8
-            je SHR_Ch
-            cmp selectedOp1Reg,9
-            je SHR_Dx
-            cmp selectedOp1Reg,10
-            je SHR_Dl
-            cmp selectedOp1Reg,11
-            je SHR_Dh
-            cmp selectedOp1Reg,15
-            je SHR_Bp
-            cmp selectedOp1Reg,16
-            je SHR_Sp
-            cmp selectedOp1Reg,17
-            je SHR_Si
-            cmp selectedOp1Reg,18
-            je SHR_Di
-            jmp SHR_invalid
-            SHR_Ax:
-                cmp selectedOp2Type,0
-                je SHR_Ax_Reg
-                cmp selectedOp2Type,3
-                je SHR_Ax_Val
-                jmp SHR_invalid
-                SHR_Ax_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Ax_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    clc
-                    SHR ax,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Al:
-                cmp selectedOp2Type,0
-                je SHR_Al_Reg
-                cmp selectedOp2Type,3
-                je SHR_Al_Val
-                jmp SHR_invalid
-                SHR_Al_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Al_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    clc
-                    SHR al,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Ah:
-                cmp selectedOp2Type,0
-                je SHR_Ah_Reg
-                cmp selectedOp2Type,3
-                je SHR_Ah_Val
-                jmp SHR_invalid
-                SHR_Ah_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov ax,ValRegAX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Ah_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov ax,ValRegAX
-                    mov cx,Op2Val
-                    clc
-                    SHR ah,cl
-                    mov ValRegAX,ax
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Bx:
-                cmp selectedOp2Type,0
-                je SHR_Bx_Reg
-                cmp selectedOp2Type,3
-                je SHR_Bx_Val
-                jmp SHR_invalid
-                SHR_Bx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Bx_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    clc
-                    SHR Bx,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Bl:
-                cmp selectedOp2Type,0
-                je SHR_Bl_Reg
-                cmp selectedOp2Type,3
-                je SHR_Bl_Val
-                jmp SHR_invalid
-                SHR_Bl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Bl_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    clc
-                    SHR Bl,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Bh:
-                cmp selectedOp2Type,0
-                je SHR_Bh_Reg
-                cmp selectedOp2Type,3
-                je SHR_Bh_Val
-                jmp SHR_invalid
-                SHR_Bh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Bh_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Bx,ValRegBX
-                    mov cx,Op2Val
-                    clc
-                    SHR Bh,cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Cx:
-                cmp selectedOp2Type,0
-                je SHR_Cx_Reg
-                cmp selectedOp2Type,3
-                je SHR_Cx_Val
-                jmp SHR_invalid
-                SHR_Cx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Cx,ValRegCx
-                    mov cx,ValRegCX
-                    clc
-                    SHR Cx,cl
-                    mov ValRegCx,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Cx_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov bx,ValRegCx
-                    mov cx,Op2Val
-                    clc
-                    SHR bx,cl
-                    mov ValRegCx,bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Cl:
-                cmp selectedOp2Type,0
-                je SHR_Cl_Reg
-                cmp selectedOp2Type,3
-                je SHR_Cl_Val
-                jmp SHR_invalid
-                SHR_Cl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR Cl,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Cl_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    clc
-                    SHR Bl,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Ch:
-                cmp selectedOp2Type,0
-                je SHR_Ch_Reg
-                cmp selectedOp2Type,3
-                je SHR_Ch_Val
-                jmp SHR_invalid
-                SHR_Ch_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR Ch,cl
-                    mov ValRegCX,Cx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Ch_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Bx,ValRegCX
-                    mov cx,Op2Val
-                    clc
-                    SHR bh,cl
-                    mov ValRegCX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Dx:
-                cmp selectedOp2Type,0
-                je SHR_Dx_Reg
-                cmp selectedOp2Type,3
-                je SHR_Dx_Val
-                jmp SHR_invalid
-                SHR_Dx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Dx_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    clc
-                    SHR Dx,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Dl:
-                cmp selectedOp2Type,0
-                je SHR_Dl_Reg
-                cmp selectedOp2Type,3
-                je SHR_Dl_Val
-                jmp SHR_invalid
-                SHR_Dl_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Dl_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    clc
-                    SHR Dl,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Dh:
-                cmp selectedOp2Type,0
-                je SHR_Dh_Reg
-                cmp selectedOp2Type,3
-                je SHR_Dh_Val
-                jmp SHR_invalid
-                SHR_Dh_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,ValRegCX
-                    clc
-                    SHR Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Dh_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Dx,ValRegDX
-                    mov cx,Op2Val
-                    clc
-                    SHR Dh,cl
-                    mov ValRegDX,Dx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Bp:
-                cmp selectedOp2Type,0
-                je SHR_Bp_Reg
-                cmp selectedOp2Type,3
-                je SHR_Bp_Val
-                jmp SHR_invalid
-                SHR_Bp_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Bp,ValRegBP
-                    mov cx,ValRegCX
-                    clc
-                    SHR BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_BP_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov BP,ValRegBP
-                    mov cx,Op2Val
-                    clc
-                    SHR BP,cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Sp:
-                cmp selectedOp2Type,0
-                je SHR_SP_Reg
-                cmp selectedOp2Type,3
-                je SHR_SP_Val
-                jmp SHR_invalid
-                SHR_SP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov SP,ValRegSP
-                    mov cx,ValRegCX
-                    clc
-                    SHR SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_SP_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov SP,ValRegSP
-                    mov cx,Op2Val
-                    clc
-                    SHR SP,cl
-                    mov ValRegSP,SP
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Si:
-                cmp selectedOp2Type,0
-                je SHR_SI_Reg
-                cmp selectedOp2Type,3
-                je SHR_SI_Val
-                jmp SHR_invalid
-                SHR_SI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov SI,ValRegSI
-                    mov cx,ValRegCX
-                    clc
-                    SHR SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_SI_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov SI,ValRegSI
-                    mov cx,Op2Val
-                    clc
-                    SHR SI,cl
-                    mov ValRegSI,SI
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Di:
-                cmp selectedOp2Type,0
-                je SHR_DI_Reg
-                cmp selectedOp2Type,3
-                je SHR_DI_Val
-                jmp SHR_invalid
-                SHR_DI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov DI,ValRegDI
-                    mov cx,ValRegCX
-                    clc
-                    SHR DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_DI_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov DI,ValRegDI
-                    mov cx,Op2Val
-                    clc
-                    SHR DI,cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        SHR_AddReg:
-            cmp selectedOp1AddReg,3
-            je SHR_AddBx
-            cmp selectedOp1AddReg,15
-            je SHR_AddBp
-            cmp selectedOp1AddReg,17
-            je SHR_AddSi
-            cmp selectedOp1AddReg,18
-            je SHR_AddDi
-            jmp SHR_invalid
-            SHR_AddBx:
-                cmp selectedOp2Type,0
-                je SHR_AddBx_Reg
-                cmp selectedOp2Type,3
-                je SHR_AddBx_Val
-                jmp SHR_invalid
-                SHR_AddBx_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_AddBx_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Bx,ValRegBX
-                    cmp Bx,15d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[Bx],cl
-                    mov ValRegBX,Bx
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_AddBp:
-                cmp selectedOp2Type,0
-                je SHR_AddBP_Reg
-                cmp selectedOp2Type,3
-                je SHR_AddBP_Val
-                jmp SHR_invalid
-                SHR_AddBP_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_AddBP_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov BP,ValRegBP
-                    cmp BP,15d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[BP],cl
-                    mov ValRegBP,BP
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_AddSi:
-                cmp selectedOp2Type,0
-                je SHR_AddSi_Reg
-                cmp selectedOp2Type,3
-                je SHR_AddSi_Val
-                jmp SHR_invalid
-                SHR_AddSi_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_AddSi_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov Si,ValRegSI
-                    cmp Si,15d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[Si],cl
-                    mov ValRegSI,Si
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_AddDi:
-                cmp selectedOp2Type,0
-                je SHR_AddDI_Reg
-                cmp selectedOp2Type,3
-                je SHR_AddDI_Val
-                jmp SHR_invalid
-                SHR_AddDI_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_AddDI_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov DI,ValRegDI
-                    cmp DI,15d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[DI],cl
-                    mov ValRegDI,DI
-                    call SetCarryFlag
-                    jmp Exit
-        SHR_Mem:
-            cmp selectedOp1Mem,0
-            je SHR_Mem0
-            cmp selectedOp1Mem,1
-            je SHR_Mem1
-            cmp selectedOp1Mem,2
-            je SHR_Mem2
-            cmp selectedOp1Mem,3
-            je SHR_Mem3
-            cmp selectedOp1Mem,4
-            je SHR_Mem4
-            cmp selectedOp1Mem,5
-            je SHR_Mem5
-            cmp selectedOp1Mem,6
-            je SHR_Mem6
-            cmp selectedOp1Mem,7
-            je SHR_Mem7
-            cmp selectedOp1Mem,8
-            je SHR_Mem8
-            cmp selectedOp1Mem,9
-            je SHR_Mem9
-            cmp selectedOp1Mem,10
-            je SHR_Mem10
-            cmp selectedOp1Mem,11
-            je SHR_Mem11
-            cmp selectedOp1Mem,12
-            je SHR_Mem12
-            cmp selectedOp1Mem,13
-            je SHR_Mem13
-            cmp selectedOp1Mem,14
-            je SHR_Mem14
-            cmp selectedOp1Mem,15
-            je SHR_Mem15
-            jmp SHR_invalid
-            SHR_Mem0:
-                cmp selectedOp2Type,0
-                je SHR_Mem0_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem0_Val
-                jmp SHR_invalid
-                SHR_Mem0_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem0_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[0],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem1:
-                cmp selectedOp2Type,0
-                je SHR_Mem1_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem1_Val
-                jmp SHR_invalid
-                SHR_Mem1_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem1_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[1],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem2:
-                cmp selectedOp2Type,0
-                je SHR_Mem2_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem2_Val
-                jmp SHR_invalid
-                SHR_Mem2_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem2_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[2],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem3:
-                cmp selectedOp2Type,0
-                je SHR_Mem3_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem3_Val
-                jmp SHR_invalid
-                SHR_Mem3_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem3_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[3],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem4:
-                cmp selectedOp2Type,0
-                je SHR_Mem4_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem4_Val
-                jmp SHR_invalid
-                SHR_Mem4_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem4_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[4],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem5:
-                cmp selectedOp2Type,0
-                je SHR_Mem5_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem5_Val
-                jmp SHR_invalid
-                SHR_Mem5_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem5_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[5],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem6:
-                cmp selectedOp2Type,0
-                je SHR_Mem6_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem6_Val
-                jmp SHR_invalid
-                SHR_Mem6_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem6_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[6],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem7:
-                cmp selectedOp2Type,0
-                je SHR_Mem7_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem7_Val
-                jmp SHR_invalid
-                SHR_Mem7_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem7_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[7],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem8:
-                cmp selectedOp2Type,0
-                je SHR_Mem8_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem8_Val
-                jmp SHR_invalid
-                SHR_Mem8_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem8_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[8],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem9:
-                cmp selectedOp2Type,0
-                je SHR_Mem9_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem9_Val
-                jmp SHR_invalid
-                SHR_Mem9_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem9_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[9],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem10:
-                cmp selectedOp2Type,0
-                je SHR_Mem10_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem10_Val
-                jmp SHR_invalid
-                SHR_Mem10_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem10_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[10],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem11:
-                cmp selectedOp2Type,0
-                je SHR_Mem11_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem11_Val
-                jmp SHR_invalid
-                SHR_Mem11_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem11_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[11],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem12:
-                cmp selectedOp2Type,0
-                je SHR_Mem12_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem12_Val
-                jmp SHR_invalid
-                SHR_Mem12_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem12_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[12],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem13:
-                cmp selectedOp2Type,0
-                je SHR_Mem13_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem13_Val
-                jmp SHR_invalid
-                SHR_Mem13_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem13_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[13],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem14:
-                cmp selectedOp2Type,0
-                je SHR_Mem14_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem14_Val
-                jmp SHR_invalid
-                SHR_Mem14_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem14_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[14],cl
-                    call SetCarryFlag
-                    jmp Exit
-            SHR_Mem15:
-                cmp selectedOp2Type,0
-                je SHR_Mem15_Reg
-                cmp selectedOp2Type,3
-                je SHR_Mem15_Val
-                jmp SHR_invalid
-                SHR_Mem15_Reg:
-                    cmp selectedOp2Reg,7
-                    jne SHR_invalid
-                    mov cx,ValRegCX
-                    clc
-                    SHR ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-                SHR_Mem15_Val:
-                    cmp Op2Val,255d
-                    ja SHR_invalid
-                    mov cx,Op2Val
-                    clc
-                    SHR ValMem[15],cl
-                    call SetCarryFlag
-                    jmp Exit
-        SHR_invalid:
-        jmp InValidCommand
-        JMP Exit
-    
-    TODO_Comm:
-        mov dx, offset error
-        CALL DisplayString
-        JMP Exit
-    
-    InValidCommand:
-        mov dx, offset error
-        CALL DisplayString
-        ; TODO - BEEP SOUND WHEN INVALID COMMAND ENTERED
-
-    Exit:
-
-            ForPwrUp:
-                cmp selectedPUPType,3 ;Changing the forbidden character only once 
-                jne notthispower3  ;-8 points 
-                
-                cmp UsedBeforeOrNot,1
-                jne notthispower3
-                dec UsedBeforeOrNot
-
-                ; Reset Cursor
-                mov ah,2
-                mov dx, ForbidPUPCursor
-                int 10h
-
-                mov ah,1 ; set forbidchar
-                int 21h
-                mov ForbidChar,al 
-
-                sub Player1Points,8
-                    notthispower3:
-                    cmp selectedPUPType,5 ;Making one of the data lines stuck at 0 or 1
-                    jne notthispower5
-                    mov ValRegAX,0
-                    mov ValRegBX,0
-                    mov ValRegCX,0
-                    mov ValRegDX,0 
-                
-                    mov ValRegBP,0
-                    mov ValRegSP,0
-                    mov ValRegSI,0
-                    mov ValRegDI,0
-                
-                    mov ourValRegAX,0
-                    mov ourValRegBX,0
-                    mov ourValRegCX,0
-                    mov ourValRegDX,0
-                
-                    mov ourValRegBP,0
-                    mov ourValRegSP,0
-                    mov ourValRegSI,0
-                    mov ourValRegDI,0
-
-                    sub Player1Points,30
-                    notthispower5:
+        CLC_Comm:
+            CALL CheckForbidCharProc
+
+            CMP p1_CpuEnabled, 1
+            JZ CLC_p1
+            JMP CLC_p2
+
+            CLC_p1:
+                CLC
+                CALL SetCf
+
+            CLC_p2:
+                MOV p1_CpuEnabled, 0
+                CMP p2_CpuEnabled, 1
+                JNZ Exit
+                CLC
+                CALL SetCF
+
+            JMP Exit
+        AND_Comm:
+            CALL AND_Comm_PROC
+            JMP Exit
+        MOV_Comm:
+            CALL MOV_Comm_PROC
+            JMP Exit
+        ADD_Comm:
+            CALL ADD_Comm_PROC
+            JMP Exit
+        ADC_Comm:
+            CALL ADC_Comm_PROC
+            JMP Exit
+        PUSH_Comm:
+            CALL PUSH_Comm_PROC
+            JMP Exit
+        POP_Comm:
+            CALL POP_Comm_PROC
+            JMP Exit
+        INC_Comm:
+            CALL INC_Comm_PROC
+            JMP Exit
+        DEC_Comm:
+            CALL DEC_Comm_PROC
+            JMP Exit
+        MUL_Comm:
+            CALL MUL_Comm_PROC
+            jmp Exit
+        DIV_Comm:
+            CALL DIV_Comm_PROC
+            jmp Exit
+        IMul_Comm:
+            CALL IMUL_Comm_PROC
+            jmp Exit
+        IDiv_Comm:
+            CALL IDIV_Comm_PROC
+            jmp Exit
+        ROR_Comm:
+            CALL ROR_Comm_PROC
+            JMP Exit
+        ROL_Comm:
+            CALL ROL_Comm_PROC
+            JMP Exit
+        RCR_Comm:
+            CALL RCR_Comm_PROC
+            JMP Exit
+        RCL_Comm:
+            CALL RCL_Comm_PROC
+            JMP Exit
+        SHL_Comm:
+            CALL SHL_Comm_PROC
+            JMP Exit
+        SHR_Comm:
+            CALL SHR_Comm_PROC
+            JMP Exit
+        Exit:
+
+            CMP isInvalidCommand, 0
+            JZ ValidCommand
+            mov dx, offset error
+            CALL DisplayString
+
+            ValidCommand:
 
             ; Test Messages
-            LEA DX, mesCom
-            CALL DisplayString
-            mov dl, selectedComm
-            add dl, '0'
-            CALL DisplayChar 
+                lea dx, mesMem
+                CAll DisplayString
+                lea dx,p2_ValMem
+                CALL DisplayString
 
-            LEA DX, mesOp1Type
-            CALL DisplayString
-            mov dl, selectedOp1Type
-            add dl, '0'
-            CALL DisplayChar
+                lea dx, mesStack
+                CAll DisplayString
+                lea dx,p2_ValStack
+                Call DisplayString
 
-            LEA DX, mesReg
-            CALL DisplayString
-            mov dl, selectedOp1Reg
-            add dl, '0'
-            CALL DisplayChar 
+                lea dx, mesVal
+                CALL DisplayString
+                mov dx, Op1Val
+                Call DisplayChar
 
-            lea dx, mesMem
-            CAll DisplayString
-            lea dx, ValMem
-            CALL DisplayString
+                LEA DX, mesRegAX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegAX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegAX+1
+                CALL DisplayChar
 
-            lea dx, mesStack
-            CAll DisplayString
-            lea dx, ValStack
-            Call DisplayString
+                LEA DX, mesRegBX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegBX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegBX+1
+                CALL DisplayChar 
 
-            lea dx, mesStackPointer
-            CALL DisplayString
-            mov dl, ValStackPointer
-            add dl, '0'
-            Call DisplayChar
+                LEA DX, mesRegCX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegCX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegCX+1
+                CALL DisplayChar 
 
-            lea dx, mesVal
-            CALL DisplayString
-            mov dx, Op1Val
-            Call DisplayChar
+                LEA DX, mesRegDX
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegDX
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegDX+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegAX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegAX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegAX+1
-            CALL DisplayChar
+                LEA DX, mesRegSI
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegSI
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegSI+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegBX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegBX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegBX+1
-            CALL DisplayChar 
+                LEA DX, mesRegDI
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegDI
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegDI+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegCX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegCX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegCX+1
-            CALL DisplayChar 
+                LEA DX, mesRegBP
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegBP
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegBP+1
+                CALL DisplayChar 
 
-            LEA DX, mesRegDX
-            CALL DisplayString
-            mov dl,Byte ptr ValRegDX
-            CALL DisplayChar
-            mov dl, byte ptr ValRegDX+1
-            CALL DisplayChar 
+                LEA DX, mesRegSP
+                CALL DisplayString
+                mov dl,Byte ptr p2_ValRegSP
+                CALL DisplayChar
+                mov dl, byte ptr p2_ValRegSP+1
+                CALL DisplayChar
+                
+                LEA DX, mesRegCF
+                CALL DisplayString
+                mov dl, p2_ValCF
+                add dl, '0'
+                CALL DisplayChar
 
-            LEA DX, mesRegSI
-            CALL DisplayString
-            mov dl,Byte ptr ValRegSI
-            CALL DisplayChar
-            mov dl, byte ptr ValRegSI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegDI
-            CALL DisplayString
-            mov dl,Byte ptr ValRegDI
-            CALL DisplayChar
-            mov dl, byte ptr ValRegDI+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegBP
-            CALL DisplayString
-            mov dl,Byte ptr ValRegBP
-            CALL DisplayChar
-            mov dl, byte ptr ValRegBP+1
-            CALL DisplayChar 
-
-            LEA DX, mesRegSP
-            CALL DisplayString
-            mov dl,Byte ptr ValRegSP
-            CALL DisplayChar
-            mov dl, byte ptr ValRegSP+1
-            CALL DisplayChar
             
-            LEA DX, mesRegCF
-            CALL DisplayString
-            mov dl, ValCF
-            add dl, '0'
-            CALL DisplayChar  
-        ;JMP Start
-        ; Return to dos
-        mov ah,4ch
-        int 21h
+
+            CALL ExitPROC
+
+            ret
+        
 
 
 CommMenu ENDP
 ;================================================================================================================
-ClearScreen PROC far
-    ; Change to text mode (clear screen)
-    mov ah,0
-    mov al,3
-    int 10h
-
-    ret
-ClearScreen ENDP
-SetCarryFlag PROC far
-    ;This is used to set the carry flag of our processor
-    push dx
-    mov dx,0h
-    adc dx,0h
-    mov ValCF,dl
-    pop dx
-    ret
-SetCarryFlag ENDP
-GetCarryFlag PROC far
-    ;This is used to get the carry flag of our processor
-    push dx
-    push bx
-    mov dx,65535d
-    mov bx,0h
-    mov bl,ValCF
-    add dx,bx
-    pop bx
-    pop dx
-    ret
-GetCarryFlag ENDP
-DisplayString PROC ; string offset saved in DX
-    mov ah, 9
-    int 21h
-
-    RET
-DisplayString ENDP
-DisplayChar PROC    ; char is saved in dl
-    mov ah,2
-    int 21h
-
-    RET
-DisplayChar ENDP
-SetCursor PROC ; position is saved in dx   
-    mov ah,2
-    int 10h
-
-    ret
-SetCursor ENDP
-MnemonicMenu PROC
-
-    ; Display Command
-    DisplayComm:
-        mov ah, 9
-        mov dx, offset MOVcom
-        int 21h
-
-    CheckKeyComType:
-        CALL WaitKeyPress
-
-    Push ax
-    PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        ; Reset Cursor
-        mov ah,2
-        mov dx, MenmonicCursorLoc
-        int 10h
-    pop dx 
-    pop ax
-
-    ; Check if pressed is Up or down or Enter
-    cmp ah, UpArrowScanCode                          
-    jz CommUp 
-    cmp ah, DownArrowScanCode
-    jz CommDown
-    cmp ah, EnterScanCode
-    jz Selected
-    jmp CheckKeyComType
-
-
-    CommUp:
-        mov ah, 9
-        ; Check overflow
-            cmp dx, offset NOPcom            ; MenmonicFirstChoice
-            jnz NotOverflow
-            mov dx, offset SHRcom             ; MnemonicLastChoiceLoc
-            add dx, CommStringSize
-        NotOverflow:
-            sub dx, CommStringSize
-            int 21h
-            jmp CheckKeyComType
-    
-    CommDown:
-        mov ah, 9
-        ; Check End of file
-            cmp dx, offset SHRcom             ; MnemonicLastChoiceLoc
-            jnz NotEOF
-            mov dx, offset NOPcom            ; MenmonicFirstChoice
-            sub dx, CommStringSize
-        NotEOF:
-            add dx, CommStringSize
-            int 21h
-            jmp CheckKeyComType
-    
-    Selected:
-        ; Detecting index of selected command
-        mov ax, dx
-        sub ax, offset NOPcom            ; MenmonicFirstChoice
-        mov bl, CommStringSize
-        div bl                                      ; Op=byte: AL:=AX / Op
-        mov selectedComm, al
-        
-        
-
-
-    ret
-MnemonicMenu ENDP
-WaitKeyPress PROC ; AH:scancode,AL:ASCII
-    ; Wait for a key pressed
-    CHECK: 
-        mov ah,1
-        int 16h
-    jz CHECK
-
-    ret
-WaitKeyPress ENDP
-CheckAddress proc     ; Value of register supposed to be in dx before calling the proc, if greater bl = 1 else bl = 0
-    cmp dx, 16
-    jg InValid
-    mov bl, 0
-    ret
-    Invalid: 
-    mov bl, 1
-    ret
-CheckAddress ENDP
-CheckForbidChar PROC   ;offset of string checked is in di, bl = 1 if found
-    mov al, ForbidChar
-    MOV CX, CommStringSize
-    REPNE SCASB
-    CMP CX,0
-    JZ NotFound
-    mov bl, 1
-    RET
-    NotFound:
-        mov bl,0 
-    RET
-ENDP
-CheckForbidCharProc PROC            ; NEEDS TO Reset selectedOperands after each instruction execution
-    ; Check in instruction
-    mov Ah, 0
-    mov AL, selectedComm
-    mov BX, CommStringSize
-    MUL BX
-    add ax, offset NOPcom       ; First Choice in command
-    CheckForbidCharMacro ax
-
-    ; Check op1
-    CheckForbidCharOp1:
-        cmp selectedOp1Type, 0
-        jz ForbidCharOp1Reg
-        cmp selectedOp1Type, 1
-        jz ForbidCharOp1AddReg
-        cmp selectedOp1Type, 2
-        jz ForbidCharOp1Mem
-        cmp selectedOp1Type, 3
-        jz ForbidCharOp1Val
-        ret
-
-        ForbidCharOp1Reg:
-            mov Ah, 0
-            mov AL, selectedOp1Reg
-            mov bx, CommStringSize
-            MUL bx
-            add ax, offset RegAX
-            CheckForbidCharMacro ax
-            JMP CheckForbidCharOp2
-        
-        ForbidCharOp1AddReg:
-            mov Ah, 0
-            mov AL, selectedOp1AddReg
-            mov bx, CommStringSize
-            MUL bx
-            add ax, offset AddRegAX
-            CheckForbidCharMacro ax
-            JMP CheckForbidCharOp2
-        
-        ForbidCharOp1Mem:
-            MOV AH, 0
-            mov AL, selectedOp1Mem
-            mov bx, CommStringSize
-            MUL bx
-            add ax, offset Mem0
-            CheckForbidCharMacro ax
-            JMP CheckForbidCharOp2
-        
-        ForbidCharOp1Val:
-            MOV AX, offset num 
-            JMP CheckForbidCharOp2 
-
-    CheckForbidCharOp2:
-        cmp selectedOp2Type, 0
-        jz ForbidCharOp2Reg
-        cmp selectedOp2Type, 1
-        jz ForbidCharOp2AddReg
-        cmp selectedOp2Type, 2
-        jz ForbidCharOp2Mem
-        cmp selectedOp2Type, 3
-        jz ForbidCharOp2Val
-        ret
-
-        ForbidCharOp2Reg:
-            MOV AH, 0
-            mov AL, selectedOp2Reg
-            mov bx, CommStringSize
-            MUL bx
-            add ax, offset RegAX
-            CheckForbidCharMacro ax
-            RET
-        
-        ForbidCharOp2AddReg:
-            MOV AH, 0
-            mov AL, selectedOp2AddReg
-            mov bx, CommStringSize
-            MUL bx
-            add ax, offset AddRegAX
-            CheckForbidCharMacro ax
-            RET
-        
-        ForbidCharOp2Mem:
-            MOV AH, 0
-            mov AL, selectedOp2Mem
-            mov bx, CommStringSize
-            MUL bx
-            add ax, offset Mem0
-            CheckForbidCharMacro ax
-            RET
-        
-        ForbidCharOp2Val:
-            MOV AX, offset num2
-            RET
-
-
-ENDP
-Op1TypeMenu PROC
-
-    mov ah, 9
-    mov dx, offset Reg
-    int 21h
-
-    CheckKeyOp1Type:
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        CALL WaitKeyPress
-
-    Push ax
-    PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        ; Reset Cursor
-        mov ah,2
-        mov dx, Op1CursorLoc
-        int 10h
-    pop dx 
-    pop ax
-
-    ; Check if pressed is Up or down or Enter
-    cmp ah, UpArrowScanCode                          
-    jz CommUp_1 
-    cmp ah, DownArrowScanCode
-    jz CommDown_1
-    cmp ah, EnterScanCode
-    jz Selected_1
-    JMP CheckKeyOp1Type
-
-
-    CommUp_1:
-        mov ah, 9
-        ; Check overflow
-            cmp dx, offset Reg
-            jnz NotOverflow_1
-            mov dx, offset Value           ; Op1TypeLastChoiceLoc
-            add dx, CommStringSize
-        NotOverflow_1:
-            sub dx, CommStringSize
-            int 21h
-            jmp CheckKeyOp1Type
-    
-    CommDown_1:
-        mov ah, 9
-        ; Check End of file
-            cmp dx, offset Value           ; Op1TypeLastChoiceLoc
-            jnz NotEOF_1
-            mov dx, offset Reg
-            sub dx, CommStringSize
-        NotEOF_1:
-            add dx, CommStringSize
-            int 21h
-            jmp CheckKeyOp1Type
-    
-    Selected_1:
-        ; Detecting index of selected command
-        mov ax, dx
-        sub ax, offset Reg         ; Op1FirstChoiceLoc
-        mov bl, CommStringSize
-        div bl                                      ; Op=byte: AL:=AX / Op 
-        mov selectedOp1Type, al
-        
-    ret
-Op1TypeMenu ENDP
-PowerUpeMenu PROC
-    ; Reset Cursor
-        mov ah,2
-        mov dx, PUPCursorLoc
-        int 10h
-        
-    mov ah, 9
-    mov dx, offset NOPUP
-    int 21h
-
-    CheckKeyOp1Type2:
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        CALL WaitKeyPress
-
-    Push ax
-    PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        ; Reset Cursor
-        mov ah,2
-        mov dx, PUPCursorLoc
-        int 10h
-    pop dx 
-    pop ax
-
-    ; Check if pressed is Up or down or Enter
-    cmp ah, UpArrowScanCode                          
-    jz CommUp_2 
-    cmp ah, DownArrowScanCode
-    jz CommDown_2
-    cmp ah, EnterScanCode
-    jz Selected_2
-    JMP CheckKeyOp1Type
-
-
-    CommUp_2:
-        mov ah, 9
-        ; Check overflow
-            cmp dx, offset NOPUP          ;Power Up firstChoiceLoc
-            jnz NotOverflow_2
-            mov dx, offset PUp5           ; Power Up LastChoiceLoc
-            add dx, CommStringSize
-        NotOverflow_2:
-            sub dx, CommStringSize
-            int 21h
-            jmp CheckKeyOp1Type2
-    
-    CommDown_2:
-        mov ah, 9
-        ; Check End of file
-            cmp dx, offset PUp5          ; Power Up LastChoiceLoc
-            jnz NotEOF_2
-            mov dx, offset NOPUP
-            sub dx, CommStringSize
-        NotEOF_2:
-            add dx, CommStringSize
-            int 21h
-            jmp CheckKeyOp1Type2
-    
-    Selected_2:
-        ; Detecting index of selected command
-        mov ax, dx
-        sub ax, offset NOPUP         ; Op1FirstChoiceLoc
-        mov bl, CommStringSize
-        div bl                                      ; Op=byte: AL:=AX / Op 
-        mov selectedPUPType, al
-        
-    ret
-PowerUpeMenu ENDP
-LineStuckPwrUp PROC     ; Value to be stucked is saved in AX/AL
-    PUSH BX
-    
-    CMP PwrUpStuckVal, 0
-    JZ PwrUpZero
-    CMP PwrUpStuckVal, 1
-    JZ PwrupOne
-    JMP Return_LineStuckPwrUp
-
-    PwrUpZero:
-        MOV BX, 0FFFEH
-        MOV CL, PwrUpDataLineIndex
-        ROL BX, CL
-        AND AX, BX
-        JMP Return_LineStuckPwrUp
-    PwrupOne:
-        MOV BX, 1
-        MOV CL, PwrUpDataLineIndex
-        ROL BX, CL
-        OR AX, BX
-
-    Return_LineStuckPwrUp:
-        POP BX
-        RET
-ENDP
-Op2TypeMenu PROC
-
-    
-    mov ah, 9
-    mov dx, offset Reg
-    int 21h
-
-    CheckKey_Op2Type:
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        CALL WaitKeyPress
-
-    Push ax
-    PUSH dx 
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        ; Reset Cursor
-        mov ah,2
-        mov dx, Op2CursorLoc
-        int 10h
-    pop dx 
-    pop ax
-
-    ; Check if pressed is Up or down or Enter
-    cmp ah, UpArrowScanCode                          
-    jz CommUp_Op2Type
-    cmp ah, DownArrowScanCode
-    jz CommDown_Op2Type
-    cmp ah, EnterScanCode
-    jz Selected_Op2Type
-    JMP CheckKey_Op2Type
-
-
-    CommUp_Op2Type:
-        mov ah, 9
-        ; Check overflow
-            cmp dx, offset Reg
-            jnz NotOverflow_Op2Type
-            mov dx, offset Value           ; OpTypeLastChoiceLoc
-            add dx, CommStringSize
-        NotOverflow_Op2Type:
-            sub dx, CommStringSize
-            int 21h
-            jmp CheckKey_Op2Type
-    
-    CommDown_Op2Type:
-        mov ah, 9
-        ; Check End of file
-            cmp dx, offset Value           ; OpTypeLastChoiceLoc
-            jnz NotEOF_Op2Type
-            mov dx, offset Reg
-            sub dx, CommStringSize
-        NotEOF_Op2Type:
-            add dx, CommStringSize
-            int 21h
-            jmp CheckKey_Op2Type
-    
-    Selected_Op2Type:
-        ; Detecting index of selected command
-        mov ax, dx
-        sub ax, offset Reg         ; OpTypeFirstChoiceLoc
-        mov bl, CommStringSize
-        div bl                                      ; Op=byte: AL:=AX / Op 
-        mov selectedOp2Type, al
-        
-    ret
-Op2TypeMenu ENDP
-Op1Menu PROC
-
-    ; Set Cursor
-    mov ah,2
-    mov dx, Op1CursorLoc 
-    int 10h
-
-    CALL Op1TypeMenu
-
-    ; Set Cursor
-    mov ah,2
-    mov dx, Op1CursorLoc 
-    int 10h
-
-
-    CMP selectedOp1Type, RegIndex     
-    JZ ChooseReg
-    CMP selectedOp1Type, AddRegIndex
-    JZ ChooseAddReg
-    CMP selectedOp1Type, MemIndex
-    JZ ChooseMem
-    CMP selectedOp1Type, ValIndex
-    JZ EnterVal
-    jmp InvalidOp1Type
-
-    ChooseReg: 
-
-        ; Display Command
-        mov ah, 9
-        mov dx, offset RegAX
-        int 21h
-
-        CheckKeyRegType:
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            CALL WaitKeyPress
-
-
-        Push ax
-        PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            ; Reset Cursor
-            mov ah,2
-            mov dx, Op1CursorLoc
-            int 10h
-        pop dx 
-        pop ax
-
-        ; Check if pressed is Up or down or Enter
-        cmp ah, UpArrowScanCode                          
-        jz CommUp2 
-        cmp ah, DownArrowScanCode
-        jz CommDown2
-        cmp ah, EnterScanCode
-        jz Selected2
-        jmp CheckKeyRegType
-
-
-        CommUp2:
-            mov ah, 9
-            ; Check overflow
-                cmp dx, offset RegAX              ; RegFirstChoiceLocation ; the start of combobox
-                jnz NotOverflow2
-                mov dx, offset RegDI              ; RegLastChoiceLocation ; last one to overcome overflow
-                add dx, CommStringSize
-            NotOverflow2:
-                sub dx, CommStringSize
-                int 21h
-                jmp CheckKeyRegType
-        
-        CommDown2:
-            mov ah, 9
-            ; Check End of file
-                cmp dx, offset RegDI              ; RegLastChoiceLocation
-                jnz NotEOF2
-                mov dx, offset RegAX              ; RegFirstChoiceLocation
-                sub dx, CommStringSize
-            NotEOF2:
-                add dx, CommStringSize
-                int 21h
-                jmp CheckKeyRegType
-        
-        Selected2:
-            ; Detecting index of selected command
-            mov ax, dx
-            SUB AX, offset RegAX              ; RegFirstChoiceLocation
-            mov bl, CommStringSize
-            div bl                                      ; Op=byte: AL:=AX / Op 
-            mov selectedOp1Reg, al
-            ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
-            JMP RETURN
-
-    ChooseAddReg:
-
-        ; Display Command
-        mov ah, 9
-        mov dx, offset AddRegAX
-        int 21h
-
-        CheckKey_AddReg:
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            CALL WaitKeyPress
-
-
-        Push ax
-        PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            ; Reset Cursor
-            mov ah,2
-            mov dx, Op1CursorLoc
-            int 10h
-        pop dx 
-        pop ax
-
-        ; Check if pressed is Up or down or Enter
-        cmp ah, UpArrowScanCode                          
-        jz CommUp_AddReg 
-        cmp ah, DownArrowScanCode
-        jz CommDown_AddReg
-        cmp ah, EnterScanCode
-        jz Selected_AddReg
-        jmp CheckKey_AddReg
-
-
-        CommUp_AddReg:
-            mov ah, 9
-            ; Check overflow
-                cmp dx, offset AddRegAX              ; RegFirstChoiceLocation ; the start of combobox
-                jnz NotOverflow_AddReg
-                mov dx, offset AddRegDI              ; RegLastChoiceLocation ; last one to overcome overflow
-                add dx, CommStringSize
-            NotOverflow_AddReg:
-                sub dx, CommStringSize
-                int 21h
-                jmp CheckKey_AddReg
-        
-        CommDown_AddReg:
-            mov ah, 9
-            ; Check End of file
-                cmp dx, offset AddRegDI              ; RegLastChoiceLocation
-                jnz NotEOF_AddReg
-                mov dx, offset AddRegAX              ; RegFirstChoiceLocation
-                sub dx, CommStringSize
-            NotEOF_AddReg:
-                add dx, CommStringSize
-                int 21h
-                jmp CheckKey_AddReg
-        
-        Selected_AddReg:
-            ; Detecting index of selected command
-            mov ax, dx
-            SUB AX, offset AddRegAX              ; RegFirstChoiceLocation
-            mov bl, CommStringSize
-            div bl                                      ; Op=byte: AL:=AX / Op 
-            mov selectedOp1AddReg, al
-            ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
-            JMP RETURN
-    
-    ChooseMem:
-    
-        ; Display memory
-        
-        mov ah, 9
-        mov dx, offset Mem0
-        int 21h
-
-        CheckKeyMemType:
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            CALL WaitKeyPress
-
-
-        Push ax
-        PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            ; Reset Cursor
-            mov ah,2
-            mov dx, Op1CursorLoc
-            int 10h
-        pop dx 
-        pop ax
-
-        ; Check if pressed is Up or down or Enter
-        cmp ah, UpArrowScanCode                          
-        jz CommUp3 
-        cmp ah, DownArrowScanCode
-        jz CommDown3
-        cmp ah, EnterScanCode
-        jz Selected3
-        jmp CheckKeyMemType
-
-
-        CommUp3:
-            mov ah, 9
-            ; Check overflow
-                cmp dx, offset Mem0         ; the start of combobox
-                jnz NotOverflow3
-                mov dx, offset Mem15 ; last one to overcome overflow
-                add dx, CommStringSize
-            NotOverflow3:
-                sub dx, CommStringSize
-                int 21h
-                jmp CheckKeyMemType
-        
-        CommDown3:
-            mov ah, 9
-            ; Check End of file
-                cmp dx, offset Mem15
-                jnz NotEOF3
-                mov dx, offset Mem0
-                sub dx, CommStringSize
-            NotEOF3:
-                add dx, CommStringSize
-                int 21h
-                jmp CheckKeyMemType
-        
-        Selected3:
-            ; Detecting index of selected command
-            mov ax, dx
-            SUB AX, offset Mem0
-            mov bl, CommStringSize
-            div bl                                      ; Op=byte: AL:=AX / Op 
-            mov selectedOp1Mem, al
-
-            JMP RETURN
-
-    EnterVal:
-
-        ; Clear the space which the user should enter the value into
-        mov dx, offset ClearSpace
-        CALL DisplayString
-
-        ; Reset Cursor
-        mov dx, Op1CursorLoc
+;; ---------------------------------- Commands Procedures ----------------------------------- ;;
+    AND_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
         CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
 
-        ; Clear buffer
-        mov ah,07
-        int 21h
-        
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckMemToMem
+        CALL CheckForbidCharProc
+        CALL CheckSizeMismatch
 
-        ; Take value as a String from User
-        mov ah,0Ah                   
-        mov dx,offset num
-        int 21h    
-        
+        CMP isInvalidCommand, 1
+        JZ Return_AndCom
 
-        mov cl,num+1                 ;save string size
-        mov StrSize,cl
+        CMP p1_CpuEnabled, 1
+        JZ And_p1
+        JMP And_p2
+        And_p1:
+            CALL GetDst
 
-        mov ch,0
-        mov si,2                     ;si to get first number from string that is not zero
-        mov di,2  
-        
-        cmp StrSize,1
-        jz hoop1
-        hoop2:
-            mov dl,num[di]               ; this loop to check zero in the first string
-            sub dl,30h
-            cmp dl,0 
-            jne hoop1
-            inc si
-            mov cl, StrSize
-            dec cl
-            mov StrSize,cl 
-            inc di
-            cmp cl,1
-        jnz hoop2
-        
-        hoop1:
-            cmp cl,4         ;check that value is hexa or Get error    
-            jng sk 
-            JMP InValidVal
+            CMP selectedOp1Size, 16
+            JZ p1_AndDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p1_AndDst_8BIT
+            JMP And_p2
 
-        sk:
-        
-        mov Bl,StrSize              ; loops to check num from 1 to 9 and A to F
-        numloop:
-            mov al,num[si] 
-            cmp al,30H
-            jnge notnum 
-            cmp al,39h
-            jnle notnum
-            sub al,30h  
-            jmp done   
-        
-        notnum: 
-            cmp al,41H
-            jnge notcharnum
-            cmp al,46h
-            jnle notcharnum
-            sub al,37h
-            jmp done  
-            
-        notcharnum:
-            cmp al,61H
-            jnge InValidVal
-            cmp al,66h
-            jnle InValidVal
-            sub al,57h
-            jmp done
-            
+            p1_AndDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p1_AndSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p1_AndSrc_16_8BIT
+
+                MOV isInValidCommand, 1
+                RET
+
+                p1_AndSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
+                    AND [DI], AX
+                    CALL SetCF
+                    JMP And_p2
                 
-        
-        done:  
-            inc si       
-            cmp bl,4                   ; first digit
-            jne ha1
-            mov cl,al 
-            mov ax,a 
-            mov ch,0
-            mul cx
-        ha1:  
-            cmp bl,3                   ;second digit
-            jne ha2
-            mov cl,al 
-            mov ax,b
-            mov ch,0
-            mul cx
-        
-        ha2:  
-            cmp bl,2                   ;third digit
-            jne ha3
-            mov cl,al 
-            mov ax,c
-            mov ch,0
-            mul cx
-        
-        ha3:
-            cmp bl,1                  ;fourth digit
-            jne ha4
-            mov ah,0
-        
-        ha4:
-            add Op1Val,ax  
-        
-        dec Bl                    ; check to exit 
-        cmp Bl,0   
-        je RETURN 
-        
-        jmp numloop
+                p1_AndSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
+                    AND [DI], AL
+                    CALL SetCF
+                    JMP And_p2
+            
+            p1_AndDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AndCom
+                AND BYTE PTR [DI], AL
+                CALL SetCF
+                JMP And_p2
 
-        InValidVal:
-            MOV Op1Valid, 0
-            JMP RETURN    
+        And_p2:
+            MOV p1_CpuEnabled, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_AndCom
 
-    InvalidOp1Type:
-        ; TODO
+            CALL GetDst
 
-    RETURN:
-        CALL CheckOp2Size
-        RET
-Op1Menu ENDP
-CheckOp1Size PROC
-    CMP selectedOp1Type, RegIndex
-    jz Reg_CheckOp1Size
-    CMP selectedOp1Type, ValIndex
-    jz Val_CheckOp1Size
-    
-    ; Memory is 16-bit addressable
-    MOV selectedOp1Size, 16
-    
-    Reg_CheckOp1Size:
-        CMP selectedOp1Reg, 0
-        JZ CheckOp1Size_RegAX
-        CMP selectedOp1Reg, 1
-        JZ CheckOp1Size_RegAL
-        CMP selectedOp1Reg, 2
-        JZ CheckOp1Size_RegAH
-        CMP selectedOp1Reg, 3
-        JZ CheckOp1Size_RegBX
-        CMP selectedOp1Reg, 4
-        JZ CheckOp1Size_RegBL
-        CMP selectedOp1Reg, 5
-        JZ CheckOp1Size_RegBH
-        CMP selectedOp1Reg, 6
-        JZ CheckOp1Size_RegCX
-        CMP selectedOp1Reg, 7
-        JZ CheckOp1Size_RegCL
-        CMP selectedOp1Reg, 8
-        JZ CheckOp1Size_RegCH
-        CMP selectedOp1Reg, 9
-        JZ CheckOp1Size_RegDX
-        CMP selectedOp1Reg, 10
-        JZ CheckOp1Size_RegDL
-        CMP selectedOp1Reg, 11
-        JZ CheckOp1Size_RegDH
+            CMP selectedOp1Size, 16
+            JZ p2_AndDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p2_AndDst_8BIT
+            JMP And_p2
 
-        CMP selectedOp1Reg, 15
-        JZ CheckOp1Size_RegBP
-        CMP selectedOp1Reg, 16
-        JZ CheckOp1Size_RegSP
-        CMP selectedOp1Reg, 17
-        JZ CheckOp1Size_RegSI
-        CMP selectedOp1Reg, 18
-        JZ CheckOp1Size_RegDI
-        
+            p2_AndDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p2_AndSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p2_AndSrc_16_8BIT
 
-        ret
+                MOV isInValidCommand, 1
+                RET
 
-        CheckOp1Size_RegAX:
-            MOV selectedOp1Size, 16
-            ret
-        CheckOp1Size_RegAL:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegAH:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegBX:
-            MOV selectedOp1Size, 16
-            ret
-        CheckOp1Size_RegBL:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegBH:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegCX:
-            MOV selectedOp1Size, 16
-            ret
-        CheckOp1Size_RegCL:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegCH:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegDX:
-            MOV selectedOp1Size, 16
-            ret
-        CheckOp1Size_RegDL:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegDH:
-            MOV selectedOp1Size, 8
-            ret
-        CheckOp1Size_RegBP:
-            MOV selectedOp1Size, 16
-            ret
-        CheckOp1Size_RegSP:
-            MOV selectedOp1Size, 16
-            ret
-        CheckOp1Size_RegSI:
-            MOV selectedOp1Size, 16
-            ret
-        CheckOp1Size_RegDI:
-            MOV selectedOp1Size, 16
-            ret
-
-    Val_CheckOp1Size:
-        CMP Op1Val, 0FFH
-        ja Op1Val_16Bit
-        mov selectedOp1Size, 8
-        RET
-        Op1Val_16Bit:
-            mov selectedOp1Size, 16
+                p2_AndSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
+                    AND [DI], AX
+                    CALL SetCF
+                    JMP Return_AndCom
+                
+                p2_AndSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AndCom
+                    AND [DI], AL
+                    CALL SetCF
+                    JMP Return_AndCom
+            
+            p2_AndDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AndCom
+                AND BYTE PTR [DI], AL
+                CALL SetCF
+                JMP Return_AndCom
 
 
-    RET
-ENDP
-Op2Menu PROC
 
-    ; Set Cursor
-    mov ah,2
-    mov dx, Op2CursorLoc 
-    int 10h
-
-    CALL Op2TypeMenu
-
-    ; Set Cursor
-    mov ah,2
-    mov dx, Op2CursorLoc 
-    int 10h
-
-
-    CMP selectedOp2Type, RegIndex     
-    JZ ChooseReg_Op2Menu
-    CMP selectedOp2Type, AddRegIndex
-    JZ ChooseAddReg_Op2Menu
-    CMP selectedOp2Type, MemIndex
-    JZ ChooseMem_Op2Menu
-    CMP selectedOp2Type, ValIndex
-    JZ EnterVal_Op2Menu
-    jmp InvalidOp2Type
-
-    ChooseReg_Op2Menu: 
-
-        ; Display Command
-        mov ah, 9
-        mov dx, offset RegAX
-        int 21h
-
-        CheckKey_RegType_Op2Menu:
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            CALL WaitKeyPress
-
-
-        Push ax
-        PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            ; Reset Cursor
-            mov ah,2
-            mov dx, Op2CursorLoc
-            int 10h
-        pop dx 
-        pop ax
-
-        ; Check if pressed is Up or down or Enter
-        cmp ah, UpArrowScanCode                          
-        jz CommUp_RegType_Op2Menu
-        cmp ah, DownArrowScanCode
-        jz CommDown_RegType_Op2Menu
-        cmp ah, EnterScanCode
-        jz Selected_RegType_Op2Menu
-        jmp CheckKey_RegType_Op2Menu
-
-
-        CommUp_RegType_Op2Menu:
-            mov ah, 9
-            ; Check overflow
-                cmp dx, offset RegAX              ; RegFirstChoiceLocation ; the start of combobox
-                jnz NotOverflow_RegType_Op2Menu
-                mov dx, offset RegDI              ; RegLastChoiceLocation ; last one to overcome overflow
-                add dx, CommStringSize
-            NotOverflow_RegType_Op2Menu:
-                sub dx, CommStringSize
-                int 21h
-                jmp CheckKey_RegType_Op2Menu
-        
-        CommDown_RegType_Op2Menu:
-            mov ah, 9
-            ; Check End of file
-                cmp dx, offset RegDI              ; RegLastChoiceLocation
-                jnz NotEOF_RegType_Op2Menu
-                mov dx, offset RegAX              ; RegFirstChoiceLocation
-                sub dx, CommStringSize
-            NotEOF_RegType_Op2Menu:
-                add dx, CommStringSize
-                int 21h
-                jmp CheckKey_RegType_Op2Menu
-        
-        Selected_RegType_Op2Menu:
-            ; Detecting index of selected command
-            mov ax, dx
-            SUB AX, offset RegAX              ; RegFirstChoiceLocation
-            mov bl, CommStringSize
-            div bl                                      ; Op=byte: AL:=AX / Op 
-            mov selectedOp2Reg, al
-            ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
-            JMP RETURN_Op2Menu
-
-    ChooseAddReg_Op2Menu:
-
-        ; Display Command
-        mov ah, 9
-        mov dx, offset AddRegAX
-        int 21h
-
-        CheckKey_AddReg_Op2Menu:
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            CALL WaitKeyPress
-
-
-        Push ax
-        PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            ; Reset Cursor
-            mov ah,2
-            mov dx, Op2CursorLoc
-            int 10h
-        pop dx 
-        pop ax
-
-        ; Check if pressed is Up or down or Enter
-        cmp ah, UpArrowScanCode                          
-        jz CommUp_AddReg_Op2Menu
-        cmp ah, DownArrowScanCode
-        jz CommDown_AddReg_Op2Menu
-        cmp ah, EnterScanCode
-        jz Selected_AddReg
-        jmp CheckKey_AddReg_Op2Menu
-
-
-        CommUp_AddReg_Op2Menu:
-            mov ah, 9
-            ; Check overflow
-                cmp dx, offset AddRegAX              ; RegFirstChoiceLocation ; the start of combobox
-                jnz NotOverflow_AddReg_Op2Menu
-                mov dx, offset AddRegDI              ; RegLastChoiceLocation ; last one to overcome overflow
-                add dx, CommStringSize
-            NotOverflow_AddReg_Op2Menu:
-                sub dx, CommStringSize
-                int 21h
-                jmp CheckKey_AddReg_Op2Menu
-        
-        CommDown_AddReg_Op2Menu:
-            mov ah, 9
-            ; Check End of file
-                cmp dx, offset AddRegDI              ; RegLastChoiceLocation
-                jnz NotEOF_AddReg_Op2Menu
-                mov dx, offset AddRegAX              ; RegFirstChoiceLocation
-                sub dx, CommStringSize
-            NotEOF_AddReg_Op2Menu:
-                add dx, CommStringSize
-                int 21h
-                jmp CheckKey_AddReg_Op2Menu
-        
-        Selected_AddReg_Op2Menu:
-            ; Detecting index of selected command
-            mov ax, dx
-            SUB AX, offset AddRegAX              ; RegFirstChoiceLocation
-            mov bl, CommStringSize
-            div bl                                      ; Op=byte: AL:=AX / Op 
-            mov selectedOp2AddReg, al
-            ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
-            JMP RETURN_Op2Menu
-    
-    ChooseMem_Op2Menu:
-    
-        ; Display memory
-        
-        mov ah, 9
-        mov dx, offset Mem0
-        int 21h
-
-        CheckKey_MemType_Op2Menu:
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            CALL WaitKeyPress
-
-
-        Push ax
-        PUSH dx 
-            ; Clear buffer
-            mov ah,07
-            int 21h
-            ; Reset Cursor
-            mov ah,2
-            mov dx, Op2CursorLoc
-            int 10h
-        pop dx 
-        pop ax
-
-        ; Check if pressed is Up or down or Enter
-        cmp ah, UpArrowScanCode                          
-        jz CommUp_Op2Menu 
-        cmp ah, DownArrowScanCode
-        jz CommDown_Op2Menu
-        cmp ah, EnterScanCode
-        jz Selected_Op2Menu
-        jmp CheckKey_MemType_Op2Menu
-
-
-        CommUp_Op2Menu:
-            mov ah, 9
-            ; Check overflow
-                cmp dx, offset Mem0         ; the start of combobox
-                jnz NotOverflow_Op2Menu
-                mov dx, offset Mem15 ; last one to overcome overflow
-                add dx, CommStringSize
-            NotOverflow_Op2Menu:
-                sub dx, CommStringSize
-                int 21h
-                jmp CheckKey_MemType_Op2Menu
-        
-        CommDown_Op2Menu:
-            mov ah, 9
-            ; Check End of file
-                cmp dx, offset Mem15
-                jnz NotEOF_Op2Menu
-                mov dx, offset Mem0
-                sub dx, CommStringSize
-            NotEOF_Op2Menu:
-                add dx, CommStringSize
-                int 21h
-                jmp CheckKey_MemType_Op2Menu
-        
-        Selected_Op2Menu:
-            ; Detecting index of selected command
-            mov ax, dx
-            SUB AX, offset Mem0
-            mov bl, CommStringSize
-            div bl                                      ; Op=byte: AL:=AX / Op 
-            mov selectedOp2Mem, al
-
-            JMP RETURN_Op2Menu
-
-    EnterVal_Op2Menu:
-
-        ; Clear the space which the user should enter the value into
-        mov dx, offset ClearSpace
-        CALL DisplayString
-
-        ; Reset Cursor
-        mov dx, Op2CursorLoc
+        Return_AndCom:
+            RET
+    ENDP
+    MOV_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
         CALL SetCursor
-        ; Clear buffer
-            mov ah,07
-            int 21h
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
 
-        ; Take value as a String from User
-        mov ah,0Ah                   
-        mov dx,offset num2
-        int 21h    
-        
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckMemToMem
+        CALL CheckForbidCharProc
+        CALL CheckSizeMismatch
 
-        mov cl,num2+1                 ;save string size
-        mov StrSize2,cl
+        CMP isInvalidCommand, 1
+        JZ Return_MovCom
 
-        mov ch,0
-        mov si,2                     ;si to get first number from string that is not zero
-        mov di,2  
-        
-        cmp StrSize2,1
-        jz hoop1_Op2Menu
-        hoop2_Op2Menu:
-            mov dl,num2[di]               ; this loop to check zero in the first string
-            sub dl,30h
-            cmp dl,0 
-            jne hoop1_Op2Menu
-            inc si
-            mov cl, StrSize2
-            dec cl
-            mov StrSize2,cl 
-            inc di
-            cmp cl,1 
-        jnz hoop2_Op2Menu
-        
-        hoop1_Op2Menu:
-            cmp cl,4         ;check that value is hexa or Get error    
-            jng sk_Op2Menu 
-            JMP InValidVal_Op2Menu
+        CMP p1_CpuEnabled, 1
+        JZ Mov_p1
+        JMP Mov_p2
+        Mov_p1:
+            CALL GetDst
 
-        sk_Op2Menu:
-        
-        mov Bl,StrSize2              ; loops to check num from 1 to 9 and A to F
-        numloop_Op2Menu:
-            mov al,num2[si] 
-            cmp al,30H
-            jnge notnum_Op2Menu 
-            cmp al,39h
-            jnle notnum_Op2Menu
-            sub al,30h  
-            jmp done_Op2Menu   
-        
-        notnum_Op2Menu: 
-            cmp al,41H
-            jnge notcharnum_Op2Menu
-            cmp al,46h
-            jnle notcharnum_Op2Menu
-            sub al,37h
-            jmp done_Op2Menu  
-            
-        notcharnum_Op2Menu:
-            cmp al,61H
-            jnge InValidVal_Op2Menu
-            cmp al,66h
-            jnle InValidVal_Op2Menu
-            sub al,57h
-            jmp done_Op2Menu
-            
+            CMP selectedOp1Size, 16
+            JZ p1_MovDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p1_MovDst_8BIT
+            JMP Mov_p2
+
+            p1_MovDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p1_MovSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p1_MovSrc_16_8BIT
+
+                p1_MovSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
+                    Mov [DI], AX
+                    JMP Mov_p2
                 
-        
-        done_Op2Menu:  
-            inc si       
-            cmp bl,4                   ; first digit
-            jne ha1_Op2Menu
-            mov cl,al 
-            mov ax,a 
-            mov ch,0
-            mul cx
-        ha1_Op2Menu:  
-            cmp bl,3                   ;second digit
-            jne ha2_Op2Menu
-            mov cl,al 
-            mov ax,b
-            mov ch,0
-            mul cx
-        
-        ha2_Op2Menu:  
-            cmp bl,2                   ;third digit
-            jne ha3_Op2Menu
-            mov cl,al 
-            mov ax,c
-            mov ch,0
-            mul cx
-        
-        ha3_Op2Menu:
-            cmp bl,1                  ;fourth digit
-            jne ha4_Op2Menu
-            mov ah,0
-        
-        ha4_Op2Menu:
-            add Op2Val,ax  
-        
-        dec Bl                    ; check to exit 
-        cmp Bl,0   
-        je RETURN_Op2Menu 
-        
-        jmp numloop_Op2Menu
+                p1_MovSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
+                    Mov [DI], AL
+                    JMP Mov_p2
+            
+            p1_MovDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                    JZ Return_MovCom
+                Mov BYTE PTR [DI], AL
+                JMP Mov_p2
 
-        InValidVal_Op2Menu:
-            MOV Op2Valid, 0
-            JMP RETURN_Op2Menu   
+        Mov_p2:
+            MOV p1_CpuEnabled, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_MovCom
 
-    InvalidOp2Type:
-        ; TODO
-        mov ah, 9               ; display error message and exit
-        mov dx, offset error
-        int 21h
+            CALL GetDst
+            
+            CMP selectedOp1Size, 16
+            JZ p2_MovDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p2_MovDst_8BIT
 
-    RETURN_Op2Menu:
-        CALL CheckOp2Size
-        RET
-Op2Menu ENDP
-CheckOp2Size PROC
-    CMP selectedOp2Type, 0
-    jz Reg_CheckOp2Size
-    CMP selectedOp2Type, ValIndex
-    jz Val_CheckOp2Size
-    
-    ; Memory is 16-bit addressable
-    MOV selectedOp2Size, 16
-    
-    Reg_CheckOp2Size:
-        CMP selectedOp2Reg, 0
-        JZ CheckOp2Size_RegAX
-        CMP selectedOp2Reg, 1
-        JZ CheckOp2Size_RegAL
-        CMP selectedOp2Reg, 2
-        JZ CheckOp2Size_RegAH
-        CMP selectedOp2Reg, 3
-        JZ CheckOp2Size_RegBX
-        CMP selectedOp2Reg, 4
-        JZ CheckOp2Size_RegBL
-        CMP selectedOp2Reg, 5
-        JZ CheckOp2Size_RegBH
-        CMP selectedOp2Reg, 6
-        JZ CheckOp2Size_RegCX
-        CMP selectedOp2Reg, 7
-        JZ CheckOp2Size_RegCL
-        CMP selectedOp2Reg, 8
-        JZ CheckOp2Size_RegCH
-        CMP selectedOp2Reg, 9
-        JZ CheckOp2Size_RegDX
-        CMP selectedOp2Reg, 10
-        JZ CheckOp2Size_RegDL
-        CMP selectedOp2Reg, 11
-        JZ CheckOp2Size_RegDH
-
-        CMP selectedOp2Reg, 15
-        JZ CheckOp2Size_RegBP
-        CMP selectedOp2Reg, 16
-        JZ CheckOp2Size_RegSP
-        CMP selectedOp2Reg, 17
-        JZ CheckOp2Size_RegSI
-        CMP selectedOp2Reg, 18
-        JZ CheckOp2Size_RegDI
-        
-
-        ret
-
-        CheckOp2Size_RegAX:
-            MOV selectedOp2Size, 16
-            ret
-        CheckOp2Size_RegAL:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegAH:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegBX:
-            MOV selectedOp2Size, 16
-            ret
-        CheckOp2Size_RegBL:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegBH:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegCX:
-            MOV selectedOp2Size, 16
-            ret
-        CheckOp2Size_RegCL:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegCH:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegDX:
-            MOV selectedOp2Size, 16
-            ret
-        CheckOp2Size_RegDL:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegDH:
-            MOV selectedOp2Size, 8
-            ret
-        CheckOp2Size_RegBP:
-            MOV selectedOp2Size, 16
-            ret
-        CheckOp2Size_RegSP:
-            MOV selectedOp2Size, 16
-            ret
-        CheckOp2Size_RegSI:
-            MOV selectedOp2Size, 16
-            ret
-        CheckOp2Size_RegDI:
-            MOV selectedOp2Size, 16
-            ret
-
-    Val_CheckOp2Size:
-        CMP Op2Val, 0FFH
-        ja Op2Val_16Bit
-        mov selectedOp2Size, 8
-        RET
-        Op2Val_16Bit:
-            mov selectedOp2Size, 16
-ENDP
-ourGetSrcOp_8Bit PROC    ; Returned Value is saved in AL
-
-    MOV AL, selectedOp1Size
-    CMP AL, selectedOp2Size
-    jnz InValidCommand
-
-    CMP selectedOp2Type, 0
-    JZ SrcOp2Reg_8Bit2
-    CMP selectedOp2Type, 1
-    JZ SrcOp2AddReg_8Bit2
-    CMP selectedOp2Type, 2
-    JZ SrcOp2Mem_8Bit2
-    CMP selectedOp2Type, 3
-    JZ SrcOp2Val_8Bit2
-    JMP InValidCommand
-
-    SrcOp2Reg_8Bit2:
-        CMP selectedOp2Reg, 1
-        JZ SrcOp2RegAL_8Bit2
-        CMP selectedOp2Reg, 2
-        JZ SrcOp2RegAH_8Bit2
-
-        CMP selectedOp2Reg, 4
-        JZ SrcOp2RegBL_8Bit2
-        CMP selectedOp2Reg, 5
-        JZ SrcOp2RegBH_8Bit2
-
-        CMP selectedOp2Reg, 7
-        JZ SrcOp2RegCL_8Bit2
-        CMP selectedOp2Reg, 8
-        JZ SrcOp2RegCH_8Bit2
-
-        CMP selectedOp2Reg, 10
-        JZ SrcOp2RegDL_8Bit2
-        CMP selectedOp2Reg, 11
-        JZ SrcOp2RegDH_8Bit2
-
-        JMP InValidCommand
-
-        SrcOp2RegAL_8Bit2:
-            mov al, BYTE PTR ourValRegAX
-            RET
-        SrcOp2RegAH_8Bit2:
-            mov al, BYTE PTR ourValRegAX+1
-            RET
-        SrcOp2RegBL_8Bit2:
-            mov al, BYTE PTR ourValRegBX
-            RET
-        SrcOp2RegBH_8Bit2:
-            mov al, BYTE PTR ourValRegBX+1
-            RET
-        SrcOp2RegCL_8Bit2:
-            mov al, BYTE PTR ourValRegCX
-            RET
-        SrcOp2RegCH_8Bit2:
-            mov al, BYTE PTR ourValRegCX+1
-            RET
-        SrcOp2RegDL_8Bit2:
-            mov al, BYTE PTR ourValRegDX
-            RET
-        SrcOp2RegDH_8Bit2:
-            mov al, BYTE PTR ourValRegDX+1
-            RET
-        
+            p2_MovDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p2_MovSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p2_MovSrc_16_8BIT
 
 
-    SrcOp2AddReg_8Bit2:
-
-        CMP selectedOp2AddReg, 3
-        JZ SrcOp2AddRegBX_8Bit2
-        CMP selectedOp2AddReg, 15
-        JZ SrcOp2AddRegBP_8Bit2
-        CMP selectedOp2AddReg, 17
-        JZ SrcOp2AddRegSI_8Bit2
-        CMP selectedOp2AddReg, 18
-        JZ SrcOp2AddRegDI_8Bit2
-
-        JMP InValidCommand
-
-        SrcOp2AddRegBX_8Bit2:
-            MOV DX, ourValRegBX
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegBX
-            MOV AL, [SI]
-            RET
-        SrcOp2AddRegBP_8Bit2:
-            MOV DX, ourValRegBP
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegBP
-            MOV AL, [SI]
-            RET
-        SrcOp2AddRegSI_8Bit2:
-            MOV DX, ourValRegSI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegSI
-            MOV AL, [SI]
-            RET
-        SrcOp2AddRegDI_8Bit2:
-            MOV DX, ourValRegDI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegDI
-            MOV AL, [SI]
-            RET
-
-    SrcOp2Mem_8Bit2:
-
-        CMP selectedOp2Mem, 0
-        JZ SrcOp2Mem0_8Bit2
-        CMP selectedOp2Mem, 1
-        JZ SrcOp2Mem1_8Bit2
-        CMP selectedOp2Mem, 2
-        JZ SrcOp2Mem2_8Bit2
-        CMP selectedOp2Mem, 3
-        JZ SrcOp2Mem3_8Bit2
-        CMP selectedOp2Mem, 4
-        JZ SrcOp2Mem4_8Bit2
-        CMP selectedOp2Mem, 5
-        JZ SrcOp2Mem5_8Bit2
-        CMP selectedOp2Mem, 6
-        JZ SrcOp2Mem6_8Bit2
-        CMP selectedOp2Mem, 7
-        JZ SrcOp2Mem7_8Bit2
-        CMP selectedOp2Mem, 8
-        JZ SrcOp2Mem8_8Bit2
-        CMP selectedOp2Mem, 9
-        JZ SrcOp2Mem9_8Bit2
-        CMP selectedOp2Mem, 10
-        JZ SrcOp2Mem10_8Bit2
-        CMP selectedOp2Mem, 11
-        JZ SrcOp2Mem11_8Bit2
-        CMP selectedOp2Mem, 12
-        JZ SrcOp2Mem12_8Bit2
-        CMP selectedOp2Mem, 13
-        JZ SrcOp2Mem13_8Bit2
-        CMP selectedOp2Mem, 14
-        JZ SrcOp2Mem14_8Bit2
-        CMP selectedOp2Mem, 15
-        JZ SrcOp2Mem15_8Bit2
-        JMP InValidCommand
-        
-        SrcOp2Mem0_8Bit2:
-            MOV AL, ourValMem
-            RET
-        SrcOp2Mem1_8Bit2:
-            MOV AL, ourValMem+1
-            RET
-        SrcOp2Mem2_8Bit2:
-            MOV AL, ourValMem+2
-            RET
-        SrcOp2Mem3_8Bit2:
-            MOV AL, ourValMem+3
-            RET
-        SrcOp2Mem4_8Bit2:
-            MOV AL, ourValMem+4
-            RET
-        SrcOp2Mem5_8Bit2:
-            MOV AL, ourValMem+5
-            RET
-        SrcOp2Mem6_8Bit2:
-            MOV AL, ourValMem+6
-            RET
-        SrcOp2Mem7_8Bit2:
-            MOV AL, ourValMem+7
-            RET
-        SrcOp2Mem8_8Bit2:
-            MOV AL, ourValMem+8
-            RET
-        SrcOp2Mem9_8Bit2:
-            MOV AL, ourValMem+9
-            RET
-        SrcOp2Mem10_8Bit2:
-            MOV AL, ourValMem+10
-            RET
-        SrcOp2Mem11_8Bit2:
-            MOV AL, ourValMem+11
-            RET
-        SrcOp2Mem12_8Bit2:
-            MOV AL, ourValMem+12
-            RET
-        SrcOp2Mem13_8Bit2:
-            MOV AL, ourValMem+13
-            RET
-        SrcOp2Mem14_8Bit2:
-            MOV AL, ourValMem+14
-            RET
-        SrcOp2Mem15_8Bit2:
-            MOV AL, ourValMem+15
-            RET
-    SrcOp2Val_8Bit2:
-        CMP Op2Valid, 0
-        jz InValidCommand
-        MOV AL, BYTE PTR Op2Val
-        RET
-ourGetSrcOp_8Bit ENDP    
-GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
-
-    MOV AL, selectedOp1Size
-    CMP AL, selectedOp2Size
-    jnz InValidCommand
-
-    CMP selectedOp2Type, 0
-    JZ SrcOp2Reg_8Bit
-    CMP selectedOp2Type, 1
-    JZ SrcOp2AddReg_8Bit
-    CMP selectedOp2Type, 2
-    JZ SrcOp2Mem_8Bit
-    CMP selectedOp2Type, 3
-    JZ SrcOp2Val_8Bit
-    JMP InValidCommand
-
-    SrcOp2Reg_8Bit:
-        CMP selectedOp2Reg, 1
-        JZ SrcOp2RegAL_8Bit
-        CMP selectedOp2Reg, 2
-        JZ SrcOp2RegAH_8Bit
-
-        CMP selectedOp2Reg, 4
-        JZ SrcOp2RegBL_8Bit
-        CMP selectedOp2Reg, 5
-        JZ SrcOp2RegBH_8Bit
-
-        CMP selectedOp2Reg, 7
-        JZ SrcOp2RegCL_8Bit
-        CMP selectedOp2Reg, 8
-        JZ SrcOp2RegCH_8Bit
-
-        CMP selectedOp2Reg, 10
-        JZ SrcOp2RegDL_8Bit
-        CMP selectedOp2Reg, 11
-        JZ SrcOp2RegDH_8Bit
-
-        JMP InValidCommand
-
-        SrcOp2RegAL_8Bit:
-            mov al, BYTE PTR ValRegAX
-            RET
-        SrcOp2RegAH_8Bit:
-            mov al, BYTE PTR ValRegAX+1
-            RET
-        SrcOp2RegBL_8Bit:
-            mov al, BYTE PTR ValRegBX
-            RET
-        SrcOp2RegBH_8Bit:
-            mov al, BYTE PTR ValRegBX+1
-            RET
-        SrcOp2RegCL_8Bit:
-            mov al, BYTE PTR ValRegCX
-            RET
-        SrcOp2RegCH_8Bit:
-            mov al, BYTE PTR ValRegCX+1
-            RET
-        SrcOp2RegDL_8Bit:
-            mov al, BYTE PTR ValRegDX
-            RET
-        SrcOp2RegDH_8Bit:
-            mov al, BYTE PTR ValRegDX+1
-            RET
-        
-
-
-    SrcOp2AddReg_8Bit:
-
-        CMP selectedOp2AddReg, 3
-        JZ SrcOp2AddRegBX_8Bit
-        CMP selectedOp2AddReg, 15
-        JZ SrcOp2AddRegBP_8Bit
-        CMP selectedOp2AddReg, 17
-        JZ SrcOp2AddRegSI_8Bit
-        CMP selectedOp2AddReg, 18
-        JZ SrcOp2AddRegDI_8Bit
-
-        JMP InValidCommand
-
-        SrcOp2AddRegBX_8Bit:
-            MOV DX, ValRegBX
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegBX
-            MOV AL, [SI]
-            RET
-        SrcOp2AddRegBP_8Bit:
-            MOV DX, ValRegBP
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegBP
-            MOV AL, [SI]
-            RET
-        SrcOp2AddRegSI_8Bit:
-            MOV DX, ValRegSI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegSI
-            MOV AL, [SI]
-            RET
-        SrcOp2AddRegDI_8Bit:
-            MOV DX, ValRegDI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegDI
-            MOV AL, [SI]
-            RET
-
-    SrcOp2Mem_8Bit:
-
-        CMP selectedOp2Mem, 0
-        JZ SrcOp2Mem0_8Bit
-        CMP selectedOp2Mem, 1
-        JZ SrcOp2Mem1_8Bit
-        CMP selectedOp2Mem, 2
-        JZ SrcOp2Mem2_8Bit
-        CMP selectedOp2Mem, 3
-        JZ SrcOp2Mem3_8Bit
-        CMP selectedOp2Mem, 4
-        JZ SrcOp2Mem4_8Bit
-        CMP selectedOp2Mem, 5
-        JZ SrcOp2Mem5_8Bit
-        CMP selectedOp2Mem, 6
-        JZ SrcOp2Mem6_8Bit
-        CMP selectedOp2Mem, 7
-        JZ SrcOp2Mem7_8Bit
-        CMP selectedOp2Mem, 8
-        JZ SrcOp2Mem8_8Bit
-        CMP selectedOp2Mem, 9
-        JZ SrcOp2Mem9_8Bit
-        CMP selectedOp2Mem, 10
-        JZ SrcOp2Mem10_8Bit
-        CMP selectedOp2Mem, 11
-        JZ SrcOp2Mem11_8Bit
-        CMP selectedOp2Mem, 12
-        JZ SrcOp2Mem12_8Bit
-        CMP selectedOp2Mem, 13
-        JZ SrcOp2Mem13_8Bit
-        CMP selectedOp2Mem, 14
-        JZ SrcOp2Mem14_8Bit
-        CMP selectedOp2Mem, 15
-        JZ SrcOp2Mem15_8Bit
-        JMP InValidCommand
-        
-        SrcOp2Mem0_8Bit:
-            MOV AL, ValMem
-            RET
-        SrcOp2Mem1_8Bit:
-            MOV AL, ValMem+1
-            RET
-        SrcOp2Mem2_8Bit:
-            MOV AL, ValMem+2
-            RET
-        SrcOp2Mem3_8Bit:
-            MOV AL, ValMem+3
-            RET
-        SrcOp2Mem4_8Bit:
-            MOV AL, ValMem+4
-            RET
-        SrcOp2Mem5_8Bit:
-            MOV AL, ValMem+5
-            RET
-        SrcOp2Mem6_8Bit:
-            MOV AL, ValMem+6
-            RET
-        SrcOp2Mem7_8Bit:
-            MOV AL, ValMem+7
-            RET
-        SrcOp2Mem8_8Bit:
-            MOV AL, ValMem+8
-            RET
-        SrcOp2Mem9_8Bit:
-            MOV AL, ValMem+9
-            RET
-        SrcOp2Mem10_8Bit:
-            MOV AL, ValMem+10
-            RET
-        SrcOp2Mem11_8Bit:
-            MOV AL, ValMem+11
-            RET
-        SrcOp2Mem12_8Bit:
-            MOV AL, ValMem+12
-            RET
-        SrcOp2Mem13_8Bit:
-            MOV AL, ValMem+13
-            RET
-        SrcOp2Mem14_8Bit:
-            MOV AL, ValMem+14
-            RET
-        SrcOp2Mem15_8Bit:
-            MOV AL, ValMem+15
-            RET
-    SrcOp2Val_8Bit:
-        CMP Op2Valid, 0
-        jz InValidCommand
-        MOV AL, BYTE PTR Op2Val
-        RET
-
-
-    RET
-GetSrcOp_8Bit ENDP
-DisPlayNumber PROC ;display number from Registers   
-    mov ax,234h     ;pop ax
-    mov bx,ax
-
-    mov cx,a
-    div cx
-
-    mov ah,2     ; display first digit
-    mov dl,al
-    add dl,30h
-    int 21h        
-
-    mov ah,0
-    mov cx,a
-    mul cx
-
-    sub bx,ax     
-
-    mov cx,b   
-    mov ax,bx
-    div cx      
-
-    mov cl,ah   
-
-    mov ah,2     ; display second digit
-    mov dl,al
-    add dl,30h
-    int 21h   
-
-    mov dl,c
-    mov al,bl
-    mov ah,0
-
-    div dl 
-
-    mov ah,2     ; display third digit
-    mov dl,al
-    add dl,30h
-    int 21h 
-
-    mov cl,c 
-    mov al,bl
-    mov ah,0
-    div cl
-    mov al,ah
-    mov ah,2     ; display fourth digit
-    mov dl,al
-    add dl,30h
-    int 21h 
+                p2_MovSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
+                    Mov [DI], AX
+                    JMP Return_MovCom
+                
+                p2_MovSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
                     
-    RET
+                    CMP isInvalidCommand, 1
+                    JZ Return_MovCom
+                    Mov [DI], AL
+                    JMP Return_MovCom
+            
+            p2_MovDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_MovCom
+                Mov BYTE PTR [DI], AL
+                JMP Return_MovCom
 
-    DisPlayNumber ENDP
-GetSrcOp PROC    ; Returned Value is saved in AX
-    CMP selectedOp2Type, 0
-    JZ SrcOp2Reg
-    CMP selectedOp2Type, 1
-    JZ SrcOp2AddReg
-    CMP selectedOp2Type, 2
-    JZ SrcOp2Mem
-    CMP selectedOp2Type, 3
-    JZ SrcOp2Val
-    JMP InValidCommand
 
-    SrcOp2Reg:
 
-        CMP selectedOp2Reg, 0
-        JZ SrcOp2RegAX
-
-        CMP selectedOp2Reg, 3
-        JZ SrcOp2RegBX
-
-        CMP selectedOp2Reg, 6
-        JZ SrcOp2RegCX
-
-        CMP selectedOp2Reg, 9
-        JZ SrcOp2pRegDX
-
-        CMP selectedOp2Reg, 15
-        JZ SrcOp2RegBP
-        CMP selectedOp2Reg, 16
-        JZ SrcOp2RegSP
-        CMP selectedOp2Reg, 17
-        JZ SrcOp2RegSI
-        CMP selectedOp2Reg, 18
-        JZ SrcOp2RegDI
-
-        JMP InValidCommand
-
-        SrcOp2RegAX:
-            MOV AX, ValRegAX
+        Return_MovCom:
             RET
-        SrcOp2RegBX:
-            MOV AX, ValRegBX
+    ENDP
+    ADD_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckMemToMem
+        CALL CheckForbidCharProc
+        CALL CheckSizeMismatch
+
+        CMP isInvalidCommand, 1
+        JZ Return_AddCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Add_p1
+        JMP Add_p2
+        Add_p1:
+            CALL GetDst
+
+            CMP selectedOp1Size, 16
+            JZ p1_AddDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p1_AddDst_8BIT
+            JMP Add_p2
+
+            p1_AddDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p1_AddSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p1_AddSrc_16_8BIT
+
+                MOV isInValidCommand, 1
+                RET
+
+                p1_AddSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
+                    Add [DI], AX
+                    CALL SetCF
+                    JMP Add_p2
+                
+                p1_AddSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
+                    Add [DI], AL
+                    CALL SetCF
+                    JMP Add_p2
+            
+            p1_AddDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AddCom
+                Add BYTE PTR [DI], AL
+                CALL SetCF
+                JMP Add_p2
+
+        Add_p2:
+            MOV p1_CpuEnabled, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_AddCom
+
+            CALL GetDst
+            
+            CMP selectedOp1Size, 16
+            JZ p2_AddDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p2_AddDst_8BIT
+            JMP Add_p2
+
+            p2_AddDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p2_AddSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p2_AddSrc_16_8BIT
+
+                
+                MOV isInValidCommand, 1
+                RET
+
+                p2_AddSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
+                    Add [DI], AX
+                    CALL SetCF
+                    JMP Return_AddCom
+                
+                p2_AddSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AddCom
+                    Add [DI], AL
+                    CALL SetCF
+                    JMP Return_AddCom
+            
+            p2_AddDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AddCom
+                Add BYTE PTR [DI], AL
+                CALL SetCF
+                JMP Return_AddCom
+
+
+
+        Return_AddCom:
             RET
-        SrcOp2RegCX:
-            MOV AX, ValRegCX
+    ENDP
+    ADC_Comm_PROC PROC FAR
+
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckMemToMem
+        CALL CheckForbidCharProc
+        CALL CheckSizeMismatch
+
+        CMP isInvalidCommand, 1
+        JZ Return_AdcCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Adc_p1
+        JMP Adc_p2
+        Adc_p1:
+            CALL GetDst
+
+            CMP selectedOp1Size, 16
+            JZ p1_AdcDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p1_AdcDst_8BIT
+            JMP Adc_p2
+
+            p1_AdcDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p1_AdcSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p1_AdcSrc_16_8BIT
+
+                MOV isInValidCommand, 1
+                RET
+
+                p1_AdcSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL GetCF
+                    Adc [DI], AX
+                    CALL SetCF
+                    JMP Adc_p2
+                
+                p1_AdcSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL GetCF
+                    Adc [DI], AL
+                    CALL SetCF
+                    JMP Adc_p2
+            
+            p1_AdcDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AdcCom
+                CALL GetCF
+                Adc BYTE PTR [DI], AL
+                CALL SetCF
+                JMP Adc_p2
+
+        Adc_p2:
+            MOV p1_CpuEnabled, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_AdcCom
+
+            CALL GetDst
+            
+            CMP selectedOp1Size, 16
+            JZ p2_AdcDst_16BIT
+            CMP selectedOp1Size, 8
+            JZ p2_AdcDst_8BIT
+            JMP Adc_p2
+
+            p2_AdcDst_16BIT:
+                CMP selectedOp2Size, 16
+                JZ p2_AdcSrc_16_16BIT
+                CMP selectedOp2Size, 8
+                JZ p2_AdcSrc_16_8BIT
+
+                
+                MOV isInValidCommand, 1
+                RET
+
+                p2_AdcSrc_16_16BIT:
+                    CALL GetSrcOp
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL GetCF
+                    Adc [DI], AX
+                    CALL SetCF
+                    JMP Return_AdcCom
+                
+                p2_AdcSrc_16_8BIT:
+                    CALL GetSrcOp_8Bit
+                    CMP isInvalidCommand, 1
+                    JZ Return_AdcCom
+                    CALL GetCF
+                    Adc [DI], AL
+                    CALL SetCF
+                    JMP Return_AdcCom
+            
+            p2_AdcDst_8BIT:    
+                CALL GetSrcOp_8Bit
+                CMP isInvalidCommand, 1
+                JZ Return_AdcCom
+                CALL GetCF
+                Adc BYTE PTR [DI], AL
+                CALL SetCF
+                JMP Return_AdcCom
+
+
+
+        Return_AdcCom:
             RET
-        SrcOp2pRegDX:
-            MOV AX, ValRegDX
-            RET
-        SrcOp2RegBP:
-            MOV AX, ValRegBP
-            RET
-        SrcOp2RegSP:
-            MOV AX, ValRegSP
-            RET
-        SrcOp2RegSI:
-            MOV AX, ValRegSI
-            RET
-        SrcOp2RegDI:
-            MOV AX, ValRegDI
+    ENDP
+    PUSH_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_PushCom
+
+        CMP selectedOp2Size, 8
+        JNZ ValidSize_Push
+
+        MOV isInvalidCommand, 1
+        JMP Return_PushCom
+
+        ValidSize_Push:
+            CMP p1_CpuEnabled, 1
+            JZ Push_p1
+            JMP Push_p2
+            Push_p1:
+                CALL GetSrcOp
+
+                CMP isInvalidCommand, 1
+                JZ Push_p2
+
+                Mov BX, p1_ValRegSP
+                MOV p1_ValStack[BX], AX
+                INC p1_ValRegSP
+                JMP Push_p2
+
+                
+
+            Push_p2:
+                MOV p1_CpuEnabled, 0
+                MOV isInvalidCommand, 0
+                CMP p2_CpuEnabled, 1
+                jnz Return_PushCom
+
+                CALL GetSrcOp
+
+                CMP isInvalidCommand, 1
+                JZ Return_PushCom
+
+                Mov BX, p2_ValRegSP
+                MOV p2_ValStack[BX], AX
+                INC p2_ValRegSP
+
+        Return_PushCom:
             RET
         
+    ENDP
+    POP_Comm_PROC PROC FAR
+        CALL Op1Menu
 
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_POPCom
 
-    SrcOp2AddReg:
-
-        CMP selectedOp2AddReg, 3
-        JZ SrcOp2AddRegBX
-        CMP selectedOp2AddReg, 15
-        JZ SrcOp2AddRegBP
-        CMP selectedOp2AddReg, 17
-        JZ SrcOp2AddRegSI
-        CMP selectedOp2AddReg, 18
-        JZ SrcOp2AddRegDI
-
-        JMP InValidCommand
-
-        SrcOp2AddRegBX:
-            MOV DX, ValRegBX
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegBX
-            MOV AX, [SI]
-            RET
-        SrcOp2AddRegBP:
-            MOV DX, ValRegBP
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegBP
-            MOV AX, [SI]
-            RET
-        SrcOp2AddRegSI:
-            MOV DX, ValRegSI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegSI
-            MOV AX, [SI]
-            RET
-        SrcOp2AddRegDI:
-            MOV DX, ValRegDI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ValRegDI
-            MOV AX, [SI]
-            RET
-
-    SrcOp2Mem:
-
-        CMP selectedOp2Mem, 0
-        JZ SrcOp2Mem0
-        CMP selectedOp2Mem, 1
-        JZ SrcOp2Mem1
-        CMP selectedOp2Mem, 2
-        JZ SrcOp2Mem2
-        CMP selectedOp2Mem, 3
-        JZ SrcOp2Mem3
-        CMP selectedOp2Mem, 4
-        JZ SrcOp2Mem4
-        CMP selectedOp2Mem, 5
-        JZ SrcOp2Mem5
-        CMP selectedOp2Mem, 6
-        JZ SrcOp2Mem6
-        CMP selectedOp2Mem, 7
-        JZ SrcOp2Mem7
-        CMP selectedOp2Mem, 8
-        JZ SrcOp2Mem8
-        CMP selectedOp2Mem, 9
-        JZ SrcOp2Mem9
-        CMP selectedOp2Mem, 10
-        JZ SrcOp2Mem10
-        CMP selectedOp2Mem, 11
-        JZ SrcOp2Mem11
-        CMP selectedOp2Mem, 12
-        JZ SrcOp2Mem12
-        CMP selectedOp2Mem, 13
-        JZ SrcOp2Mem13
-        CMP selectedOp2Mem, 14
-        JZ SrcOp2Mem14
-        CMP selectedOp2Mem, 15
-        JZ SrcOp2Mem15
-        JMP InValidCommand
+        CMP selectedOp1Size, 8
+        JNZ ValidSize_POP
         
-        SrcOp2Mem0:
-            MOV AX, WORD PTR ValMem
+        MOV isInvalidCommand, 1
+        JMP Return_POPCom
+
+        ValidSize_POP:
+            CMP p1_CpuEnabled, 1
+            JZ POP_p1
+            JMP POP_p2
+            POP_p1:
+                CALL GetDst
+
+                CMP isInvalidCommand, 1
+                JZ POP_p2
+
+                Mov BX, p1_ValRegSP
+                MOV DX, p1_ValStack[BX]
+                MOV [DI], DX
+                DEC p1_ValRegSP
+                JMP POP_p2
+
+            POP_p2:
+                MOV p1_CpuEnabled, 0
+                MOV isInvalidCommand, 0
+                CMP p2_CpuEnabled, 1
+                jnz Return_POPCom
+
+                CALL GetDst
+
+                CMP isInvalidCommand, 1
+                JZ Return_POPCom
+
+                Mov BX, p2_ValRegSP
+                MOV DX, p2_ValStack[BX]
+                MOV [DI], DX
+                DEC p2_ValRegSP
+
+        Return_POPCom:
             RET
-        SrcOp2Mem1:
-            MOV AX, WORD PTR ValMem+1
+
+    ENDP
+    INC_Comm_PROC PROC FAR
+        CALL Op1Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_IncCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Inc_p1
+        JMP Inc_p2
+        Inc_p1:
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Inc_p2
+
+            INC [DI]
+            
+            JMP Inc_p2
+
+        Inc_p2:
+            MOV p1_CpuEnabled, 0
+            MOV isInvalidCommand, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_IncCom
+
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Return_IncCom
+
+            
+            INC [DI]
+
+        Return_IncCom:
             RET
-        SrcOp2Mem2:
-            MOV AX, WORD PTR ValMem+2
+
+    ENDP
+    DEC_Comm_PROC PROC FAR
+        
+        CALL Op1Menu
+
+        CALL CheckForbidCharProc
+        CMP isInvalidCommand, 1
+        JZ Return_DecCom
+
+        CMP p1_CpuEnabled, 1
+        JZ Dec_p1
+        JMP Dec_p2
+        Dec_p1:
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Dec_p2
+
+            DEC [DI]
+            
+            JMP Dec_p2
+
+        Dec_p2:
+            MOV p1_CpuEnabled, 0
+            MOV isInvalidCommand, 0
+            CMP p2_CpuEnabled, 1
+            jnz Return_DecCom
+
+            CALL GetDst
+
+            CMP isInvalidCommand, 1
+            JZ Return_DecCom
+
+            
+            DEC [DI]
+
+        Return_DecCom:
             RET
-        SrcOp2Mem3:
-            MOV AX, WORD PTR ValMem+3
+
+    ENDP
+    MUL_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne MUL_righttype
+        mov isInvalidCommand, 1
+        jmp Return_MUL
+        MUL_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_MUL
+
+        CMP p1_CpuEnabled, 1
+        je MUL_p1
+        jmp MUL_p2
+
+        MUL_p1:
+            cmp selectedOp2Size,16
+            je MUL_p1_16bit
+            jmp MUL_p1_8bit
+
+            MUL_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                mul BX
+                call SetCF
+                call UpdateP1Registers
+                jmp MUL_p2
+            MUL_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                mul Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp MUL_p2
+        MUL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_MUL
+            cmp selectedOp2Size,16
+            je MUL_p2_16bit
+            jmp MUL_p2_8bit
+            MUL_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                mul BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_MUL
+            MUL_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                mul Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_MUL:
+        RET
+    ENDP
+    DIV_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne DIV_righttype
+        mov isInvalidCommand, 1
+        jmp Return_DIV
+        DIV_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_DIV
+
+        CMP p1_CpuEnabled, 1
+        je DIV_p1
+        jmp DIV_p2
+
+        DIV_p1:
+            cmp selectedOp2Size,16
+            je DIV_p1_16bit
+            jmp DIV_p1_8bit
+
+            DIV_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                DIV BX
+                call SetCF
+                call UpdateP1Registers
+                jmp DIV_p2
+            DIV_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                DIV Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp DIV_p2
+        DIV_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_DIV
+            cmp selectedOp2Size,16
+            je DIV_p2_16bit
+            jmp DIV_p2_8bit
+            DIV_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                DIV BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_DIV
+            DIV_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                DIV Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_DIV:
+        RET
+    ENDP
+    IMUL_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne IMUL_righttype
+        mov isInvalidCommand, 1
+        jmp Return_IMUL
+        IMUL_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_IMUL
+
+        CMP p1_CpuEnabled, 1
+        je IMUL_p1
+        jmp IMUL_p2
+
+        IMUL_p1:
+            cmp selectedOp2Size,16
+            je IMUL_p1_16bit
+            jmp IMUL_p1_8bit
+
+            IMUL_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                IMUL BX
+                call SetCF
+                call UpdateP1Registers
+                jmp IMUL_p2
+            IMUL_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                IMUL Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp IMUL_p2
+        IMUL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_IMUL
+            cmp selectedOp2Size,16
+            je IMUL_p2_16bit
+            jmp IMUL_p2_8bit
+            IMUL_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                IMUL BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_IMUL
+            IMUL_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                IMUL Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_IMUL:
+        RET
+    ENDP
+    IDIV_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne IDIV_righttype
+        mov isInvalidCommand, 1
+        jmp Return_IDIV
+        IDIV_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_IDIV
+
+        CMP p1_CpuEnabled, 1
+        je IDIV_p1
+        jmp IDIV_p2
+
+        IDIV_p1:
+            cmp selectedOp2Size,16
+            je IDIV_p1_16bit
+            jmp IDIV_p1_8bit
+
+            IDIV_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                IDIV BX
+                call SetCF
+                call UpdateP1Registers
+                jmp IDIV_p2
+            IDIV_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                IDIV Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp IDIV_p2
+        IDIV_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_IDIV
+            cmp selectedOp2Size,16
+            je IDIV_p2_16bit
+            jmp IDIV_p2_8bit
+            IDIV_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                IDIV BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_IDIV
+            IDIV_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                IDIV Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_IDIV:
+        RET
+    ENDP
+    ROR_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_ROR_reg
+        cmp selectedOp2Type,ValIndex
+        je check_ROR_val
+        mov isInvalidCommand,1
+        jmp Return_ROR
+
+        check_ROR_reg:
+            cmp selectedOp2Reg, 7
+            je ROR_right
+            mov isInvalidCommand,1
+            jmp Return_ROR
+        check_ROR_val:
+            cmp Op2Val,255d
+            jle ROR_right
+            mov isInvalidCommand,1
+            jmp Return_ROR
+        
+        ROR_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_ROR
+
+        cmp p1_CpuEnabled,1
+        je ROR_p1
+        jmp ROR_p2
+
+        ROR_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            cmp selectedOp1Size,8
+            jne ROR_p1_16bit
+            ROR BYTE PTR [di],cl
+            call SetCF
+            jmp ROR_p2
+            ROR_p1_16bit:
+            ROR [di],cl
+            call SetCF
+            jmp ROR_p2
+        ROR_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_ROR
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            cmp selectedOp1Size,8
+            jne ROR_p2_16bit
+            ROR BYTE PTR [di],cl
+            call SetCF
+            jmp Return_ROR
+            ROR_p2_16bit:
+            ROR [di],cl
+            call SetCF
+        Return_ROR:
+        RET
+    ENDP
+    ROL_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_ROL_reg
+        cmp selectedOp2Type,ValIndex
+        je check_ROL_val
+        mov isInvalidCommand,1
+        jmp Return_ROL
+
+        check_ROL_reg:
+            cmp selectedOp2Reg, 7
+            je ROL_right
+            mov isInvalidCommand,1
+            jmp Return_ROL
+        check_ROL_val:
+            cmp Op2Val,255d
+            jle ROL_right
+            mov isInvalidCommand,1
+            jmp Return_ROL
+        
+        ROL_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_ROL
+
+        cmp p1_CpuEnabled,1
+        je ROL_p1
+        jmp ROL_p2
+
+        ROL_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            cmp selectedOp1Size,8
+            jne ROL_p1_16bit
+            ROL BYTE PTR [di],cl
+            call SetCF
+            jmp ROL_p2
+            ROL_p1_16bit:
+            ROL [di],cl
+            call SetCF
+            jmp ROL_p2
+        ROL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_ROL
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            cmp selectedOp1Size,8
+            jne ROL_p2_16bit
+            ROL BYTE PTR [di],cl
+            call SetCF
+            jmp Return_ROL
+            ROL_p2_16bit:
+            ROL [di],cl
+            call SetCF
+        Return_ROL:
+        RET
+    ENDP
+    SHL_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_SHL_reg
+        cmp selectedOp2Type,ValIndex
+        je check_SHL_val
+        mov isInvalidCommand,1
+        jmp Return_SHL
+
+        check_SHL_reg:
+            cmp selectedOp2Reg, 7
+            je SHL_right
+            mov isInvalidCommand,1
+            jmp Return_SHL
+        check_SHL_val:
+            cmp Op2Val,255d
+            jle SHL_right
+            mov isInvalidCommand,1
+            jmp Return_SHL
+        
+        SHL_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_SHL
+
+        cmp p1_CpuEnabled,1
+        je SHL_p1
+        jmp SHL_p2
+
+        SHL_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            cmp selectedOp1Size,8
+            jne SHL_p1_16bit
+            SHL BYTE PTR [di],cl
+            call SetCF
+            jmp SHL_p2
+            SHL_p1_16bit:
+            SHL [di],cl
+            call SetCF
+            jmp SHL_p2
+        SHL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_SHL
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            cmp selectedOp1Size,8
+            jne SHL_p2_16bit
+            SHL BYTE PTR [di],cl
+            call SetCF
+            jmp Return_SHL
+            SHL_p2_16bit:
+            SHL [di],cl
+            call SetCF
+        Return_SHL:
+        RET
+    ENDP
+    SHR_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_SHR_reg
+        cmp selectedOp2Type,ValIndex
+        je check_SHR_val
+        mov isInvalidCommand,1
+        jmp Return_SHR
+
+        check_SHR_reg:
+            cmp selectedOp2Reg, 7
+            je SHR_right
+            mov isInvalidCommand,1
+            jmp Return_SHR
+        check_SHR_val:
+            cmp Op2Val,255d
+            jle SHR_right
+            mov isInvalidCommand,1
+            jmp Return_SHR
+        
+        SHR_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_SHR
+
+        cmp p1_CpuEnabled,1
+        je SHR_p1
+        jmp SHR_p2
+
+        SHR_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            cmp selectedOp1Size,8
+            jne SHR_p1_16bit
+            SHR BYTE PTR [di],cl
+            call SetCF
+            jmp SHR_p2
+            SHR_p1_16bit:
+            SHR [di],cl
+            call SetCF
+            jmp SHR_p2
+        SHR_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_SHR
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            cmp selectedOp1Size,8
+            jne SHR_p2_16bit
+            SHR BYTE PTR [di],cl
+            call SetCF
+            jmp Return_SHR
+            SHR_p2_16bit:
+            SHR [di],cl
+            call SetCF
+        Return_SHR:
+        RET
+    ENDP
+    RCR_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_RCR_reg
+        cmp selectedOp2Type,ValIndex
+        je check_RCR_val
+        mov isInvalidCommand,1
+        jmp Return_RCR
+
+        check_RCR_reg:
+            cmp selectedOp2Reg, 7
+            je RCR_right
+            mov isInvalidCommand,1
+            jmp Return_RCR
+        check_RCR_val:
+            cmp Op2Val,255d
+            jle RCR_right
+            mov isInvalidCommand,1
+            jmp Return_RCR
+        
+        RCR_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_RCR
+
+        cmp p1_CpuEnabled,1
+        je RCR_p1
+        jmp RCR_p2
+
+        RCR_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            cmp selectedOp1Size,8
+            jne RCR_p1_16bit
+            call GetCF
+            RCR BYTE PTR [di],cl
+            call SetCF
+            jmp RCR_p2
+            RCR_p1_16bit:
+            call GetCF
+            RCR [di],cl
+            call SetCF
+            jmp RCR_p2
+        RCR_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_RCR
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            cmp selectedOp1Size,8
+            jne RCR_p2_16bit
+            call GetCF
+            RCR BYTE PTR [di],cl
+            call SetCF
+            jmp Return_RCR
+            RCR_p2_16bit:
+            call GetCF
+            RCR [di],cl
+            call SetCF
+        Return_RCR:
+        RET
+    ENDP
+    RCL_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_RCL_reg
+        cmp selectedOp2Type,ValIndex
+        je check_RCL_val
+        mov isInvalidCommand,1
+        jmp Return_RCL
+
+        check_RCL_reg:
+            cmp selectedOp2Reg, 7
+            je RCL_right
+            mov isInvalidCommand,1
+            jmp Return_RCL
+        check_RCL_val:
+            cmp Op2Val,255d
+            jle RCL_right
+            mov isInvalidCommand,1
+            jmp Return_RCL
+        
+        RCL_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_RCL
+
+        cmp p1_CpuEnabled,1
+        je RCL_p1
+        jmp RCL_p2
+
+        RCL_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            cmp selectedOp1Size,8
+            jne RCL_p1_16bit
+            call GetCF
+            RCL BYTE PTR [di],cl
+            call SetCF
+            jmp RCL_p2
+            RCL_p1_16bit:
+            call GetCF
+            RCL [di],cl
+            call SetCF
+            jmp RCL_p2
+        RCL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_RCL
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            cmp selectedOp1Size,8
+            jne RCL_p2_16bit
+            call GetCF
+            RCL BYTE PTR [di],cl
+            call SetCF
+            jmp Return_RCL
+            RCL_p2_16bit:
+            call GetCF
+            RCL [di],cl
+            call SetCF
+        Return_RCL:
+        RET
+    ENDP
+    
+;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
+    ;; -------------------------- Menus Procedures ------------------------- ;;
+        MnemonicMenu PROC
+            
+            ; Reset Cursor
+                mov ah,2
+                mov dx, MenmonicCursorLoc
+                int 10h
+
+            ; Display Command
+            DisplayComm:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                mov ah, 9
+                mov dx, offset ADDcom
+                int 21h
+
+            CheckKeyComType:
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, MenmonicCursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp 
+            cmp ah, DownArrowScanCode
+            jz CommDown
+            cmp ah, EnterScanCode
+            jz Selected
+            jmp CheckKeyComType
+
+
+            CommUp:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset NOPcom            ; MenmonicFirstChoice
+                    jnz NotOverflow
+                    mov dx, offset SHRcom             ; MnemonicLastChoiceLoc
+                    add dx, CommStringSize
+                NotOverflow:
+                    sub dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyComType
+            
+            CommDown:
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset SHRcom             ; MnemonicLastChoiceLoc
+                    jnz NotEOF
+                    mov dx, offset NOPcom            ; MenmonicFirstChoice
+                    sub dx, CommStringSize
+                NotEOF:
+                    add dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyComType
+            
+            Selected:
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset NOPcom            ; MenmonicFirstChoice
+                mov bl, CommStringSize
+                div bl                                      ; Op=byte: AL:=AX / Op
+                mov selectedComm, al
+                
+                
+
+
+            ret
+        MnemonicMenu ENDP
+        Op1TypeMenu PROC
+
+            mov ah, 9
+            mov dx, offset Reg
+            int 21h
+
+            CheckKeyOp1Type:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, Op1CursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_1 
+            cmp ah, DownArrowScanCode
+            jz CommDown_1
+            cmp ah, EnterScanCode
+            jz Selected_1
+            JMP CheckKeyOp1Type
+
+
+            CommUp_1:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset Reg
+                    jnz NotOverflow_1
+                    mov dx, offset Value           ; Op1TypeLastChoiceLoc
+                    add dx, CommStringSize
+                NotOverflow_1:
+                    sub dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyOp1Type
+            
+            CommDown_1:
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset Value           ; Op1TypeLastChoiceLoc
+                    jnz NotEOF_1
+                    mov dx, offset Reg
+                    sub dx, CommStringSize
+                NotEOF_1:
+                    add dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyOp1Type
+            
+            Selected_1:
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset Reg         ; Op1FirstChoiceLoc
+                mov bl, CommStringSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov selectedOp1Type, al
+                
+            ret
+        Op1TypeMenu ENDP
+        Op2TypeMenu PROC
+
+            
+            mov ah, 9
+            mov dx, offset Reg
+            int 21h
+
+            CheckKey_Op2Type:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, Op2CursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_Op2Type
+            cmp ah, DownArrowScanCode
+            jz CommDown_Op2Type
+            cmp ah, EnterScanCode
+            jz Selected_Op2Type
+            JMP CheckKey_Op2Type
+
+
+            CommUp_Op2Type:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset Reg
+                    jnz NotOverflow_Op2Type
+                    mov dx, offset Value           ; OpTypeLastChoiceLoc
+                    add dx, CommStringSize
+                NotOverflow_Op2Type:
+                    sub dx, CommStringSize
+                    int 21h
+                    jmp CheckKey_Op2Type
+            
+            CommDown_Op2Type:
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset Value           ; OpTypeLastChoiceLoc
+                    jnz NotEOF_Op2Type
+                    mov dx, offset Reg
+                    sub dx, CommStringSize
+                NotEOF_Op2Type:
+                    add dx, CommStringSize
+                    int 21h
+                    jmp CheckKey_Op2Type
+            
+            Selected_Op2Type:
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset Reg         ; OpTypeFirstChoiceLoc
+                mov bl, CommStringSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov selectedOp2Type, al
+                
+            ret
+        Op2TypeMenu ENDP
+        Op1Menu PROC
+
+            ; Set Cursor
+            mov ah,2
+            mov dx, Op1CursorLoc 
+            int 10h
+
+            CALL Op1TypeMenu
+
+            ; Set Cursor
+            mov ah,2
+            mov dx, Op1CursorLoc 
+            int 10h
+
+
+            CMP selectedOp1Type, RegIndex     
+            JZ ChooseReg
+            CMP selectedOp1Type, AddRegIndex
+            JZ ChooseAddReg
+            CMP selectedOp1Type, MemIndex
+            JZ ChooseMem
+            CMP selectedOp1Type, ValIndex
+            JZ EnterVal
+            jmp InvalidOp1Type
+
+            ChooseReg: 
+
+                ; Display Command
+                mov ah, 9
+                mov dx, offset RegAX
+                int 21h
+
+                CheckKeyRegType:
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    CALL WaitKeyPress
+
+
+                Push ax
+                PUSH dx 
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    ; Reset Cursor
+                    mov ah,2
+                    mov dx, Op1CursorLoc
+                    int 10h
+                pop dx 
+                pop ax
+
+                ; Check if pressed is Up or down or Enter
+                cmp ah, UpArrowScanCode                          
+                jz CommUp2 
+                cmp ah, DownArrowScanCode
+                jz CommDown2
+                cmp ah, EnterScanCode
+                jz Selected2
+                jmp CheckKeyRegType
+
+
+                CommUp2:
+                    mov ah, 9
+                    ; Check overflow
+                        cmp dx, offset RegAX              ; RegFirstChoiceLocation ; the start of combobox
+                        jnz NotOverflow2
+                        mov dx, offset RegDI              ; RegLastChoiceLocation ; last one to overcome overflow
+                        add dx, CommStringSize
+                    NotOverflow2:
+                        sub dx, CommStringSize
+                        int 21h
+                        jmp CheckKeyRegType
+                
+                CommDown2:
+                    mov ah, 9
+                    ; Check End of file
+                        cmp dx, offset RegDI              ; RegLastChoiceLocation
+                        jnz NotEOF2
+                        mov dx, offset RegAX              ; RegFirstChoiceLocation
+                        sub dx, CommStringSize
+                    NotEOF2:
+                        add dx, CommStringSize
+                        int 21h
+                        jmp CheckKeyRegType
+                
+                Selected2:
+                    ; Detecting index of selected command
+                    mov ax, dx
+                    SUB AX, offset RegAX              ; RegFirstChoiceLocation
+                    mov bl, CommStringSize
+                    div bl                                      ; Op=byte: AL:=AX / Op 
+                    mov selectedOp1Reg, al
+                    ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
+                    JMP RETURN
+
+            ChooseAddReg:
+
+                ; Display Command
+                mov ah, 9
+                mov dx, offset AddRegAX
+                int 21h
+
+                CheckKey_AddReg:
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    CALL WaitKeyPress
+
+
+                Push ax
+                PUSH dx 
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    ; Reset Cursor
+                    mov ah,2
+                    mov dx, Op1CursorLoc
+                    int 10h
+                pop dx 
+                pop ax
+
+                ; Check if pressed is Up or down or Enter
+                cmp ah, UpArrowScanCode                          
+                jz CommUp_AddReg 
+                cmp ah, DownArrowScanCode
+                jz CommDown_AddReg
+                cmp ah, EnterScanCode
+                jz Selected_AddReg
+                jmp CheckKey_AddReg
+
+
+                CommUp_AddReg:
+                    mov ah, 9
+                    ; Check overflow
+                        cmp dx, offset AddRegAX              ; RegFirstChoiceLocation ; the start of combobox
+                        jnz NotOverflow_AddReg
+                        mov dx, offset AddRegDI              ; RegLastChoiceLocation ; last one to overcome overflow
+                        add dx, CommStringSize
+                    NotOverflow_AddReg:
+                        sub dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_AddReg
+                
+                CommDown_AddReg:
+                    mov ah, 9
+                    ; Check End of file
+                        cmp dx, offset AddRegDI              ; RegLastChoiceLocation
+                        jnz NotEOF_AddReg
+                        mov dx, offset AddRegAX              ; RegFirstChoiceLocation
+                        sub dx, CommStringSize
+                    NotEOF_AddReg:
+                        add dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_AddReg
+                
+                Selected_AddReg:
+                    ; Detecting index of selected command
+                    mov ax, dx
+                    SUB AX, offset AddRegAX              ; RegFirstChoiceLocation
+                    mov bl, CommStringSize
+                    div bl                                      ; Op=byte: AL:=AX / Op 
+                    mov selectedOp1AddReg, al
+                    ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
+                    JMP RETURN
+            
+            ChooseMem:
+            
+                ; Display memory
+                
+                mov ah, 9
+                mov dx, offset Mem0
+                int 21h
+
+                CheckKeyMemType:
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    CALL WaitKeyPress
+
+
+                Push ax
+                PUSH dx 
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    ; Reset Cursor
+                    mov ah,2
+                    mov dx, Op1CursorLoc
+                    int 10h
+                pop dx 
+                pop ax
+
+                ; Check if pressed is Up or down or Enter
+                cmp ah, UpArrowScanCode                          
+                jz CommUp3 
+                cmp ah, DownArrowScanCode
+                jz CommDown3
+                cmp ah, EnterScanCode
+                jz Selected3
+                jmp CheckKeyMemType
+
+
+                CommUp3:
+                    mov ah, 9
+                    ; Check overflow
+                        cmp dx, offset Mem0         ; the start of combobox
+                        jnz NotOverflow3
+                        mov dx, offset Mem15 ; last one to overcome overflow
+                        add dx, CommStringSize
+                    NotOverflow3:
+                        sub dx, CommStringSize
+                        int 21h
+                        jmp CheckKeyMemType
+                
+                CommDown3:
+                    mov ah, 9
+                    ; Check End of file
+                        cmp dx, offset Mem15
+                        jnz NotEOF3
+                        mov dx, offset Mem0
+                        sub dx, CommStringSize
+                    NotEOF3:
+                        add dx, CommStringSize
+                        int 21h
+                        jmp CheckKeyMemType
+                
+                Selected3:
+                    ; Detecting index of selected command
+                    mov ax, dx
+                    SUB AX, offset Mem0
+                    mov bl, CommStringSize
+                    div bl                                      ; Op=byte: AL:=AX / Op 
+                    mov selectedOp1Mem, al
+
+                    JMP RETURN
+
+            EnterVal:
+
+                ; Clear the space which the user should enter thep2_Value into
+                mov dx, offset ClearSpace
+                CALL DisplayString
+
+                ; Reset Cursor
+                mov dx, Op1CursorLoc
+                CALL SetCursor
+
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                
+
+                ; Takep2_Value as a String from User
+                mov ah,0Ah                   
+                mov dx,offset num
+                int 21h    
+                
+
+                mov cl,num+1                 ;save string size
+                mov StrSize,cl
+
+                mov ch,0
+                mov si,2                     ;si to get first number from string that is not zero
+                mov di,2  
+                
+                cmp StrSize,1
+                jz hoop1
+                hoop2:
+                    mov dl,num[di]               ; this loop to check zero in the first string
+                    sub dl,30h
+                    cmp dl,0 
+                    jne hoop1
+                    inc si
+                    mov cl, StrSize
+                    dec cl
+                    mov StrSize,cl 
+                    inc di
+                    cmp cl,1
+                jnz hoop2
+                
+                hoop1:
+                    cmp cl,4         ;check thatp2_Value is hexa or Get error    
+                    jng sk 
+                    JMP InValidVal
+
+                sk:
+                
+                mov Bl,StrSize              ; loops to check num from 1 to 9 and A to F
+                numloop:
+                    mov al,num[si] 
+                    cmp al,30H
+                    jnge notnum 
+                    cmp al,39h
+                    jnle notnum
+                    sub al,30h  
+                    jmp done   
+                
+                notnum: 
+                    cmp al,41H
+                    jnge notcharnum
+                    cmp al,46h
+                    jnle notcharnum
+                    sub al,37h
+                    jmp done  
+                    
+                notcharnum:
+                    cmp al,61H
+                    jnge InValidVal
+                    cmp al,66h
+                    jnle InValidVal
+                    sub al,57h
+                    jmp done
+                    
+                        
+                
+                done:  
+                    inc si       
+                    cmp bl,4                   ; first digit
+                    jne ha1
+                    mov cl,al 
+                    mov ax,a 
+                    mov ch,0
+                    mul cx
+                ha1:  
+                    cmp bl,3                   ;second digit
+                    jne ha2
+                    mov cl,al 
+                    mov ax,b
+                    mov ch,0
+                    mul cx
+                
+                ha2:  
+                    cmp bl,2                   ;third digit
+                    jne ha3
+                    mov cl,al 
+                    mov ax,c
+                    mov ch,0
+                    mul cx
+                
+                ha3:
+                    cmp bl,1                  ;fourth digit
+                    jne ha4
+                    mov ah,0
+                
+                ha4:
+                    add Op1Val,ax  
+                
+                dec Bl                    ; check to exit 
+                cmp Bl,0   
+                je RETURN 
+                
+                jmp numloop
+
+                InValidVal:
+                    MOV Op1Valid, 0
+                    JMP RETURN    
+
+            InvalidOp1Type:
+                ; TODO
+
+            RETURN:
+                CALL CheckOp1Size
+                RET
+        Op1Menu ENDP
+        Op2Menu PROC
+
+            ; Set Cursor
+            mov ah,2
+            mov dx, Op2CursorLoc 
+            int 10h
+
+            CALL Op2TypeMenu
+
+            ; Set Cursor
+            mov ah,2
+            mov dx, Op2CursorLoc 
+            int 10h
+
+
+            CMP selectedOp2Type, RegIndex     
+            JZ ChooseReg_Op2Menu
+            CMP selectedOp2Type, AddRegIndex
+            JZ ChooseAddReg_Op2Menu
+            CMP selectedOp2Type, MemIndex
+            JZ ChooseMem_Op2Menu
+            CMP selectedOp2Type, ValIndex
+            JZ EnterVal_Op2Menu
+            jmp InvalidOp2Type
+
+            ChooseReg_Op2Menu: 
+
+                ; Display Command
+                mov ah, 9
+                mov dx, offset RegAX
+                int 21h
+
+                CheckKey_RegType_Op2Menu:
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    CALL WaitKeyPress
+
+
+                Push ax
+                PUSH dx 
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    ; Reset Cursor
+                    mov ah,2
+                    mov dx, Op2CursorLoc
+                    int 10h
+                pop dx 
+                pop ax
+
+                ; Check if pressed is Up or down or Enter
+                cmp ah, UpArrowScanCode                          
+                jz CommUp_RegType_Op2Menu
+                cmp ah, DownArrowScanCode
+                jz CommDown_RegType_Op2Menu
+                cmp ah, EnterScanCode
+                jz Selected_RegType_Op2Menu
+                jmp CheckKey_RegType_Op2Menu
+
+
+                CommUp_RegType_Op2Menu:
+                    mov ah, 9
+                    ; Check overflow
+                        cmp dx, offset RegAX              ; RegFirstChoiceLocation ; the start of combobox
+                        jnz NotOverflow_RegType_Op2Menu
+                        mov dx, offset RegDI              ; RegLastChoiceLocation ; last one to overcome overflow
+                        add dx, CommStringSize
+                    NotOverflow_RegType_Op2Menu:
+                        sub dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_RegType_Op2Menu
+                
+                CommDown_RegType_Op2Menu:
+                    mov ah, 9
+                    ; Check End of file
+                        cmp dx, offset RegDI              ; RegLastChoiceLocation
+                        jnz NotEOF_RegType_Op2Menu
+                        mov dx, offset RegAX              ; RegFirstChoiceLocation
+                        sub dx, CommStringSize
+                    NotEOF_RegType_Op2Menu:
+                        add dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_RegType_Op2Menu
+                
+                Selected_RegType_Op2Menu:
+                    ; Detecting index of selected command
+                    mov ax, dx
+                    SUB AX, offset RegAX              ; RegFirstChoiceLocation
+                    mov bl, CommStringSize
+                    div bl                                      ; Op=byte: AL:=AX / Op 
+                    mov selectedOp2Reg, al
+                    ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
+                    JMP RETURN_Op2Menu
+
+            ChooseAddReg_Op2Menu:
+
+                ; Display Command
+                mov ah, 9
+                mov dx, offset AddRegAX
+                int 21h
+
+                CheckKey_AddReg_Op2Menu:
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    CALL WaitKeyPress
+
+
+                Push ax
+                PUSH dx 
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    ; Reset Cursor
+                    mov ah,2
+                    mov dx, Op2CursorLoc
+                    int 10h
+                pop dx 
+                pop ax
+
+                ; Check if pressed is Up or down or Enter
+                cmp ah, UpArrowScanCode                          
+                jz CommUp_AddReg_Op2Menu
+                cmp ah, DownArrowScanCode
+                jz CommDown_AddReg_Op2Menu
+                cmp ah, EnterScanCode
+                jz Selected_AddReg_Op2Menu
+                jmp CheckKey_AddReg_Op2Menu
+
+
+                CommUp_AddReg_Op2Menu:
+                    mov ah, 9
+                    ; Check overflow
+                        cmp dx, offset AddRegAX              ; RegFirstChoiceLocation ; the start of combobox
+                        jnz NotOverflow_AddReg_Op2Menu
+                        mov dx, offset AddRegDI              ; RegLastChoiceLocation ; last one to overcome overflow
+                        add dx, CommStringSize
+                    NotOverflow_AddReg_Op2Menu:
+                        sub dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_AddReg_Op2Menu
+                
+                CommDown_AddReg_Op2Menu:
+                    mov ah, 9
+                    ; Check End of file
+                        cmp dx, offset AddRegDI              ; RegLastChoiceLocation
+                        jnz NotEOF_AddReg_Op2Menu
+                        mov dx, offset AddRegAX              ; RegFirstChoiceLocation
+                        sub dx, CommStringSize
+                    NotEOF_AddReg_Op2Menu:
+                        add dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_AddReg_Op2Menu
+                
+                Selected_AddReg_Op2Menu:
+                    ; Detecting index of selected command
+                    mov ax, dx
+                    SUB AX, offset AddRegAX              ; RegFirstChoiceLocation
+                    mov bl, CommStringSize
+                    div bl                                      ; Op=byte: AL:=AX / Op 
+                    mov selectedOp2AddReg, al
+                    ; NEEDS TO ADD A RETURN OR ENDING JUMP HERE
+                    JMP RETURN_Op2Menu
+            
+            ChooseMem_Op2Menu:
+            
+                ; Display memory
+                
+                mov ah, 9
+                mov dx, offset Mem0
+                int 21h
+
+                CheckKey_MemType_Op2Menu:
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    CALL WaitKeyPress
+
+
+                Push ax
+                PUSH dx 
+                    ; Clear buffer
+                    mov ah,07
+                    int 21h
+                    ; Reset Cursor
+                    mov ah,2
+                    mov dx, Op2CursorLoc
+                    int 10h
+                pop dx 
+                pop ax
+
+                ; Check if pressed is Up or down or Enter
+                cmp ah, UpArrowScanCode                          
+                jz CommUp_Op2Menu 
+                cmp ah, DownArrowScanCode
+                jz CommDown_Op2Menu
+                cmp ah, EnterScanCode
+                jz Selected_Op2Menu
+                jmp CheckKey_MemType_Op2Menu
+
+
+                CommUp_Op2Menu:
+                    mov ah, 9
+                    ; Check overflow
+                        cmp dx, offset Mem0         ; the start of combobox
+                        jnz NotOverflow_Op2Menu
+                        mov dx, offset Mem15 ; last one to overcome overflow
+                        add dx, CommStringSize
+                    NotOverflow_Op2Menu:
+                        sub dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_MemType_Op2Menu
+                
+                CommDown_Op2Menu:
+                    mov ah, 9
+                    ; Check End of file
+                        cmp dx, offset Mem15
+                        jnz NotEOF_Op2Menu
+                        mov dx, offset Mem0
+                        sub dx, CommStringSize
+                    NotEOF_Op2Menu:
+                        add dx, CommStringSize
+                        int 21h
+                        jmp CheckKey_MemType_Op2Menu
+                
+                Selected_Op2Menu:
+                    ; Detecting index of selected command
+                    mov ax, dx
+                    SUB AX, offset Mem0
+                    mov bl, CommStringSize
+                    div bl                                      ; Op=byte: AL:=AX / Op 
+                    mov selectedOp2Mem, al
+
+                    JMP RETURN_Op2Menu
+
+            EnterVal_Op2Menu:
+
+                ; Clear the space which the user should enter thep2_Value into
+                mov dx, offset ClearSpace
+                CALL DisplayString
+
+                ; Reset Cursor
+                mov dx, Op2CursorLoc
+                CALL SetCursor
+                ; Clear buffer
+                    mov ah,07
+                    int 21h
+
+                ; Takep2_Value as a String from User
+                mov ah,0Ah                   
+                mov dx,offset num2
+                int 21h    
+                
+
+                mov cl,num2+1                 ;save string size
+                mov StrSize2,cl
+
+                mov ch,0
+                mov si,2                     ;si to get first number from string that is not zero
+                mov di,2  
+                
+                cmp StrSize2,1
+                jz hoop1_Op2Menu
+                hoop2_Op2Menu:
+                    mov dl,num2[di]               ; this loop to check zero in the first string
+                    sub dl,30h
+                    cmp dl,0 
+                    jne hoop1_Op2Menu
+                    inc si
+                    mov cl, StrSize2
+                    dec cl
+                    mov StrSize2,cl 
+                    inc di
+                    cmp cl,1 
+                jnz hoop2_Op2Menu
+                
+                hoop1_Op2Menu:
+                    cmp cl,4         ;check thatp2_Value is hexa or Get error    
+                    jng sk_Op2Menu 
+                    JMP InValidVal_Op2Menu
+
+                sk_Op2Menu:
+                
+                mov Bl,StrSize2              ; loops to check num from 1 to 9 and A to F
+                numloop_Op2Menu:
+                    mov al,num2[si] 
+                    cmp al,30H
+                    jnge notnum_Op2Menu 
+                    cmp al,39h
+                    jnle notnum_Op2Menu
+                    sub al,30h  
+                    jmp done_Op2Menu   
+                
+                notnum_Op2Menu: 
+                    cmp al,41H
+                    jnge notcharnum_Op2Menu
+                    cmp al,46h
+                    jnle notcharnum_Op2Menu
+                    sub al,37h
+                    jmp done_Op2Menu  
+                    
+                notcharnum_Op2Menu:
+                    cmp al,61H
+                    jnge InValidVal_Op2Menu
+                    cmp al,66h
+                    jnle InValidVal_Op2Menu
+                    sub al,57h
+                    jmp done_Op2Menu
+                    
+                        
+                
+                done_Op2Menu:  
+                    inc si       
+                    cmp bl,4                   ; first digit
+                    jne ha1_Op2Menu
+                    mov cl,al 
+                    mov ax,a 
+                    mov ch,0
+                    mul cx
+                ha1_Op2Menu:  
+                    cmp bl,3                   ;second digit
+                    jne ha2_Op2Menu
+                    mov cl,al 
+                    mov ax,b
+                    mov ch,0
+                    mul cx
+                
+                ha2_Op2Menu:  
+                    cmp bl,2                   ;third digit
+                    jne ha3_Op2Menu
+                    mov cl,al 
+                    mov ax,c
+                    mov ch,0
+                    mul cx
+                
+                ha3_Op2Menu:
+                    cmp bl,1                  ;fourth digit
+                    jne ha4_Op2Menu
+                    mov ah,0
+                
+                ha4_Op2Menu:
+                    add Op2Val,ax  
+                
+                dec Bl                    ; check to exit 
+                cmp Bl,0   
+                je RETURN_Op2Menu 
+                
+                jmp numloop_Op2Menu
+
+                InValidVal_Op2Menu:
+                    MOV isInValidCommand, 1
+                    JMP RETURN_Op2Menu   
+
+            InvalidOp2Type:
+                ; TODO
+                mov ah, 9               ; display error message and exit
+                mov dx, offset error
+                int 21h
+
+            RETURN_Op2Menu:
+                CALL CheckOp2Size
+                RET
+        Op2Menu ENDP
+        
+        PowrUpMenu PROC
+            ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+                
+            mov ah, 9
+            mov dx, offset NOPUP
+            int 21h
+
+            CheckKeyOp1Type2:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_2 
+            cmp ah, DownArrowScanCode
+            jz CommDown_2
+            cmp ah, EnterScanCode
+            jz Selected_2
+            JMP CheckKeyOp1Type2
+
+
+            CommUp_2:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset NOPUP          ;Power Up firstChoiceLoc
+                    jnz NotOverflow_2
+                    mov dx, offset PUp5           ; Power Up LastChoiceLoc
+                    add dx, CommStringSize
+                NotOverflow_2:
+                    sub dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyOp1Type2
+            
+            CommDown_2:
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset PUp5          ; Power Up LastChoiceLoc
+                    jnz NotEOF_2
+                    mov dx, offset NOPUP
+                    sub dx, CommStringSize
+                NotEOF_2:
+                    add dx, CommStringSize
+                    int 21h
+                    jmp CheckKeyOp1Type2
+            
+            Selected_2:
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset NOPUP         ; Op1FirstChoiceLoc
+                mov bl, CommStringSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov selectedPUPType, al
+                
+            ret
+        PowrUpMenu ENDP
+        StuckIndexSubMenu PROC FAR
+            ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+                
+            mov ah, 9
+            mov dx, offset DataIndex0
+            int 21h
+
+            CheckKeyOp1Type_DataIndex:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_DataIndex 
+            cmp ah, DownArrowScanCode
+            jz CommDown_DataIndex 
+            cmp ah, EnterScanCode
+            jz Selected_DataIndex 
+            JMP CheckKeyOp1Type_DataIndex
+
+
+            CommUp_DataIndex:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset DataIndex0     ; Power Up firstChoiceLoc
+                    jnz NotOverflow_DataIndex 
+                    mov dx, offset DataIndex15           ; Power Up LastChoiceLoc
+                    add dx, SubPwrUpSize
+                NotOverflow_DataIndex:
+                    sub dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_DataIndex
+            
+            CommDown_DataIndex :
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset DataIndex15          ; Power Up LastChoiceLoc
+                    jnz NotEOF_DataIndex
+                    mov dx, offset DataIndex0
+                    sub dx, SubPwrUpSize
+                NotEOF_DataIndex:
+                    add dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_DataIndex
+            
+            Selected_DataIndex :
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset DataIndex0         ; Op1FirstChoiceLoc
+                mov bl, SubPwrUpSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov opponentPwrUpDataLineIndex, AL
+                
+
             RET
-        SrcOp2Mem4:
-            MOV AX, WORD PTR ValMem+4
+        ENDP
+        StuckValSubMenu PROC FAR
+            ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+                
+            mov ah, 9
+            mov dx, offset StuckVal0
+            int 21h
+
+            CheckKeyOp1Type_StuckVal:
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                CALL WaitKeyPress
+
+            Push ax
+            PUSH dx 
+                ; Clear buffer
+                mov ah,07
+                int 21h
+                ; Reset Cursor
+                mov ah,2
+                mov dx, PUPCursorLoc
+                int 10h
+            pop dx 
+            pop ax
+
+            ; Check if pressed is Up or down or Enter
+            cmp ah, UpArrowScanCode                          
+            jz CommUp_StuckVal 
+            cmp ah, DownArrowScanCode
+            jz CommDown_StuckVal 
+            cmp ah, EnterScanCode
+            jz Selected_StuckVal 
+            JMP CheckKeyOp1Type_StuckVal
+
+
+            CommUp_StuckVal:
+                mov ah, 9
+                ; Check overflow
+                    cmp dx, offset StuckVal0     ; Power Up firstChoiceLoc
+                    jnz NotOverflow_StuckVal 
+                    mov dx, offset StuckVal1           ; Power Up LastChoiceLoc
+                    add dx, SubPwrUpSize
+                NotOverflow_StuckVal:
+                    sub dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_StuckVal
+            
+            CommDown_StuckVal :
+                mov ah, 9
+                ; Check End of file
+                    cmp dx, offset StuckVal1          ; Power Up LastChoiceLoc
+                    jnz NotEOF_StuckVal
+                    mov dx, offset StuckVal0
+                    sub dx, SubPwrUpSize
+                NotEOF_StuckVal:
+                    add dx, SubPwrUpSize
+                    int 21h
+                    jmp CheckKeyOp1Type_StuckVal
+            
+            Selected_StuckVal :
+                ; Detecting index of selected command
+                mov ax, dx
+                sub ax, offset StuckVal0         ; Op1FirstChoiceLoc
+                mov bl, SubPwrUpSize
+                div bl                                      ; Op=byte: AL:=AX / Op 
+                mov opponentPwrUpStuckVal, AL
+                
+
             RET
-        SrcOp2Mem5:
-            MOV AX, WORD PTR ValMem+5
+        ENDP
+        
+    ;; -------------------------- Getters Procedures ----------------------- ;;
+        GetDst PROC FAR  ; offset of the operand is saved in di, destination is called by op1 menu. Call the procedure twice to get the next value if two cpus are enabled
+            ; Saving values of AX
+                PUSH AX
+            CMP selectedOp1Type, 0
+            JZ DstOp1Reg
+            CMP selectedOp1Type, 1
+            JZ DstOp1AddReg
+            CMP selectedOp1Type, 2
+            JZ DstOp1Mem
+
+            MOV isInValidCommand, 1
+            JMP RETURN_DstSrc
+            
+            DstOp1Reg:
+                CMP selectedOp1Reg, 0
+                JZ DstOp1RegAX
+                CMP selectedOp1Reg, 1
+                JZ DstOp1RegAX
+                CMP selectedOp1Reg, 2
+                JZ DstOp1RegAH
+
+
+                CMP selectedOp1Reg, 3
+                JZ DstOp1RegBX
+                CMP selectedOp1Reg, 4
+                JZ DstOp1RegBX
+                CMP selectedOp1Reg, 5
+                JZ DstOp1RegBH
+
+
+                CMP selectedOp1Reg, 6
+                JZ DstOp1RegCX
+                CMP selectedOp1Reg, 7
+                JZ DstOp1RegCX
+                CMP selectedOp1Reg, 8
+                JZ DstOp1RegCH
+
+                CMP selectedOp1Reg, 9
+                JZ DstOp1RegDX
+                CMP selectedOp1Reg, 8
+                JZ DstOp1RegDX
+                CMP selectedOp1Reg, 10
+                JZ DstOp1RegDH
+
+                CMP selectedOp1Reg, 15
+                JZ DstOp1RegBP
+                CMP selectedOp1Reg, 16
+                JZ DstOp1RegSP
+                CMP selectedOp1Reg, 17
+                JZ DstOp1RegSI
+                CMP selectedOp1Reg, 18
+                JZ DstOp1RegDI
+
+                MOV isInValidCommand, 1
+                JMP RETURN_DstSrc
+
+                DstOp1RegAX:
+                    DstOpReg p1_ValRegAX, p2_ValRegAX
+
+                DstOp1RegAH:
+                    DstOpReg p1_ValRegAX+1, p2_ValRegAX+1
+
+                DstOp1RegBX:
+                    DstOpReg p1_ValRegBX, p2_ValRegBX
+
+                DstOp1RegBH:
+                    DstOpReg p1_ValRegBX+1, p2_ValRegBX+1
+
+                DstOp1RegCX:
+                    DstOpReg p1_ValRegCX, p2_ValRegCX
+
+                DstOp1RegCH:
+                    DstOpReg p1_ValRegCX+1, p2_ValRegCX+1
+                
+                DstOp1RegDX:
+                    DstOpReg p1_ValRegDX, p2_ValRegDX
+
+                DstOp1RegDH:
+                    DstOpReg p1_ValRegDX+1, p2_ValRegDX+1
+
+                DstOp1RegBP:
+                    DstOpReg p1_ValRegBP, p2_ValRegBP
+
+                DstOp1RegSP:
+                    DstOpReg p1_ValRegSP, p2_ValRegSP
+
+                DstOp1RegSI:
+                    DstOpReg p1_ValRegSI, p2_ValRegSI
+
+                DstOp1RegDI:
+                    DstOpReg p1_ValRegDI, p2_ValRegDI
+                
+
+
+            DstOp1AddReg:
+
+                CMP selectedOp1AddReg, 3
+                JZ DstOp1AddRegBX
+                CMP selectedOp1AddReg, 15
+                JZ DstOp1AddRegBP
+                CMP selectedOp1AddReg, 17
+                JZ DstOp1AddRegSI
+                CMP selectedOp1AddReg, 18
+                JZ DstOp1AddRegDI
+
+                MOV isInValidCommand, 1
+                JMP RETURN_DstSrc
+
+                DstOp1AddRegBX:
+                    DstOpAddReg p1_ValRegBX, p2_ValRegBX
+                DstOp1AddRegBP:
+                    DstOpAddReg p1_ValRegBP, p2_ValRegBP
+                DstOp1AddRegSI:
+                    DstOpAddReg p1_ValRegSI, p2_ValRegSI
+                DstOp1AddRegDI:
+                    DstOpAddReg p1_ValRegDI, p2_ValRegDI
+
+            DstOp1Mem:
+
+                MOV BX, 0
+                SearchForMem_GetDst: 
+                    CMP selectedOp1Mem, BL
+                    JNE NextMem_GetDst
+
+                    CMP p1_CpuEnabled, 1
+                    JZ p1_DstMem
+                    CMP p2_CpuEnabled, 1
+                    JZ p2_DstMem
+                    JMP RETURN_DstSrc
+
+                    p1_DstMem:
+                        LEA DI, p1_ValMem[BX]      ;command
+                        JMP RETURN_DstSrc
+                    
+                    p2_DstMem:
+                        LEA DI, p2_ValMem[BX]      ;command
+                        JMP RETURN_DstSrc
+
+
+                    NextMem_GetDst:
+                        INC BX
+                        CMP BX, 16
+                        JZ EndSearch_GetDst
+                jmp SearchForMem_GetDst
+                EndSearch_GetDst:
+                    MOV isInValidCommand, 1
+                    JMP RETURN_DstSrc
+
+
+            RETURN_DstSrc:
+                ; Saving values of AX
+                    POP AX
+                RET
+        GetDst ENDP
+
+        GetSrcOp PROC    ; Returned Value is saved in AX, CALL TWICE IF Command is executed on BOTH CPUS
+            ; Saving values of DI
+                PUSH DI
+            CMP selectedOp2Type, 0
+            JZ SrcOp2Reg
+            CMP selectedOp2Type, 1
+            JZ SrcOp2AddReg
+            CMP selectedOp2Type, 2
+            JZ SrcOp2Mem
+            CMP selectedOp2Type, 3
+            JZ SrcOp2Val
+
+            MOV isInValidCommand, 1
+            JMP RETURN_GetSrcOp
+
+            SrcOp2Reg:
+
+                CMP selectedOp2Reg, 0
+                JZ SrcOp2RegAX
+
+                CMP selectedOp2Reg, 3
+                JZ SrcOp2RegBX
+
+                CMP selectedOp2Reg, 6
+                JZ SrcOp2RegCX
+
+                CMP selectedOp2Reg, 9
+                JZ SrcOp2pRegDX
+
+                CMP selectedOp2Reg, 15
+                JZ SrcOp2RegBP
+                CMP selectedOp2Reg, 16
+                JZ SrcOp2RegSP
+                CMP selectedOp2Reg, 17
+                JZ SrcOp2RegSI
+                CMP selectedOp2Reg, 18
+                JZ SrcOp2RegDI
+
+                MOV isInValidCommand, 1
+                JMP RETURN_GetSrcOp
+
+                SrcOp2RegAX:
+                    SrcOpReg p1_ValRegAX, p2_ValRegAX
+                SrcOp2RegBX:
+                    SrcOpReg p1_ValRegBX, p2_ValRegBX
+                SrcOp2RegCX:
+                    SrcOpReg p1_ValRegCX, p2_ValRegCX
+                SrcOp2pRegDX:
+                    SrcOpReg p1_ValRegDX, p2_ValRegDX
+                SrcOp2RegBP:
+                    SrcOpReg p1_ValRegBP, p2_ValRegBP
+                SrcOp2RegSP:
+                    SrcOpReg p1_ValRegSP, p2_ValRegSP
+                SrcOp2RegSI:
+                    SrcOpReg p1_ValRegSI, p2_ValRegSI
+                SrcOp2RegDI:
+                    SrcOpReg p1_ValRegDI, p2_ValRegDI
+                
+
+
+            SrcOp2AddReg:
+                CMP selectedOp2AddReg, 3
+                JZ SrcOp2AddRegBX
+                CMP selectedOp2AddReg, 15
+                JZ SrcOp2AddRegBP
+                CMP selectedOp2AddReg, 17
+                JZ SrcOp2AddRegSI
+                CMP selectedOp2AddReg, 18
+                JZ SrcOp2AddRegDI
+
+                MOV isInValidCommand, 1
+                JMP RETURN_GetSrcOp
+
+                SrcOp2AddRegBX:
+                    SrcOpAddReg p1_ValRegBX, p2_ValRegBX
+                SrcOp2AddRegBP:
+                    
+                    SrcOpAddReg p1_ValRegBP, p2_ValRegBP
+                SrcOp2AddRegSI:
+                    SrcOpAddReg p1_ValRegSI, p2_ValRegSI
+                SrcOp2AddRegDI:
+                    SrcOpAddReg p1_ValRegDI, p2_ValRegDI
+
+            SrcOp2Mem:
+
+                MOV BX, 0
+                SearchForMem_GetSrc: 
+                    CMP selectedOp2Mem, BL
+                    JNE NextMem_GetSrc
+
+                    CMP p1_CpuEnabled, 1
+                    JZ p1_GetSrc
+                    CMP p2_CpuEnabled, 1
+                    JZ p2_GetSrc
+                    JMP RETURN_GetSrcOp
+
+                    p1_GetSrc:
+                        MOV AX, WORD PTR p1_ValMem[BX]      ;command
+                        JMP RETURN_GetSrcOp
+                    
+                    p2_GetSrc:
+                        MOV AX, WORD PTR p2_ValMem[BX]      ;command
+                        JMP RETURN_GetSrcOp
+
+
+                    NextMem_GetSrc:
+                        INC BX
+                        CMP BX, 16
+                        JZ EndSearch_GetSrc
+                jmp SearchForMem_GetSrc
+                EndSearch_GetSrc:
+                    MOV isInValidCommand, 1
+                    JMP RETURN_GetSrcOp
+
+            SrcOp2Val:
+                CMP Op2Valid, 1
+                JZ ValidVal_GetSrc
+                MOV isInValidCommand, 1
+                ValidVal_GetSrc:
+                    MOV AX, Op2Val
+                    JMP RETURN_GetSrcOp
+
+            RETURN_GetSrcOp:
+                CALL LineStuckPwrUp
+                ; Saving values of DI
+                    POP DI
+                RET
+
+        GetSrcOp ENDP
+        GetSrcOp_8Bit PROC    ; Returned Value is saved in AL
+            ; Saving values of DI
+                PUSH DI
+
+            CMP selectedOp2Type, 0
+            JZ SrcOp2Reg_8Bit
+            CMP selectedOp2Type, 1
+            JZ SrcOp2AddReg_8Bit
+            CMP selectedOp2Type, 2
+            JZ SrcOp2Mem_8Bit
+            CMP selectedOp2Type, 3
+            JZ SrcOp2Val_8Bit
+            MOV isInValidCommand, 1
+            JMP RETURN_GetSrcOp_8Bit
+
+            SrcOp2Reg_8Bit:
+                CMP selectedOp2Reg, 1
+                JZ SrcOp2RegAL_8Bit
+                CMP selectedOp2Reg, 2
+                JZ SrcOp2RegAH_8Bit
+
+                CMP selectedOp2Reg, 4
+                JZ SrcOp2RegBL_8Bit
+                CMP selectedOp2Reg, 5
+                JZ SrcOp2RegBH_8Bit
+
+                CMP selectedOp2Reg, 7
+                JZ SrcOp2RegCL_8Bit
+                CMP selectedOp2Reg, 8
+                JZ SrcOp2RegCH_8Bit
+
+                CMP selectedOp2Reg, 10
+                JZ SrcOp2RegDL_8Bit
+                CMP selectedOp2Reg, 11
+                JZ SrcOp2RegDH_8Bit
+
+                MOV isInValidCommand, 1
+                JMP RETURN_GetSrcOp_8Bit
+
+                SrcOp2RegAL_8Bit:
+                    SrcOpReg_8bit p1_ValRegAX, p2_ValRegAX
+                SrcOp2RegAH_8Bit:
+                    SrcOpReg_8bit p1_ValRegAX+1, p2_ValRegAX+1
+                SrcOp2RegBL_8Bit:
+                    SrcOpReg_8bit p1_ValRegBX, p2_ValRegBX
+                SrcOp2RegBH_8Bit:
+                    SrcOpReg_8bit p1_ValRegBX+1, p2_ValRegBX+1
+                SrcOp2RegCL_8Bit:
+                    SrcOpReg_8bit p1_ValRegCX, p2_ValRegCX
+                SrcOp2RegCH_8Bit:
+                    SrcOpReg_8bit p1_ValRegCX+1, p2_ValRegCX+1
+                SrcOp2RegDL_8Bit:
+                    SrcOpReg_8bit p1_ValRegDX, p2_ValRegDX
+                SrcOp2RegDH_8Bit:
+                    SrcOpReg_8bit p1_ValRegDX+1, p2_ValRegDX+1
+                
+
+
+            SrcOp2AddReg_8Bit:
+
+                CMP selectedOp2AddReg, 3
+                JZ SrcOp2AddRegBX_8Bit
+                CMP selectedOp2AddReg, 15
+                JZ SrcOp2AddRegBP_8Bit
+                CMP selectedOp2AddReg, 17
+                JZ SrcOp2AddRegSI_8Bit
+                CMP selectedOp2AddReg, 18
+                JZ SrcOp2AddRegDI_8Bit
+
+                MOV isInValidCommand, 1
+                JMP RETURN_GetSrcOp_8Bit
+
+                SrcOp2AddRegBX_8Bit:
+                    SrcOpAddReg_8bit p1_ValRegBX, p2_ValRegBX
+                SrcOp2AddRegBP_8Bit:
+                    SrcOpAddReg_8bit p1_ValRegBP, p2_ValRegBP
+                SrcOp2AddRegSI_8Bit:
+                    SrcOpAddReg_8bit p1_ValRegSI, p2_ValRegSI
+                SrcOp2AddRegDI_8Bit:
+                    SrcOpAddReg_8Bit p1_ValRegDI, p2_ValRegDI
+
+            SrcOp2Mem_8Bit:
+
+                MOV BX, 0
+                SearchForMem_GetSrc_8BIT: 
+                    CMP selectedOp2Mem, BL
+                    JNE NextMem_GetSrc_8BIT
+
+                    CMP p1_CpuEnabled, 1
+                    JZ p1_GetSrc_8BIT
+                    CMP p2_CpuEnabled, 1
+                    JZ p2_GetSrc_8BIT
+                    JMP RETURN_GetSrcOp_8Bit
+
+                    p1_GetSrc_8BIT:
+                        MOV AL, p1_ValMem[BX]      ;command
+                        JMP RETURN_GetSrcOp_8Bit
+                    
+                    p2_GetSrc_8BIT:
+                        MOV AL, p2_ValMem[BX]      ;command
+                        JMP RETURN_GetSrcOp_8Bit
+
+
+                    NextMem_GetSrc_8BIT:
+                        INC BX
+                        CMP BX, 16
+                        JZ EndSearch_GetSrc_8BIT
+                jmp SearchForMem_GetSrc_8BIT
+                EndSearch_GetSrc_8BIT:
+                    MOV isInValidCommand, 1
+                    JMP RETURN_GetSrcOp_8Bit
+
+            SrcOp2Val_8Bit:
+                CMP Op2Valid, 1
+                JZ ValidVal_GetSrc_8BIT
+                MOV isInValidCommand, 1
+                ValidVal_GetSrc_8BIT:
+                    MOV AL, BYTE PTR Op2Val
+                    JMP RETURN_GetSrcOp_8Bit
+            
+            RETURN_GetSrcOp_8Bit:
+                CALL LineStuckPwrUp
+                ; Saving values of DI
+                    POP DI
+                RET
+        GetSrcOp_8Bit ENDP
+        SetCF PROC
+            PUSH BX
+                CMP p1_CpuEnabled, 1
+                JZ p1_SetCF
+                CMP p2_CpuEnabled, 1
+                JZ p2_SetCF
+
+                JMP Return_SetCF
+
+                p1_SetCF:
+                    MOV BL, 0
+                    ADC BL, 0
+                    MOV p1_ValCF, BL 
+                    JMP Return_SetCF
+                p2_SetCF:
+                    MOV BL, 0
+                    ADC BL, 0
+                    MOV p2_ValCF, Bl
+            Return_SetCF:
+                POP BX
+
             RET
-        SrcOp2Mem6:
-            MOV AX, WORD PTR ValMem+6
+        ENDP
+        GetCF PROC
+            PUSH BX
+
+            CMP p1_CpuEnabled, 1
+            JZ p1_GetCF
+            CMP p2_CpuEnabled, 1
+            JZ p2_GetCF
+
+            JMP Return_GetCF
+
+            p1_GetCF:
+                MOV BL, p1_ValCF
+                ADD BL, 0FFH
+                JMP Return_GetCF
+            p2_GetCF:
+                MOV BL, p2_ValCF
+                ADD BL, 0FFH
+
+            Return_GetCF:
+                POP BX
+
             RET
-        SrcOp2Mem7:
-            MOV AX, WORD PTR ValMem+7
+        ENDP
+
+
+    ;; ----------------------------- Validations --------------------------- ;;
+        CheckMemToMem PROC FAR
+
+            CMP selectedOp1Type, AddRegIndex
+            JZ Op1Mem_Check
+            CMP selectedOp1Type, MemIndex
+            JZ Op1Mem_Check
             RET
-        SrcOp2Mem8:
-            MOV AX, WORD PTR ValMem+8
+
+            Op1Mem_Check:
+                CMP selectedOp2Type, AddRegIndex
+                JZ Op2Mem_Check
+                CMP selectedOp2Type, MemIndex
+                JZ Op2Mem_Check
+                RET
+
+                Op2Mem_Check:
+                    MOV isInValidCommand, 1
+
             RET
-        SrcOp2Mem9:
-            MOV AX, WORD PTR ValMem+9
+        ENDP
+        CheckSizeMismatch PROC FAR
+
+            CMP selectedOp1Type, RegIndex
+            JZ CheckSizeOp2
             RET
-        SrcOp2Mem10:
-            MOV AX, WORD PTR ValMem+10
+
+            CheckSizeOp2:
+                CMP selectedOp2Type, RegIndex
+                JZ CheckSizeMismatch_Op2Reg
+                CMP selectedOp2Type, ValIndex
+                JZ CheckSizeMismatch_Op2Val
+                RET
+
+                CheckSizeMismatch_Op2Reg:
+                    ; Saving values of ax
+                        push ax
+                    mov al, selectedOp1Size
+                    CMP AL, selectedOp2Size
+                    JNZ SizeMismatch
+                    POP AX
+                    RET
+                    SizeMismatch:
+                        MOV isInValidCommand, 1
+                        POP AX
+                        RET
+                CheckSizeMismatch_Op2Val:
+                    PUSH AX
+
+                    MOV AL, selectedOp1Size
+                    CMP AL, selectedOp2Size
+                    JB SizeMismatch
+                    POP AX
+                    RET
+
+                    
+
+
+
+            
+        ENDP
+        CheckAddress proc     ; Value of register supposed to be in dx before calling the proc, if greater bl = 1 else bl = 0
+            cmp dx, 16
+            jg InValid
+            mov bl, 0
+            ret
+            Invalid: 
+            mov bl, 1
+            ret
+        CheckAddress ENDP
+        CheckForbidChar PROC   ;offset of string checked is in di, bl = 1 if found
+            mov al, ForbidChar
+            MOV CX, CommStringSize
+            REPNE SCASB
+            CMP CX,0
+            JZ NotFound
+            mov bl, 1
             RET
-        SrcOp2Mem11:
-            MOV AX, WORD PTR ValMem+11
+            NotFound:
+                mov bl,0 
             RET
-        SrcOp2Mem12:
-            MOV AX, WORD PTR ValMem+12
+        ENDP
+        CheckForbidCharProc PROC            ; NEEDS TO Reset selectedOperands after each instruction execution
+            ; Check in instruction
+            mov Ah, 0
+            mov AL, selectedComm
+            mov BX, CommStringSize
+            MUL BX
+            add ax, offset NOPcom       ; First Choice in command
+            CheckForbidCharMacro ax
+
+            ; Check op1
+            CheckForbidCharOp1:
+                cmp selectedOp1Type, 0
+                jz ForbidCharOp1Reg
+                cmp selectedOp1Type, 1
+                jz ForbidCharOp1AddReg
+                cmp selectedOp1Type, 2
+                jz ForbidCharOp1Mem
+                cmp selectedOp1Type, 3
+                jz ForbidCharOp1Val
+                
+                JMP CheckForbidCharOp2
+
+                ForbidCharOp1Reg:
+                    mov Ah, 0
+                    mov AL, selectedOp1Reg
+                    mov bx, CommStringSize
+                    MUL bx
+                    add ax, offset RegAX
+                    CheckForbidCharMacro ax
+                    JMP CheckForbidCharOp2
+                
+                ForbidCharOp1AddReg:
+                    mov Ah, 0
+                    mov AL, selectedOp1AddReg
+                    mov bx, CommStringSize
+                    MUL bx
+                    add ax, offset AddRegAX
+                    CheckForbidCharMacro ax
+                    JMP CheckForbidCharOp2
+                
+                ForbidCharOp1Mem:
+                    MOV AH, 0
+                    mov AL, selectedOp1Mem
+                    mov bx, CommStringSize
+                    MUL bx
+                    add ax, offset Mem0
+                    CheckForbidCharMacro ax
+                    JMP CheckForbidCharOp2
+                
+                ForbidCharOp1Val:
+                    MOV AX, offset num 
+                    JMP CheckForbidCharOp2 
+
+            CheckForbidCharOp2:
+                cmp selectedOp2Type, 0
+                jz ForbidCharOp2Reg
+                cmp selectedOp2Type, 1
+                jz ForbidCharOp2AddReg
+                cmp selectedOp2Type, 2
+                jz ForbidCharOp2Mem
+                cmp selectedOp2Type, 3
+                jz ForbidCharOp2Val
+                ret
+
+                ForbidCharOp2Reg:
+                    MOV AH, 0
+                    mov AL, selectedOp2Reg
+                    mov bx, CommStringSize
+                    MUL bx
+                    add ax, offset RegAX
+                    CheckForbidCharMacro ax
+                    RET
+                
+                ForbidCharOp2AddReg:
+                    MOV AH, 0
+                    mov AL, selectedOp2AddReg
+                    mov bx, CommStringSize
+                    MUL bx
+                    add ax, offset AddRegAX
+                    CheckForbidCharMacro ax
+                    RET
+                
+                ForbidCharOp2Mem:
+                    MOV AH, 0
+                    mov AL, selectedOp2Mem
+                    mov bx, CommStringSize
+                    MUL bx
+                    add ax, offset Mem0
+                    CheckForbidCharMacro ax
+                    RET
+                
+                ForbidCharOp2Val:
+                    MOV AX, offset num2
+                    RET
+
+
             RET
-        SrcOp2Mem13:
-            MOV AX, WORD PTR ValMem+13
+        ENDP
+
+
+        CheckOp1Size PROC
+            CMP selectedOp1Type, RegIndex
+            jz Reg_CheckOp1Size
+            CMP selectedOp1Type, ValIndex
+            jz Val_CheckOp1Size
+            
+            ; Memory is 16-bit addressable
+            MOV selectedOp1Size, 16
             RET
-        SrcOp2Mem14:
-            MOV AX, WORD PTR ValMem+14
+            
+            Reg_CheckOp1Size:
+                CMP selectedOp1Reg, 0
+                JZ CheckOp1Size_RegAX
+                CMP selectedOp1Reg, 1
+                JZ CheckOp1Size_RegAL
+                CMP selectedOp1Reg, 2
+                JZ CheckOp1Size_RegAH
+                CMP selectedOp1Reg, 3
+                JZ CheckOp1Size_RegBX
+                CMP selectedOp1Reg, 4
+                JZ CheckOp1Size_RegBL
+                CMP selectedOp1Reg, 5
+                JZ CheckOp1Size_RegBH
+                CMP selectedOp1Reg, 6
+                JZ CheckOp1Size_RegCX
+                CMP selectedOp1Reg, 7
+                JZ CheckOp1Size_RegCL
+                CMP selectedOp1Reg, 8
+                JZ CheckOp1Size_RegCH
+                CMP selectedOp1Reg, 9
+                JZ CheckOp1Size_RegDX
+                CMP selectedOp1Reg, 10
+                JZ CheckOp1Size_RegDL
+                CMP selectedOp1Reg, 11
+                JZ CheckOp1Size_RegDH
+
+                CMP selectedOp1Reg, 15
+                JZ CheckOp1Size_RegBP
+                CMP selectedOp1Reg, 16
+                JZ CheckOp1Size_RegSP
+                CMP selectedOp1Reg, 17
+                JZ CheckOp1Size_RegSI
+                CMP selectedOp1Reg, 18
+                JZ CheckOp1Size_RegDI
+                
+
+                ret
+
+                CheckOp1Size_RegAX:
+                    MOV selectedOp1Size, 16
+                    ret
+                CheckOp1Size_RegAL:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegAH:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegBX:
+                    MOV selectedOp1Size, 16
+                    ret
+                CheckOp1Size_RegBL:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegBH:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegCX:
+                    MOV selectedOp1Size, 16
+                    ret
+                CheckOp1Size_RegCL:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegCH:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegDX:
+                    MOV selectedOp1Size, 16
+                    ret
+                CheckOp1Size_RegDL:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegDH:
+                    MOV selectedOp1Size, 8
+                    ret
+                CheckOp1Size_RegBP:
+                    MOV selectedOp1Size, 16
+                    ret
+                CheckOp1Size_RegSP:
+                    MOV selectedOp1Size, 16
+                    ret
+                CheckOp1Size_RegSI:
+                    MOV selectedOp1Size, 16
+                    ret
+                CheckOp1Size_RegDI:
+                    MOV selectedOp1Size, 16
+                    ret
+
+            Val_CheckOp1Size:
+                CMP Op1Val, 0FFH
+                ja Op1Val_16Bit
+                mov selectedOp1Size, 8
+                RET
+                Op1Val_16Bit:
+                    mov selectedOp1Size, 16
+
+
             RET
-        SrcOp2Mem15:
-            MOV AX, WORD PTR ValMem+15
+        ENDP
+        CheckOp2Size PROC
+            CMP selectedOp2Type, RegIndex
+            jz Reg_CheckOp2Size
+            CMP selectedOp2Type, ValIndex
+            jz Val_CheckOp2Size
+            
+            ; Memory is 16-bit addressable
+            MOV selectedOp2Size, 16
             RET
-    SrcOp2Val:
-        CMP Op2Valid, 0
-        jz InValidCommand
-        MOV AX, Op2Val
+            
+            Reg_CheckOp2Size:
+                CMP selectedOp2Reg, 0
+                JZ CheckOp2Size_RegAX
+                CMP selectedOp2Reg, 1
+                JZ CheckOp2Size_RegAL
+                CMP selectedOp2Reg, 2
+                JZ CheckOp2Size_RegAH
+                CMP selectedOp2Reg, 3
+                JZ CheckOp2Size_RegBX
+                CMP selectedOp2Reg, 4
+                JZ CheckOp2Size_RegBL
+                CMP selectedOp2Reg, 5
+                JZ CheckOp2Size_RegBH
+                CMP selectedOp2Reg, 6
+                JZ CheckOp2Size_RegCX
+                CMP selectedOp2Reg, 7
+                JZ CheckOp2Size_RegCL
+                CMP selectedOp2Reg, 8
+                JZ CheckOp2Size_RegCH
+                CMP selectedOp2Reg, 9
+                JZ CheckOp2Size_RegDX
+                CMP selectedOp2Reg, 10
+                JZ CheckOp2Size_RegDL
+                CMP selectedOp2Reg, 11
+                JZ CheckOp2Size_RegDH
+
+                CMP selectedOp2Reg, 15
+                JZ CheckOp2Size_RegBP
+                CMP selectedOp2Reg, 16
+                JZ CheckOp2Size_RegSP
+                CMP selectedOp2Reg, 17
+                JZ CheckOp2Size_RegSI
+                CMP selectedOp2Reg, 18
+                JZ CheckOp2Size_RegDI
+                
+
+                ret
+
+                CheckOp2Size_RegAX:
+                    MOV selectedOp2Size, 16
+                    ret
+                CheckOp2Size_RegAL:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegAH:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegBX:
+                    MOV selectedOp2Size, 16
+                    ret
+                CheckOp2Size_RegBL:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegBH:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegCX:
+                    MOV selectedOp2Size, 16
+                    ret
+                CheckOp2Size_RegCL:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegCH:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegDX:
+                    MOV selectedOp2Size, 16
+                    ret
+                CheckOp2Size_RegDL:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegDH:
+                    MOV selectedOp2Size, 8
+                    ret
+                CheckOp2Size_RegBP:
+                    MOV selectedOp2Size, 16
+                    ret
+                CheckOp2Size_RegSP:
+                    MOV selectedOp2Size, 16
+                    ret
+                CheckOp2Size_RegSI:
+                    MOV selectedOp2Size, 16
+                    ret
+                CheckOp2Size_RegDI:
+                    MOV selectedOp2Size, 16
+                    ret
+
+            Val_CheckOp2Size:
+                CMP Op2Val, 0FFH
+                ja Op2Val_16Bit
+                mov selectedOp2Size, 8
+                RET
+                Op2Val_16Bit:
+                mov selectedOp2Size, 16
+                ret
+        ENDP 
+    ;; ---------------------------- Power Ups ------------------------------ ;;
+        ExecPwrUp PROC FAR
+            CMP selectedPUPType, 1
+            JZ PwrUp1
+            CMP selectedPUPType, 2
+            JZ PwrUp2
+            CMP selectedPUPType, 3
+            JZ PwrUp3
+            CMP selectedPUPType, 4
+            JZ PwrUp4
+            CMP selectedPUPType, 5
+            JZ PwrUp5
+            RET
+
+            PwrUp1: ; Power Up #1: Executing a command on your own processor (consumes 5 points)
+                
+                CMP Player1Points, 5
+                JBE NoAvailablePoints
+                SUB Player1Points, 5
+
+                MOV p1_CpuEnabled, 1    ; Assuming that p1_cpu is the cpu of the current player
+                JMP Return_ExecPwrUp
+
+            PwrUp2: ; Power Up #2: Executing a command on your processor and your opponent processor at the same time (consumes 3 points)
+
+                CMP Player1Points, 3
+                JBE NoAvailablePoints
+                SUB Player1Points, 3
+
+                MOV p1_CpuEnabled, 1
+                MOV p2_CpuEnabled, 1
+                JMP Return_ExecPwrUp
+            PwrUp3: ; Power Up #3: Changing the forbidden character only once (consumes 8 points)
+                
+                CMP isPwrUp3Used, 1
+                JZ Return_ExecPwrUp
+
+                CMP Player1Points, 8
+                JBE NoAvailablePoints
+                SUB Player1Points, 8
+
+                CALL ChangeForbiddenChar
+                MOV isPwrUp3Used, 1
+                JMP Return_ExecPwrUp
+
+            PwrUp4: ; Power Up #4: Making one of the data lines stuck at zero or at one for a single instruction (consumes 2 points)
+                
+                CMP Player1Points, 2
+                JBE NoAvailablePoints
+                SUB Player1Points, 2
+
+                ; Prompt the user for the details using LineStuckIndexMsg, LineStuckValMsg
+                ; Validate user Input and enter it in the opponent data line variables
+                CALL StuckIndexSubMenu
+                CALL StuckValSubMenu
+                MOV opponentPwrUpStuckEnabled, 1
+
+                JMP Return_ExecPwrUp
+            PwrUp5: ; Clearing all registers at once. (Consumes 30 points and could be used only once).
+                
+                CMP isPwrUp5Used, 1
+                JZ Return_ExecPwrUp
+                
+                CMP Player1Points, 30
+                JBE NoAvailablePoints
+                SUB Player1Points, 30
+
+                CALL ClearAllRegisters
+                MOV isPwrUp5Used, 1
+                JMP Return_ExecPwrUp 
+            NoAvailablePoints:
+                LEA Dx, NoAvailablePointsMsg
+                CALL DisplayString
+                RET
+            Return_ExecPwrUp:    
+                RET
+        ENDP
+        ChangeForbiddenChar PROC FAR
+            LEA DX, ChangeForbidMsg
+            CALL DisplayString
+            NotValidChar:
+                CALL WaitKeyPress
+                CMP AL, ' '
+                JZ NotValidChar
+            
+            CALL CharToUpper
+            MOV ForbidChar, AL
+
+
+            RET
+        ENDP
+        ClearAllRegisters PROC FAR
+            MOV p1_ValRegAX, 0
+            MOV p1_ValRegBX, 0
+            MOV p1_ValRegCX, 0
+            MOV p1_ValRegDX, 0
+            MOV p1_ValRegBP, 0
+            MOV p1_ValRegSP, 0
+            MOV p1_ValRegSI, 0
+            MOV p1_ValRegDI, 0
+
+            MOV p2_ValRegAX, 0
+            MOV p2_ValRegBX, 0
+            MOV p2_ValRegCX, 0
+            MOV p2_ValRegDX, 0
+            MOV p2_ValRegBP, 0
+            MOV p2_ValRegSP, 0
+            MOV p2_ValRegSI, 0
+            MOV p2_ValRegDI, 0
+            RET
+        ENDP
+        LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
+            PUSH BX
+            PUSH CX
+            PUSH DX
+
+            CMP ourPwrUpStuckEnabled, 1
+            jnz NotStuck
+            CMP ourPwrUpStuckVal, 0
+            JZ PwrUpZero
+            CMP ourPwrUpStuckVal, 1
+            JZ PwrupOne
+
+            PwrUpZero:
+                MOV BX, 0FFFEH
+                mov cl, ourPwrUpDataLineIndex
+                ROL BX, cl
+                AND AX, BX
+                mov ourPwrUpStuckEnabled, 0
+                JMP NoTStuck
+            PwrupOne:
+                MOV BX, 1
+                mov cl, ourPwrUpDataLineIndex
+                ROL BX,cl
+                OR AX, BX
+                mov ourPwrUpStuckEnabled, 0
+                ;MOV DL, AL
+                ;CALL DisplayChar
+            NotStuck:
+                
+            POP DX
+            POP CX
+            POP BX
+            RET
+        ENDP
+        
+    ;; ------------------------- Other Helper prcoedures ------------------- ;;
+        
+        
+
+;; --------------------------------- General Helper Procedures ------------------------------- ;;
+
+    CharToUpper PROC FAR    ; Convert Char in AL to upper Case
+        ; Check if it's an alpapetic lower case
+        CMP AL, 'a'
+        JAE ChckUpperLimit
+        RET
+        ChckUpperLimit:
+            CMP AL, 'z'
+            JA NotLower
+            SUB AL, 14H
+        NotLower:    
+
+        RET
+    ENDP
+    WaitKeyPress PROC ; AH:scancode,AL:ASCII
+        ; Wait for a key pressed
+        CHECK: 
+            mov ah,1
+            int 16h
+        jz CHECK
+
+        ret
+    WaitKeyPress ENDP
+    DisplayChar PROC    ; char is saved in dl
+        mov ah,2
+        int 21h
+
+        RET
+    DisplayChar ENDP
+    DisplayString PROC ; string offset saved in DX
+        mov ah, 9
+        int 21h
+
+        RET
+    DisplayString ENDP
+    DisplayHexanumber PROC ;display Hexanumber from Registers   
+        mov ax,234h     ;pop ax
+        mov bx,ax
+
+        mov cx,a
+        div cx
+
+        mov ah,2     ; display first digit
+        mov dl,al
+        add dl,30h
+        int 21h        
+
+        mov ah,0
+        mov cx,a
+        mul cx
+
+        sub bx,ax     
+
+        mov cx,b   
+        mov ax,bx
+        div cx      
+
+        mov cl,ah   
+
+        mov ah,2     ; display second digit
+        mov dl,al
+        add dl,30h
+        int 21h   
+
+        mov dl,c
+        mov al,bl
+        mov ah,0
+
+        div dl 
+
+        mov ah,2     ; display third digit
+        mov dl,al
+        add dl,30h
+        int 21h 
+
+        mov cl,c 
+        mov al,bl
+        mov ah,0
+        div cl
+        mov al,ah
+        mov ah,2     ; display fourth digit
+        mov dl,al
+        add dl,30h
+        int 21h 
+                        
         RET
 
+    DisplayHexanumber ENDP
+    SetCursor PROC ; position is saved in dx   
+        mov ah,2
+        int 10h
 
-    RET
-GetSrcOp ENDP
-ourGetSrcOp PROC    ; Returned Value is saved in AX
-    CMP selectedOp2Type, 0
-    JZ SrcOp2Rega
-    CMP selectedOp2Type, 1
-    JZ SrcOp2AddRega
-    CMP selectedOp2Type, 2
-    JZ SrcOp2Mema
-    CMP selectedOp2Type, 3
-    JZ SrcOp2Vala
-    JMP InValidCommand
+        ret
+    SetCursor ENDP
+    ClearScreenTxtMode PROC far
+        ; Change to text mode (clear screen)
+        mov ah,0
+        mov al,3
+        int 10h
 
-    SrcOp2Rega:
-
-        CMP selectedOp2Reg, 0
-        JZ SrcOp2RegAXa
-
-        CMP selectedOp2Reg, 3
-        JZ SrcOp2RegBXa
-
-        CMP selectedOp2Reg, 6
-        JZ SrcOp2RegCXa
-
-        CMP selectedOp2Reg, 9
-        JZ SrcOp2pRegDXa
-
-        CMP selectedOp2Reg, 15
-        JZ SrcOp2RegBPa
-        CMP selectedOp2Reg, 16
-        JZ SrcOp2RegSPa
-        CMP selectedOp2Reg, 17
-        JZ SrcOp2RegSIa
-        CMP selectedOp2Reg, 18
-        JZ SrcOp2RegDIa
-
-        JMP InValidCommand
-
-        SrcOp2RegAXa:
-            MOV AX, ourValRegAX
-            RET
-        SrcOp2RegBXa:
-            MOV AX, ourValRegBX
-            RET
-        SrcOp2RegCXa:
-            MOV AX, ourValRegCX
-            RET
-        SrcOp2pRegDXa:
-            MOV AX, ourValRegDX
-            RET
-        SrcOp2RegBPa:
-            MOV AX, ourValRegBP
-            RET
-        SrcOp2RegSPa:
-            MOV AX, ourValRegSP
-            RET
-        SrcOp2RegSIa:
-            MOV AX, ourValRegSI
-            RET
-        SrcOp2RegDIa:
-            MOV AX, ourValRegDI
-            RET
+        ret
+    ClearScreenTxtMode ENDP
+    ExitPROC PROC FAR
+        ; Return to dos
+        mov ah,4ch
+        int 21h
         
+    ENDP
 
-
-    SrcOp2AddRega:
-
-        CMP selectedOp2AddReg, 3
-        JZ SrcOp2AddRegBXa
-        CMP selectedOp2AddReg, 15
-        JZ SrcOp2AddRegBPa
-        CMP selectedOp2AddReg, 17
-        JZ SrcOp2AddRegSIa
-        CMP selectedOp2AddReg, 18
-        JZ SrcOp2AddRegDIa
-
-        JMP InValidCommand
-
-        SrcOp2AddRegBXa:
-            MOV DX, ourValRegBX
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegBX
-            MOV AX, [SI]
-            RET
-        SrcOp2AddRegBPa:
-            MOV DX, ourValRegBP
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegBP
-            MOV AX, [SI]
-            RET
-        SrcOp2AddRegSIa:
-            MOV DX, ourValRegSI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegSI
-            MOV AX, [SI]
-            RET
-        SrcOp2AddRegDIa:
-            MOV DX, ourValRegDI
-            CALL CheckAddress
-            CMP BL, 1
-            JZ InValidCommand
-            MOV SI, ourValRegDI
-            MOV AX, [SI]
-            RET
-
-    SrcOp2Mema:
-
-        CMP selectedOp2Mem, 0
-        JZ SrcOp2Mem0a
-        CMP selectedOp2Mem, 1
-        JZ SrcOp2Mem1a
-        CMP selectedOp2Mem, 2
-        JZ SrcOp2Mem2a
-        CMP selectedOp2Mem, 3
-        JZ SrcOp2Mem3a
-        CMP selectedOp2Mem, 4
-        JZ SrcOp2Mem4a
-        CMP selectedOp2Mem, 5
-        JZ SrcOp2Mem5a
-        CMP selectedOp2Mem, 6
-        JZ SrcOp2Mem6a
-        CMP selectedOp2Mem, 7
-        JZ SrcOp2Mem7a
-        CMP selectedOp2Mem, 8
-        JZ SrcOp2Mem8a
-        CMP selectedOp2Mem, 9
-        JZ SrcOp2Mem9a
-        CMP selectedOp2Mem, 10
-        JZ SrcOp2Mem10a
-        CMP selectedOp2Mem, 11
-        JZ SrcOp2Mem11a
-        CMP selectedOp2Mem, 12
-        JZ SrcOp2Mem12a
-        CMP selectedOp2Mem, 13
-        JZ SrcOp2Mem13a
-        CMP selectedOp2Mem, 14
-        JZ SrcOp2Mem14a
-        CMP selectedOp2Mem, 15
-        JZ SrcOp2Mem15a
-        JMP InValidCommand
-        
-        SrcOp2Mem0a:
-            MOV AX, WORD PTR ourValMem
-            RET
-        SrcOp2Mem1a:
-            MOV AX, WORD PTR ourValMem+1
-            RET
-        SrcOp2Mem2a:
-            MOV AX, WORD PTR ourValMem+2
-            RET
-        SrcOp2Mem3a:
-            MOV AX, WORD PTR ourValMem+3
-            RET
-        SrcOp2Mem4a:
-            MOV AX, WORD PTR ourValMem+4
-            RET
-        SrcOp2Mem5a:
-            MOV AX, WORD PTR ourValMem+5
-            RET
-        SrcOp2Mem6a:
-            MOV AX, WORD PTR ourValMem+6
-            RET
-        SrcOp2Mem7a:
-            MOV AX, WORD PTR ourValMem+7
-            RET
-        SrcOp2Mem8a:
-            MOV AX, WORD PTR ourValMem+8
-            RET
-        SrcOp2Mem9a:
-            MOV AX, WORD PTR ourValMem+9
-            RET
-        SrcOp2Mem10a:
-            MOV AX, WORD PTR ourValMem+10
-            RET
-        SrcOp2Mem11a:
-            MOV AX, WORD PTR ourValMem+11
-            RET
-        SrcOp2Mem12a:
-            MOV AX, WORD PTR ourValMem+12
-            RET
-        SrcOp2Mem13a:
-            MOV AX, WORD PTR ourValMem+13
-            RET
-        SrcOp2Mem14a:
-            MOV AX, WORD PTR ourValMem+14
-            RET
-        SrcOp2Mem15a:
-            MOV AX, WORD PTR ourValMem+15
-            RET
-    SrcOp2Vala:
-        CMP Op2Valid, 0
-        jz InValidCommand
-        MOV AX, Op2Val
+    LoadP1Registers PROC FAR
+        MOV AX,p1_ValRegAX
+        mov DX,p1_ValRegDX
         RET
+    ENDP
+    UpdateP1Registers PROC FAR
+        MOV p1_ValRegAX,AX
+        mov p1_ValRegDX,DX
+        RET
+    ENDP
+
+    LoadP2Registers PROC FAR
+        MOV AX,p2_ValRegAX
+        mov DX,p2_ValRegDX
+        RET
+    ENDP
+    UpdateP2Registers PROC FAR
+        MOV p2_ValRegAX,AX
+        mov p2_ValRegDX,DX
+        RET
+    ENDP
+
+    
 
 
-    RET
-ourGetSrcOp ENDP
-SetCF PROC
-    PUSH BX
-        MOV BL, 0
-        ADC BL, 0
-        MOV BL, ValCF
-    POP BX
 
-    RET
-ENDP
-GetCF PROC
-    PUSH BX
-        MOV BL, ValCF
-        ADD BL, 0FFH
-    POP BX
 
-    RET
-ENDP
 END CommMenu
