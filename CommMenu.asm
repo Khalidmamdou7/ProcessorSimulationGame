@@ -625,6 +625,7 @@ ENDM
     ; Keys Scan Codes
     UpArrowScanCode EQU 72
     DownArrowScanCode EQU 80
+
     EnterScanCode EQU 28 
 
     ; Cursor Locations
@@ -3381,62 +3382,33 @@ CommMenu ENDP
         ENDP 
     
     ;; ------------------------- Other Helper prcoedures ------------------- ;;
-        LineStuckPwrUp PROC  FAR   ;p2_Value to be stucked is saved in AX/AL
+        LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
             PUSH BX
             PUSH CX
             PUSH DX
-            PUSH AX
-            CMP PwrUpStuckEnabled, 1
-            jnz NoTStuck
-                CMP PwrUpStuckVal, 0
-                JZ PwrUpZero
-                CMP PwrUpStuckVal, 1
-                JZ PwrupOne
-                JMP Return_LineStuckPwrUp
 
-                PwrUpZero:
-                    MOV BX, 0FFFEH
-                    mov cl,PwrUpDataLineIndex
-                    ROL BX, cl
-                    AND AX, BX
-                    mov PwrUpStuckEnabled,0
-                    JMP NoTStuck
-                PwrupOne:
-                    MOV BX, 1
-                    mov cl,PwrUpDataLineIndex
-                    ROL BX,cl
-                    OR AX, BX
-                    mov PwrUpStuckEnabled,0
-            NoTStuck:
-                cmp selectedPUPType,4
-                jne Return_LineStuckPwrUp
-                ;TODO Take 1 input from the user as thep2_Value to be stuck 0 or 1, and 1 input for the index of thep2_Value stuck
-                mov ah,1
-                int 21h
-                cmp al,31h
-                jg notvalid10 
-                sub al,30h
-                mov PwrUpStuckVal,al
-                mov ah,1
-                int 21h
-                sub al,30h
-                mov ah,0
-                mov cx,c
-                mul cx
-                mov dx,ax
-                mov ah,1
-                int 21h
-                sub al,30h 
-                mov ah,0
-                add dx,ax
-                mov PwrUpDataLineIndex,dl
-                cmp dx,15h
-                jg notvalid10
-                mov PwrUpStuckEnabled,1
-                notvalid10:
-                mov PwrUpStuckEnabled,0
-            Return_LineStuckPwrUp:
-            POP AX
+            CMP PwrUpStuckEnabled, 1
+            jnz NotStuck
+            CMP PwrUpStuckVal, 0
+            JZ PwrUpZero
+            CMP PwrUpStuckVal, 1
+            JZ PwrupOne
+
+            PwrUpZero:
+                MOV BX, 0FFFEH
+                mov cl, PwrUpDataLineIndex
+                ROL BX, cl
+                AND AX, BX
+                mov PwrUpStuckEnabled, 0
+                JMP NoTStuck
+            PwrupOne:
+                MOV BX, 1
+                mov cl, PwrUpDataLineIndex
+                ROL BX,cl
+                OR AX, BX
+                mov PwrUpStuckEnabled, 0
+            NotStuck:
+                
             POP DX
             POP CX
             POP BX
