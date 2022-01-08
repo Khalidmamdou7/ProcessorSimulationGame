@@ -3485,67 +3485,75 @@ Send    			endp
             RET
         ENDP
         DIV_Comm_PROC PROC FAR
-            CALL Op2Menu
+        CALL Op2Menu
 
-            ;call  PowrUpMenu ; to choose power up
-            CALL CheckForbidCharProc
-            cmp selectedOp2Type,ValIndex
-            jne DIV_righttype
-            mov isInvalidCommand, 1
-            jmp Return_DIV
-            DIV_righttype:
-            CMP isInvalidCommand, 1
-            Je Return_DIV
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne DIV_righttype
+        mov isInvalidCommand, 1
+        jmp Return_DIV
+        DIV_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_DIV
 
-            CMP p1_CpuEnabled, 1
-            je DIV_p1
-            jmp DIV_p2
+        CMP p1_CpuEnabled, 1
+        je DIV_p1
+        jmp DIV_p2
 
-            DIV_p1:
-                cmp selectedOp2Size,16
-                je DIV_p1_16bit
-                jmp DIV_p1_8bit
+        DIV_p1:
+            cmp selectedOp2Size,16
+            je DIV_p1_16bit
+            jmp DIV_p1_8bit
 
-                DIV_p1_16bit:
-                    call GetSrcOp
-                    mov bx,ax
-                    call LoadP1Registers
-                    DIV BX
-                    call SetCF
-                    call UpdateP1Registers
-                    jmp DIV_p2
-                DIV_p1_8bit:
-                    call GetSrcOp_8Bit
-                    mov bl,al
-                    call LoadP1Registers
-                    DIV Bl
-                    call SetCF
-                    call UpdateP1Registers
-                    jmp DIV_p2
-            DIV_p2:
-                mov p1_CpuEnabled,0
-                cmp p2_CpuEnabled,1
-                jne Return_DIV
-                cmp selectedOp2Size,16
-                je DIV_p2_16bit
-                jmp DIV_p2_8bit
-                DIV_p2_16bit:
-                    call GetSrcOp
-                    mov bx,ax
-                    call LoadP2Registers
-                    DIV BX
-                    call SetCF
-                    call UpdateP2Registers
-                    jmp Return_DIV
-                DIV_p2_8bit:
-                    call GetSrcOp_8Bit
-                    mov bl,al
-                    call LoadP2Registers
-                    DIV Bl
-                    call SetCF
-                    call UpdateP2Registers
-            Return_DIV:
-            RET
+            DIV_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                cmp bx,0
+                je Return_DIV
+                DIV BX
+                call SetCF
+                call UpdateP1Registers
+                jmp DIV_p2
+            DIV_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                cmp bl,0
+                je Return_DIV
+                DIV Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp DIV_p2
+        DIV_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_DIV
+            cmp selectedOp2Size,16
+            je DIV_p2_16bit
+            jmp DIV_p2_8bit
+            DIV_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                cmp bx,0
+                je Return_DIV
+                DIV BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_DIV
+            DIV_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                cmp bl,0
+                je Return_DIV
+                DIV Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_DIV:
+        RET
         ENDP
         IMUL_Comm_PROC PROC FAR
             CALL Op2Menu
@@ -3611,67 +3619,75 @@ Send    			endp
             RET
         ENDP
         IDIV_Comm_PROC PROC FAR
-            CALL Op2Menu
+        CALL Op2Menu
 
-            ;call  PowrUpMenu ; to choose power up
-            CALL CheckForbidCharProc
-            cmp selectedOp2Type,ValIndex
-            jne IDIV_righttype
-            mov isInvalidCommand, 1
-            jmp Return_IDIV
-            IDIV_righttype:
-            CMP isInvalidCommand, 1
-            Je Return_IDIV
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne IDIV_righttype
+        mov isInvalidCommand, 1
+        jmp Return_IDIV
+        IDIV_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_IDIV
 
-            CMP p1_CpuEnabled, 1
-            je IDIV_p1
-            jmp IDIV_p2
+        CMP p1_CpuEnabled, 1
+        je IDIV_p1
+        jmp IDIV_p2
 
-            IDIV_p1:
-                cmp selectedOp2Size,16
-                je IDIV_p1_16bit
-                jmp IDIV_p1_8bit
+        IDIV_p1:
+            cmp selectedOp2Size,16
+            je IDIV_p1_16bit
+            jmp IDIV_p1_8bit
 
-                IDIV_p1_16bit:
-                    call GetSrcOp
-                    mov bx,ax
-                    call LoadP1Registers
-                    IDIV BX
-                    call SetCF
-                    call UpdateP1Registers
-                    jmp IDIV_p2
-                IDIV_p1_8bit:
-                    call GetSrcOp_8Bit
-                    mov bl,al
-                    call LoadP1Registers
-                    IDIV Bl
-                    call SetCF
-                    call UpdateP1Registers
-                    jmp IDIV_p2
-            IDIV_p2:
-                mov p1_CpuEnabled,0
-                cmp p2_CpuEnabled,1
-                jne Return_IDIV
-                cmp selectedOp2Size,16
-                je IDIV_p2_16bit
-                jmp IDIV_p2_8bit
-                IDIV_p2_16bit:
-                    call GetSrcOp
-                    mov bx,ax
-                    call LoadP2Registers
-                    IDIV BX
-                    call SetCF
-                    call UpdateP2Registers
-                    jmp Return_IDIV
-                IDIV_p2_8bit:
-                    call GetSrcOp_8Bit
-                    mov bl,al
-                    call LoadP2Registers
-                    IDIV Bl
-                    call SetCF
-                    call UpdateP2Registers
-            Return_IDIV:
-            RET
+            IDIV_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                cmp bx,0
+                je Return_IDIV
+                IDIV BX
+                call SetCF
+                call UpdateP1Registers
+                jmp IDIV_p2
+            IDIV_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                cmp bl,0
+                je Return_IDIV
+                IDIV Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp IDIV_p2
+        IDIV_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_IDIV
+            cmp selectedOp2Size,16
+            je IDIV_p2_16bit
+            jmp IDIV_p2_8bit
+            IDIV_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                cmp bx,0
+                je Return_IDIV
+                IDIV BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_IDIV
+            IDIV_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                cmp bl,0
+                je Return_IDIV
+                IDIV Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_IDIV:
+        RET
         ENDP
         ROR_Comm_PROC PROC FAR
             CALL Op1Menu
