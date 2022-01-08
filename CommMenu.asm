@@ -745,30 +745,35 @@ CommMenu proc far
         DEC_Comm:
 
         MUL_Comm:
-            
+            CALL MUL_Comm_PROC
+            jmp Exit
         DIV_Comm:
-            
+            CALL DIV_Comm_PROC
+            jmp Exit
         IMul_Comm:
-           
+            CALL IMUL_Comm_PROC
+            jmp Exit
         IDiv_Comm:
-            
+            CALL IDIV_Comm_PROC
+            jmp Exit
         ROR_Comm:
-            
-        
+            CALL ROR_Comm_PROC
+            JMP Exit
         ROL_Comm:
-            
-        
+            CALL ROL_Comm_PROC
+            JMP Exit
         RCR_Comm:
-           
+            CALL RCR_Comm_PROC
+            JMP Exit
         RCL_Comm:
-            
-        
+            CALL RCL_Comm_PROC
+            JMP Exit
         SHL_Comm:
-            
-        
+            CALL SHL_Comm_PROC
+            JMP Exit
         SHR_Comm:
-            
-
+            CALL SHR_Comm_PROC
+            JMP Exit
         Exit:
 
             CMP isInvalidCommand, 0
@@ -1354,6 +1359,586 @@ CommMenu ENDP
         
         RET
     ENDP
+    MUL_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne MUL_righttype
+        mov isInvalidCommand, 1
+        jmp Return_MUL
+        MUL_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_MUL
+
+        CMP p1_CpuEnabled, 1
+        je MUL_p1
+        jmp MUL_p2
+
+        MUL_p1:
+            cmp selectedOp2Size,16
+            je MUL_p1_16bit
+            jmp MUL_p1_8bit
+
+            MUL_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                mul BX
+                call SetCF
+                call UpdateP1Registers
+                jmp MUL_p2
+            MUL_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                mul Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp MUL_p2
+        MUL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_MUL
+            cmp selectedOp2Size,16
+            je MUL_p2_16bit
+            jmp MUL_p2_8bit
+            MUL_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                mul BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_MUL
+            MUL_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                mul Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_MUL:
+        RET
+    ENDP
+    DIV_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne DIV_righttype
+        mov isInvalidCommand, 1
+        jmp Return_DIV
+        DIV_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_DIV
+
+        CMP p1_CpuEnabled, 1
+        je DIV_p1
+        jmp DIV_p2
+
+        DIV_p1:
+            cmp selectedOp2Size,16
+            je DIV_p1_16bit
+            jmp DIV_p1_8bit
+
+            DIV_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                DIV BX
+                call SetCF
+                call UpdateP1Registers
+                jmp DIV_p2
+            DIV_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                DIV Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp DIV_p2
+        DIV_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_DIV
+            cmp selectedOp2Size,16
+            je DIV_p2_16bit
+            jmp DIV_p2_8bit
+            DIV_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                DIV BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_DIV
+            DIV_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                DIV Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_DIV:
+        RET
+    ENDP
+    IMUL_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne IMUL_righttype
+        mov isInvalidCommand, 1
+        jmp Return_IMUL
+        IMUL_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_IMUL
+
+        CMP p1_CpuEnabled, 1
+        je IMUL_p1
+        jmp IMUL_p2
+
+        IMUL_p1:
+            cmp selectedOp2Size,16
+            je IMUL_p1_16bit
+            jmp IMUL_p1_8bit
+
+            IMUL_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                IMUL BX
+                call SetCF
+                call UpdateP1Registers
+                jmp IMUL_p2
+            IMUL_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                IMUL Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp IMUL_p2
+        IMUL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_IMUL
+            cmp selectedOp2Size,16
+            je IMUL_p2_16bit
+            jmp IMUL_p2_8bit
+            IMUL_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                IMUL BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_IMUL
+            IMUL_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                IMUL Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_IMUL:
+        RET
+    ENDP
+    IDIV_Comm_PROC PROC FAR
+        CALL Op2Menu
+
+        ;call  PowrUpMenu ; to choose power up
+        CALL CheckForbidCharProc
+        cmp selectedOp2Type,ValIndex
+        jne IDIV_righttype
+        mov isInvalidCommand, 1
+        jmp Return_IDIV
+        IDIV_righttype:
+        CMP isInvalidCommand, 1
+        Je Return_IDIV
+
+        CMP p1_CpuEnabled, 1
+        je IDIV_p1
+        jmp IDIV_p2
+
+        IDIV_p1:
+            cmp selectedOp2Size,16
+            je IDIV_p1_16bit
+            jmp IDIV_p1_8bit
+
+            IDIV_p1_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP1Registers
+                IDIV BX
+                call SetCF
+                call UpdateP1Registers
+                jmp IDIV_p2
+            IDIV_p1_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP1Registers
+                IDIV Bl
+                call SetCF
+                call UpdateP1Registers
+                jmp IDIV_p2
+        IDIV_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_IDIV
+            cmp selectedOp2Size,16
+            je IDIV_p2_16bit
+            jmp IDIV_p2_8bit
+            IDIV_p2_16bit:
+                call GetSrcOp
+                mov bx,ax
+                call LoadP2Registers
+                IDIV BX
+                call SetCF
+                call UpdateP2Registers
+                jmp Return_IDIV
+            IDIV_p2_8bit:
+                call GetSrcOp_8Bit
+                mov bl,al
+                call LoadP2Registers
+                IDIV Bl
+                call SetCF
+                call UpdateP2Registers
+        Return_IDIV:
+        RET
+    ENDP
+    ROR_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_ROR_reg
+        cmp selectedOp2Type,ValIndex
+        je check_ROR_val
+        mov isInvalidCommand,1
+        jmp Return_ROR
+
+        check_ROR_reg:
+            cmp selectedOp2Reg, 7
+            je ROR_right
+            mov isInvalidCommand,1
+            jmp Return_ROR
+        check_ROR_val:
+            cmp Op2Val,255d
+            jle ROR_right
+            mov isInvalidCommand,1
+            jmp Return_ROR
+        
+        ROR_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_ROR
+
+        cmp p1_CpuEnabled,1
+        je ROR_p1
+        jmp ROR_p2
+
+        ROR_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            ROR [di],cl
+            call SetCF
+            jmp ROR_p2
+        ROR_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_ROR
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            ROR [di],cl
+            call SetCF
+        Return_ROR:
+        RET
+    ENDP
+    ROL_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_ROL_reg
+        cmp selectedOp2Type,ValIndex
+        je check_ROL_val
+        mov isInvalidCommand,1
+        jmp Return_ROL
+
+        check_ROL_reg:
+            cmp selectedOp2Reg, 7
+            je ROL_right
+            mov isInvalidCommand,1
+            jmp Return_ROL
+        check_ROL_val:
+            cmp Op2Val,255d
+            jle ROL_right
+            mov isInvalidCommand,1
+            jmp Return_ROL
+        
+        ROL_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_ROL
+
+        cmp p1_CpuEnabled,1
+        je ROL_p1
+        jmp ROL_p2
+
+        ROL_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            ROL [di],cl
+            call SetCF
+            jmp ROL_p2
+        ROL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_ROL
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            ROL [di],cl
+            call SetCF
+        Return_ROL:
+        RET
+    ENDP
+    SHL_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_SHL_reg
+        cmp selectedOp2Type,ValIndex
+        je check_SHL_val
+        mov isInvalidCommand,1
+        jmp Return_SHL
+
+        check_SHL_reg:
+            cmp selectedOp2Reg, 7
+            je SHL_right
+            mov isInvalidCommand,1
+            jmp Return_SHL
+        check_SHL_val:
+            cmp Op2Val,255d
+            jle SHL_right
+            mov isInvalidCommand,1
+            jmp Return_SHL
+        
+        SHL_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_SHL
+
+        cmp p1_CpuEnabled,1
+        je SHL_p1
+        jmp SHL_p2
+
+        SHL_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            SHL [di],cl
+            call SetCF
+            jmp SHL_p2
+        SHL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_SHL
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            SHL [di],cl
+            call SetCF
+        Return_SHL:
+        RET
+    ENDP
+    SHR_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_SHR_reg
+        cmp selectedOp2Type,ValIndex
+        je check_SHR_val
+        mov isInvalidCommand,1
+        jmp Return_SHR
+
+        check_SHR_reg:
+            cmp selectedOp2Reg, 7
+            je SHR_right
+            mov isInvalidCommand,1
+            jmp Return_SHR
+        check_SHR_val:
+            cmp Op2Val,255d
+            jle SHR_right
+            mov isInvalidCommand,1
+            jmp Return_SHR
+        
+        SHR_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_SHR
+
+        cmp p1_CpuEnabled,1
+        je SHR_p1
+        jmp SHR_p2
+
+        SHR_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            SHR [di],cl
+            call SetCF
+            jmp SHR_p2
+        SHR_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_SHR
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            SHR [di],cl
+            call SetCF
+        Return_SHR:
+        RET
+    ENDP
+    RCR_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_RCR_reg
+        cmp selectedOp2Type,ValIndex
+        je check_RCR_val
+        mov isInvalidCommand,1
+        jmp Return_RCR
+
+        check_RCR_reg:
+            cmp selectedOp2Reg, 7
+            je RCR_right
+            mov isInvalidCommand,1
+            jmp Return_RCR
+        check_RCR_val:
+            cmp Op2Val,255d
+            jle RCR_right
+            mov isInvalidCommand,1
+            jmp Return_RCR
+        
+        RCR_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_RCR
+
+        cmp p1_CpuEnabled,1
+        je RCR_p1
+        jmp RCR_p2
+
+        RCR_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            call GetCF
+            RCR [di],cl
+            call SetCF
+            jmp RCR_p2
+        RCR_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_RCR
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            call GetCF
+            RCR [di],cl
+            call SetCF
+        Return_RCR:
+        RET
+    ENDP
+    RCL_Comm_PROC PROC FAR
+        CALL Op1Menu
+        mov DX, CommaCursorLoc
+        CALL SetCursor
+        mov dl, ','
+        CALL DisplayChar
+        CALL Op2Menu
+
+        cmp selectedOp2Type,RegIndex
+        je check_RCL_reg
+        cmp selectedOp2Type,ValIndex
+        je check_RCL_val
+        mov isInvalidCommand,1
+        jmp Return_RCL
+
+        check_RCL_reg:
+            cmp selectedOp2Reg, 7
+            je RCL_right
+            mov isInvalidCommand,1
+            jmp Return_RCL
+        check_RCL_val:
+            cmp Op2Val,255d
+            jle RCL_right
+            mov isInvalidCommand,1
+            jmp Return_RCL
+        
+        RCL_right:
+        CALL CheckForbidCharProc
+        cmp isInvalidCommand,1
+        je Return_RCL
+
+        cmp p1_CpuEnabled,1
+        je RCL_p1
+        jmp RCL_p2
+
+        RCL_p1:
+            CALL GetDst
+            CALL GetSrcOp_8Bit
+            mov cl,al
+            call GetCF
+            RCL [di],cl
+            call SetCF
+            jmp RCL_p2
+        RCL_p2:
+            mov p1_CpuEnabled,0
+            cmp p2_CpuEnabled,1
+            jne Return_RCL
+            call GetDst
+            call GetSrcOp_8Bit
+            mov cl,AL
+            call GetCF
+            RCL [di],cl
+            call SetCF
+        Return_RCL:
+        RET
+    ENDP
 
 ;; ------------------------------ Commands Helper Procedures -------------------------------- ;;
     ;; -------------------------- Menus Procedures ------------------------- ;;
@@ -1362,7 +1947,7 @@ CommMenu ENDP
             ; Display Command
             DisplayComm:
                 mov ah, 9
-                mov dx, offset MOVcom
+                mov dx, offset RORcom
                 int 21h
 
             CheckKeyComType:
@@ -2661,7 +3246,7 @@ CommMenu ENDP
             CMP selectedOp2Type, 2
             JZ SrcOp2Mem_8Bit
             CMP selectedOp2Type, 3
-
+            JZ SrcOp2Val_8Bit
             MOV isInValidCommand, 1
             JMP RETURN_GetSrcOp_8Bit
 
@@ -2788,12 +3373,12 @@ CommMenu ENDP
                 p1_SetCF:
                     MOV BL, 0
                     ADC BL, 0
-                    MOV BL, p1_ValCF
+                    MOV p1_ValCF, bl
                     JMP Return_SetCF
                 p2_SetCF:
                     MOV BL, 0
                     ADC BL, 0
-                    MOV BL, p1_ValCF
+                    MOV p2_ValCF, bl
 
             Return_SetCF:
                 POP BX
@@ -3377,11 +3962,29 @@ CommMenu ENDP
         
     ENDP
 
+    LoadP1Registers PROC FAR
+        MOV AX,p1_ValRegAX
+        mov DX,p1_ValRegDX
+        RET
+    ENDP
+    UpdateP1Registers PROC FAR
+        MOV p1_ValRegAX,AX
+        mov p1_ValRegDX,DX
+        RET
+    ENDP
 
+    LoadP2Registers PROC FAR
+        MOV AX,p2_ValRegAX
+        mov DX,p2_ValRegDX
+        RET
+    ENDP
+    UpdateP2Registers PROC FAR
+        MOV p2_ValRegAX,AX
+        mov p2_ValRegDX,DX
+        RET
+    ENDP
 
-
-
-
+    
 
 
 
