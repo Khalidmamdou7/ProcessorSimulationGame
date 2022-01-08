@@ -1485,34 +1485,22 @@ Send    			endp
         CALL ShowMsg
 
         CheckKey_P2Round:
+            CALL ClearBuffer
             CALL WaitKeyPress
         
-        Push ax
+        PUSH ax
+        PUSH DX
             CALL ClearBuffer
+        POP DX
         pop ax
         
         cmp ah, EnterScanCode
         jz CONT_P2Round
-        cmp ah, RightScanCode
-        jz MoveRight_P2Round
-        cmp ah, LeftScanCode
-        jz MoveLeft_P2Round
-        cmp ah, 57
-        jz ourDrawBullet_P2Round
         cmp ah, EscScanCode
         jz Exit_P2Round
 
         jmp CheckKey_P2Round
 
-        ourDrawBullet_P2Round:
-            Call ourDrawBullet
-            JMP CheckKey_P2Round
-        MoveLeft_P2Round:
-            CALL MoveShooter1Left
-            JMP CheckKey_P2Round
-        MoveRight_P2Round:
-            CALL MoveShooter1Right
-            JMP CheckKey_P2Round
         Exit_P2Round:
             Call Terminate
         CONT_P2Round:
