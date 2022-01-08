@@ -580,6 +580,10 @@ ENDM
     error db 13,10,"Error Input",'$'
 
     tstmsg db 13, 10, "Test ", '$'
+    ChangeForbidMsg db 10, 'Press the new forbidden char: ', '$'
+    LineStuckIndexMsg db 10, 'Enter the number of the stuck data line (0-15): ', '$'
+    LineStuckValMsg db 10, 'Enter the value to be stuck at (0/1): ', '$'
+    NoAvailablePointsMsg db 10, 'No Available points.', '$'
 
 
 
@@ -616,7 +620,8 @@ ENDM
     p2_CpuEnabled db 1      ; ..
 
     ; Power Up Variables
-    UsedBeforeOrNot db 1    ;Chance to use forbiden power up
+    isPwrUp3Used db 0    ;Chance to use forbiden power up
+    isPwrUp5Used db 0
     ourPwrUpDataLineIndex db 0
     ourPwrUpStuckVal db 0
     ourPwrUpStuckEnabled db 0
@@ -4060,48 +4065,101 @@ CommMenu ENDP
 
             PwrUp1: ; Power Up #1: Executing a command on your own processor (consumes 5 points)
                 
-                ; TODO - Check Available Points and consume it if available
+                CMP Player1Points, 5
+                JBE NoAvailablePoints
+                SUB Player1Points, 5
 
                 MOV p1_CpuEnabled, 1    ; Assuming that p1_cpu is the cpu of the current player
                 JMP Return_ExecPwrUp
 
             PwrUp2: ; Power Up #2: Executing a command on your processor and your opponent processor at the same time (consumes 3 points)
 
-                ; TODO - Check Available Points and consume it if available
+                CMP Player1Points, 3
+                JBE NoAvailablePoints
+                SUB Player1Points, 3
 
                 MOV p1_CpuEnabled, 1
                 MOV p2_CpuEnabled, 1
                 JMP Return_ExecPwrUp
             PwrUp3: ; Power Up #3: Changing the forbidden character only once (consumes 8 points)
                 
-                ; TODO - Check Available Points and consume it if available
+                CMP isPwrUp3Used, 1
+                JZ Return_ExecPwrUp
+
+                CMP Player1Points, 8
+                JBE NoAvailablePoints
+                SUB Player1Points, 8
 
                 CALL ChangeForbiddenChar
+                MOV isPwrUp3Used, 1
                 JMP Return_ExecPwrUp
 
-            PwrUp4: ; Power Up #4: Making one of the data lines stuck at zero or at one for a single instruction (consumes 2 points) 
+            PwrUp4: ; Power Up #4: Making one of the data lines stuck at zero or at one for a single instruction (consumes 2 points)
+                
+                CMP Player1Points, 2
+                JBE NoAvailablePoints
+                SUB Player1Points, 2
 
-                ; TODO - Check Available Points and consume it if available
-
-                ; Prompt the user for the details
-
+                ; Prompt the user for the details using LineStuckIndexMsg, LineStuckValMsg
+                ; Validate user Input and enter it in the opponent data line variables
+                ;opponentPwrUpDataLineIndex db 0
+                ;opponentPwrUpStuckVal      db 0
                 MOV opponentPwrUpStuckEnabled, 1
 
                 JMP Return_ExecPwrUp
+            PwrUp5: ; Clearing all registers at once. (Consumes 30 points and could be used only once).
+                
+                CMP isPwrUp5Used, 1
+                JZ Return_ExecPwrUp
+                
+                CMP Player1Points, 30
+                JBE NoAvailablePoints
+                SUB Player1Points, 30
 
-
-
+                CALL ClearAllRegisters
+                MOV isPwrUp5Used, 1
+                JMP Return_ExecPwrUp 
             NoAvailablePoints:
-
+                LEA Dx, NoAvailablePointsMsg
+                CALL DisplayString
+                RET
             Return_ExecPwrUp:    
                 RET
         ENDP
         ChangeForbiddenChar PROC FAR
+            LEA DX, ChangeForbidMsg
+            CALL DisplayString
+            NotValidChar:
+                CALL WaitKeyPress
+                CMP AL, ' '
+                JZ NotValidChar
+            
+            CALL CharToUpper
+            MOV ForbidChar, AL
 
 
             RET
         ENDP
-    ;; ------------------------- Other Helper prcoedures ------------------- ;;
+        ClearAllRegisters PROC FAR
+            MOV p1_ValRegAX, 0
+            MOV p1_ValRegBX, 0
+            MOV p1_ValRegCX, 0
+            MOV p1_ValRegDX, 0
+            MOV p1_ValRegBP, 0
+            MOV p1_ValRegSP, 0
+            MOV p1_ValRegSI, 0
+            MOV p1_ValRegDI, 0
+
+            MOV p2_ValRegAX, 0
+            MOV p2_ValRegBX, 0
+            MOV p2_ValRegCX, 0
+            MOV p2_ValRegDX, 0
+            MOV p2_ValRegBP, 0
+            MOV p2_ValRegSP, 0
+            MOV p2_ValRegSI, 0
+            MOV p2_ValRegDI, 0
+            RET
+        ENDP
         LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
             PUSH BX
             PUSH CX
@@ -4134,11 +4192,25 @@ CommMenu ENDP
             POP BX
             RET
         ENDP
+    ;; ------------------------- Other Helper prcoedures ------------------- ;;
+        
         
 
 ;; --------------------------------- General Helper Procedures ------------------------------- ;;
 
+    CharToUpper PROC FAR    ; Convert Char in AL to upper Case
+        ; Check if it's an alpapetic lower case
+        CMP AL, 'a'
+        JAE ChckUpperLimit
+        RET
+        ChckUpperLimit:
+            CMP AL, 'z'
+            JA NotLower
+            SUB AL, 14H
+        NotLower:    
 
+        RET
+    ENDP
     WaitKeyPress PROC ; AH:scancode,AL:ASCII
         ; Wait for a key pressed
         CHECK: 
