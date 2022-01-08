@@ -617,9 +617,13 @@ ENDM
 
     ; Power Up Variables
     UsedBeforeOrNot db 1    ;Chance to use forbiden power up
-    PwrUpDataLineIndex db 0
-    PwrUpStuckVal db 0
-    PwrUpStuckEnabled db 0
+    ourPwrUpDataLineIndex db 0
+    ourPwrUpStuckVal db 0
+    ourPwrUpStuckEnabled db 0
+
+    opponentPwrUpDataLineIndex db 0
+    opponentPwrUpStuckVal      db 0
+    opponentPwrUpStuckEnabled  db 0
 
 
     ; Keys Scan Codes
@@ -2523,6 +2527,7 @@ CommMenu ENDP
             ret
         PowrUpMenu ENDP
         
+        
     ;; -------------------------- Getters Procedures ----------------------- ;;
         GetDst PROC FAR  ; offset of the operand is saved in di, destination is called by op1 menu. Call the procedure twice to get the next value if two cpus are enabled
             ; Saving values of AX
@@ -3380,33 +3385,89 @@ CommMenu ENDP
                 mov selectedOp2Size, 16
                 ret
         ENDP 
-    
+    ;; ---------------------------- Power Ups ------------------------------ ;;
+        ExecPwrUp PROC FAR
+            CMP selectedPUPType, 1
+            JZ PwrUp1
+            CMP selectedPUPType, 2
+            JZ PwrUp2
+            CMP selectedPUPType, 3
+            JZ PwrUp3
+            CMP selectedPUPType, 4
+            JZ PwrUp4
+            CMP selectedPUPType, 5
+            JZ PwrUp5
+            RET
+
+            PwrUp1: ; Power Up #1: Executing a command on your own processor (consumes 5 points)
+                
+                ; TODO - Check Available Points and consume it if available
+
+                MOV p1_CpuEnabled, 1    ; Assuming that p1_cpu is the cpu of the current player
+                JMP Return_ExecPwrUp
+
+            PwrUp2: ; Power Up #2: Executing a command on your processor and your opponent processor at the same time (consumes 3 points)
+
+                ; TODO - Check Available Points and consume it if available
+
+                MOV p1_CpuEnabled, 1
+                MOV p2_CpuEnabled, 1
+                JMP Return_ExecPwrUp
+            PwrUp3: ; Power Up #3: Changing the forbidden character only once (consumes 8 points)
+                
+                ; TODO - Check Available Points and consume it if available
+
+                CALL ChangeForbiddenChar
+                JMP Return_ExecPwrUp
+
+            PwrUp4: ; Power Up #4: Making one of the data lines stuck at zero or at one for a single instruction (consumes 2 points) 
+
+                ; TODO - Check Available Points and consume it if available
+
+                ; Prompt the user for the details
+
+                MOV opponentPwrUpStuckEnabled, 1
+
+                JMP Return_ExecPwrUp
+
+
+
+            NoAvailablePoints:
+
+            Return_ExecPwrUp:    
+                RET
+        ENDP
+        ChangeForbiddenChar PROC FAR
+
+
+            RET
+        ENDP
     ;; ------------------------- Other Helper prcoedures ------------------- ;;
         LineStuckPwrUp PROC  FAR   ; Value to be stucked is saved in AX/AL
             PUSH BX
             PUSH CX
             PUSH DX
 
-            CMP PwrUpStuckEnabled, 1
+            CMP ourPwrUpStuckEnabled, 1
             jnz NotStuck
-            CMP PwrUpStuckVal, 0
+            CMP ourPwrUpStuckVal, 0
             JZ PwrUpZero
-            CMP PwrUpStuckVal, 1
+            CMP ourPwrUpStuckVal, 1
             JZ PwrupOne
 
             PwrUpZero:
                 MOV BX, 0FFFEH
-                mov cl, PwrUpDataLineIndex
+                mov cl, ourPwrUpDataLineIndex
                 ROL BX, cl
                 AND AX, BX
-                mov PwrUpStuckEnabled, 0
+                mov ourPwrUpStuckEnabled, 0
                 JMP NoTStuck
             PwrupOne:
                 MOV BX, 1
-                mov cl, PwrUpDataLineIndex
+                mov cl, ourPwrUpDataLineIndex
                 ROL BX,cl
                 OR AX, BX
-                mov PwrUpStuckEnabled, 0
+                mov ourPwrUpStuckEnabled, 0
             NotStuck:
                 
             POP DX
