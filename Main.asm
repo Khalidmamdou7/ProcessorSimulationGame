@@ -477,7 +477,9 @@
         LeftScanCode EQU 75
         EnterScanCode EQU 28
         SpaceScanCode EQU 57
-        EscScanCode EQU 1 
+        EscScanCode EQU 1
+        F1ScanCode EQU 59
+        F2ScanCode EQU 60
     ; ------------------------------------------------ Test Messages -------------------------------------------- ;
         mesSelCom db 10,'You have selected Command #', '$'
         mesSelOp1Type db 10,'You have selected Operand 1 of Type #', '$'
@@ -772,6 +774,13 @@
                 opponentPwrUpDataLineIndex db 0
                 opponentPwrUpStuckVal      db 0
                 opponentPwrUpStuckEnabled  db 0
+
+            ; ---------- Connection Variables ----- ;
+                GameInvite db 0
+                ChatInvite db 0
+                AcceptGame db 0
+                AcceptChat db 0
+                HOST DB 0
             
 
         
@@ -797,7 +806,7 @@
         MOV DS,AX     
         MOV ES,AX
 
-        JMP TestSkip
+        ; JMP TestSkip
 
 
         MAIN_MENU: 
@@ -845,7 +854,12 @@
         MOV InitialPointsP2, BH
         CALL CLEARSCREEN
         ;---------------------------------------------------------------------------------------------------------------------------------------	
+        
+
         BACK_TO_MAIN_SCREEN:
+
+        CALL RecieveInvitations
+
         MOV Exit_Chat , 0
         MOV firs_half , 0400h
         MOV sec_half , 0f00h
@@ -856,28 +870,46 @@
         MOV AH,0									 ; CONSUME THE ENTERED KEY FROM THE KEYBOARD BUFFER
         INT 16H
         CMP AX,1C0DH                                 ; CHECK IF THE ENTERED KEY IS THE ENTER KEY 
-        JE  NEXTSCREEN                               ; JUMP IF THE ENTERED KEY IS PRESSED 
+        JE  NEXTSCREEN                               ; JUMP IF THE ENTERED KEY IS PRESSED
         CALL CHECKCHOICE                             ; CALL CHECKCHOICE TO NAVIGATE THE CHOICES 
+
+        CALL CheckInvitationsAcception
+        CMP AcceptChat, 1
+        JZ GuestChat
+        CMP AcceptGame, 1
+        JZ GuestGame
+            ; JMP TO CHAT OR GAME OR BACK TO MAIN SCREEN
+
+        
         JMP BACK_TO_MAIN_SCREEN
         NEXTSCREEN: 
         CMP  CHOSEN,1
         JNE CHECK_CHAT
         GAME_AGAIN:
+            ; MOV HOST, 1
+            ; Send Invitation (F2 SCAN CODE) 
+            ; WAIT TO RECIEVE ACCEPTION (F2 SCAN CODE)
+            GuestGame:
+            ; SEND THEN RECIEVE NAME AND INITIAL POINTS
+
+            MOV BH , InitialPointsP1
+            MOV BL , InitialPointsP2
+            CMP BL, BH
+            JB TAKE_PLAYER2POINTS
+            MOV Player1_Points, BH
+            MOV Player2_Points, BH
+            TAKE_PLAYER2POINTS:
+                MOV Player1_Points, BL
+                MOV Player2_Points, BL
+
         CALL GAME  
-        MOV BH , InitialPointsP1
-        MOV BL , InitialPointsP2
-        CMP BL, BH
-        JB TAKE_PLAYER2POINTS
-        MOV Player1_Points, BH
-        MOV Player2_Points, BH
-        JMP NEXT_FORWARD
-        TAKE_PLAYER2POINTS:
-            MOV Player1_Points, BL
-            MOV Player2_Points, BL
-        NEXT_FORWARD:	                                  ; CALL GAME FUNCTION 
-            JMP BACK_TO_MAIN_SCREEN
         CHECK_CHAT:  CMP CHOSEN,2
                     JNE EXITP_ROGRAM
+                    ; MOV HOST, 1
+                    ; Send Invitation (F1 SCAN CODE) 
+                    ; WAIT TO RECIEVE ACCEPTION (F1 SCAN CODE)
+                    GuestChat:
+                    ; SEND THEN RECIEVE NAME AND INITIAL POINTS
                     CALL CHATMODE
                     JMP BACK_TO_MAIN_SCREEN
         EXITP_ROGRAM:   MOV AH,0                        ; NORMAL TERMINATION OF THE GAME 
@@ -6881,4 +6913,67 @@ Send    			endp
         RET
         ;Buffer Cleared
     ENDP
+
+    ;; ======================================================================================== ;;
+    ;; ------------------------------------ Connection Procedures ----------------------- ;;
+        RecieveInvitations PROC FAR
+            PUSHA
+
+            ;Check that Data is Ready
+            mov dx , 3FDH		; Line Status Register
+            CHK2:
+                in al , dx 
+                test al , 1
+            JZ Return_RecieveInvitations             ; Not Ready
+
+            ; If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in al , dx 
+            
+            CMP AL, F1ScanCode
+            JZ RecievedChatInvite
+            CMP AL, F2ScanCode
+            JZ RecievedGameInvite
+            JMP Return_RecieveInvitations
+
+            RecievedChatInvite:
+                MOV ChatInvite, 1
+                JMP Return_RecieveInvitations
+            RecievedGameInvite:
+                MOV GameInvite, 1
+                JMP Return_RecieveInvitations
+        
+
+            Return_RecieveInvitations:
+                POPA
+                RET
+        ENDP
+        CheckInvitationsAcception PROC FAR
+            CMP AH, F1ScanCode
+            JZ AcceptChatInvite
+            CMP AH, F2ScanCode
+            JZ AcceptGameInvite
+            JMP Return_CheckInvitationsAcception
+
+            AcceptChatInvite:
+                CMP ChatInvite, 0
+                JZ Return_CheckInvitationsAcception
+                MOV ChatInvite, 0
+                ;;; Accepted Invite
+                ;;; Send Acception
+                MOV AcceptChat, 1
+                JMP Return_CheckInvitationsAcception
+
+            AcceptGameInvite:
+                CMP GameInvite, 0
+                JZ Return_CheckInvitationsAcception
+                MOV GameInvite, 0
+                ;;; Accepted Invite
+                ;;; Send Acception
+                MOV AcceptGame, 1
+                JMP Return_CheckInvitationsAcception
+
+            Return_CheckInvitationsAcception:
+                RET
+        ENDP
 END   MAIN
