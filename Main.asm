@@ -13,6 +13,7 @@
     ENDM PrintChar
     PrintChar_black MACRO chara
         ;draw X in the cursor position
+        ;;blabla
         mov ah,0ah
         mov al,chara
         mov bh,0h
