@@ -1476,16 +1476,16 @@ Send    			endp
                         JNZ GET_ANOTHER_INPUT
                         ;-----------------------------------------------ADD THE NEW FEATURES HERE FOR LEVEL 2-----------------------------------------
                         MOV LEVEL, 2
-                        mov bl,LEVEL
-                        CALL SendByte
-                        
+                        NotThisHost:
+                        CALL ReadInitialRegisters       ;;;;;;;;;;;Zawedha_Henaaaaaa;;;;;;;;;;;;
+                        jmp GotoForbiddenChar
                         GuestWaitforLevel:
                             CALL CLEARSCREEN
                             CALL RecieveByte
                             mov Level,bl
                             cmp Level,1
                             je LEVEL_1
-                            jmp LEVEL_2
+                            jmp NotThisHost
 
             LEVEL_1:	MOV DH, 0
                         MOV DL, LEVEL                           ; PRINT THE VALID INPUT CHARACTER 
@@ -1500,6 +1500,7 @@ Send    			endp
                         MOV AH,0                       ; WAIT FOR A KEY TO PROCEED FOR THE NEXT SCREEN 
                         INT 16H
                         CALL CLEARSCREEN
+            GotoForbiddenChar:
                         CALL GETFORBIDDEN
                         MOV Player1_ForbidChar, BL
                         CALL ExchangeForbiddenChar
@@ -7205,6 +7206,11 @@ Send    			endp
                 CALL SendByte
 
             Finishforbidden:
+            RET
+        ENDP
+
+        ReadInitialRegisters PROC FAR
+
             RET
         ENDP
         
