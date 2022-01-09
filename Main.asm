@@ -908,12 +908,15 @@
             MOV BL , InitialPointsP2
             CMP BL, BH
             JB TAKE_PLAYER2POINTS
+            sub bh,16
             MOV Player1_Points, BH
             MOV Player2_Points, BH
+            jmp NotThisPointsDone
             TAKE_PLAYER2POINTS:
+                sub bl,16
                 MOV Player1_Points, BL
                 MOV Player2_Points, BL
-
+            NotThisPointsDone:
         CALL GAME  
         CHECK_CHAT:  CMP CHOSEN,2
                     JNE EXITP_ROGRAM
@@ -1456,6 +1459,9 @@ Send    			endp
                         MOV DL,25
                         MOV DH,10
                         CALL MOVECURSOR
+                        cmp HOST,1
+                        jne GuestWaitforLevel
+
                         MOV DX, OFFSET MESG7
                         CALL PRINTMESSAGE
                         MOV AH, 0
@@ -1463,12 +1469,25 @@ Send    			endp
                         CMP AL, 31H                   ; THE LEVEL CHOSEN IS 1
                         JNZ LEVEL_2
                         MOV LEVEL, 1
+                        mov bl,LEVEL
+                        CALL SendByte
                         JMP LEVEL_1
             LEVEL_2:	 CMP AL, 32H
                         JNZ GET_ANOTHER_INPUT
                         ;-----------------------------------------------ADD THE NEW FEATURES HERE FOR LEVEL 2-----------------------------------------
                         MOV LEVEL, 2
-            LEVEL_1:	 MOV DH, 0
+                        mov bl,LEVEL
+                        CALL SendByte
+                        
+                        GuestWaitforLevel:
+                            CALL CLEARSCREEN
+                            CALL RecieveByte
+                            mov Level,bl
+                            cmp Level,1
+                            je LEVEL_1
+                            jmp LEVEL_2
+
+            LEVEL_1:	MOV DH, 0
                         MOV DL, LEVEL                           ; PRINT THE VALID INPUT CHARACTER 
                         ADD DL,30H
                         MOV AH,2
@@ -1483,8 +1502,7 @@ Send    			endp
                         CALL CLEARSCREEN
                         CALL GETFORBIDDEN
                         MOV Player1_ForbidChar, BL
-                        CALL GETFORBIDDEN
-                        MOV Player2_ForbidChar, BL
+                        CALL ExchangeForbiddenChar
                         MOV AH,0                      ; GO TO GRAPHICAL MODE 
                         MOV AL,13H
                         INT 10H
@@ -7025,7 +7043,6 @@ Send    			endp
             RET
         ENDP
         SendByte PROC  ; data transferred is in BL (8 bits)
-            PUSHA
             ;Check that Transmitter Holding Register is Empty
             mov dx , 3FDH		        ; Line Status Register
             AGAIN:
@@ -7038,7 +7055,6 @@ Send    			endp
             mov al, BL
             out dx, al
 
-            POPA
             ret
         SendByte ENDP
         RecieveByte PROC ; data is saved in BL
@@ -7166,5 +7182,30 @@ Send    			endp
             Return_RecieveData:
                 ret
         RecieveData ENDP
+
+        ExchangeForbiddenChar PROC FAR
+
+            CMP HOST, 1
+            JZ SENDforbiddenFIRST
+            JMP SENDforbiddenSECOND
+
+            SENDforbiddenFIRST:
+
+                lea si, Player1_ForbidChar
+                CALL SendByte
+                LEA DI, Player2_ForbidChar
+                CALL RecieveByte
+
+                JMP Finishforbidden
+
+            SENDforbiddenSECOND:
+                LEA DI, Player2_ForbidChar
+                CALL RecieveByte
+                lea si, Player1_ForbidChar
+                CALL SendByte
+
+            Finishforbidden:
+            RET
+        ENDP
         
 END   MAIN
