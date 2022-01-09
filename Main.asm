@@ -566,6 +566,8 @@
         LineStuckValMsg db 10, 'Enter the value to be stuck at (0/1): ', '$'
         NoAvailablePointsMsg db 10, 'No Available points.', '$'    
         ClearCommandSpace db 15 dup(' '), '$'
+        Player1WinsMsg db 10, 'You Won! Congrats$', 10
+        Player2WinsMsg db 10, 'You lost!$', 10
     ; ---------------------------------------------- Cursor Locations ------------------------------------------- ;
         MenmonicCursorLoc EQU 1500H
         Op1CursorLoc EQU 1506H
@@ -1671,14 +1673,15 @@ Send    			endp
             CALL ClearCommand
             CALL CommMenu
             CALL ClearCommand
-            CALL PlayerTwoRound
-            ;CALL DisplayRegValues
+            CALL DetectWinner
+                CALL PlayerTwoRound
+            CALL DetectWinner
             CALL ResetValues
             MOV p2_CpuEnabled, 1
 
         JMP GameLoop
 
-
+        BreakGameLoop:
 
 
 
@@ -6180,7 +6183,6 @@ Send    			endp
                 RET
             ENDP
             CheckForbidCharProc PROC            ; NEEDS TO Reset selectedOperands after each instruction execution
-                ; Check in instruction
                 mov Ah, 0
                 mov AL, selectedComm
                 mov BX, CommStringSize
@@ -6964,6 +6966,58 @@ Send    			endp
     ENDP
 
     ;; ======================================================================================== ;;
+        DetectWinner PROC FAR
+            CMP Player1_Points, 0
+            JBE Player2Wins
+            CMP Player2_Points, 0
+            JBE Player1Wins
+
+            LEA DI, ValRegAX
+            CheckMyWin:
+                MOV CX, 8
+                CMP [DI], 105eH
+                JZ Player1Wins
+                ADD DI, 2
+                DEC CX
+                JNZ CheckMyWin
+            
+            LEA DI, ourValRegAX
+            CheckOpponentWin:
+                MOV CX, 8
+                CMP [DI], 105eH
+                JZ Player2Wins
+                ADD DI, 2
+                DEC CX
+                JNZ CheckOpponentWin
+            RET
+
+            Player1Wins:
+                CALL ClearScreenTxtMode
+                lea dx, Player1WinsMsg
+                CALL DisplayString
+
+                MOV CX, 1000
+                WasteTimeWin:
+                    DEC CX
+                    JNZ WasteTimeWin
+                POP AX
+                JMP BreakGameLoop
+                RET
+            Player2Wins:
+
+                CALL ClearScreenTxtMode
+                lea dx, Player2WinsMsg
+                CALL DisplayString
+
+                MOV CX, 1000
+                WasteTimeWin:
+                    DEC CX
+                    JNZ WasteTimeWin
+                POP AX
+                JMP BreakGameLoop
+
+            RET
+        ENDP
     ;; ------------------------------------ Connection Procedures ----------------------- ;;
         RecieveInvitations PROC FAR
             PUSHA
