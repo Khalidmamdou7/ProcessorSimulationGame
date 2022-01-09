@@ -220,6 +220,48 @@
         MOV isInvalidCommand, 1
         ValidCommand:
     ENDM
+    SendMem MACRO Mem
+        LOCAL SendMem
+        MOV CX,16
+        LEA SI, Mem
+        SendMem:
+            CALL SendData
+            inc si
+            DEC CX
+            JNZ SendMem
+    ENDM
+    RecMem MACRO Mem
+        LOCAL RecMem
+        MOV CX, 16
+        LEA DI, Mem
+        RecMem:
+            CALL RecieveByte
+            MOV [DI], BL
+            inc DI
+            DEC CX
+            JNZ RecMem
+    ENDM
+    SendRegister MACRO ValReg
+        LOCAL SendReg
+        MOV CX,2
+        LEA SI, ValReg
+        SendReg:
+            CALL SendData
+            inc si
+            DEC CX
+            JNZ SendReg
+    ENDM
+    RecieveRegister MACRO ValReg
+        LOCAL recReg
+        MOV CX, 2
+        LEA DI, ValReg
+        RecReg:
+            CALL RecieveByte
+            MOV [DI], BL
+            inc di
+            DEC CX
+            JNZ RecReg
+    ENDM
 ;================================================================================================================
 .MODEL HUGE
 ;----------------
@@ -763,7 +805,7 @@
                 Player1_Points DB 8
                 Player2_Points DB 0
                 Player1_ForbidChar DB 0
-		        Player2_ForbidChar DB 'X'
+		        Player2_ForbidChar DB 'Z'
 		        LEVEL           DB 0
                 isInvalidCommand db 0   ; 1 if Invalid
                 p1_CpuEnabled db 0      ; 1 if command will run on it
@@ -1586,6 +1628,8 @@ Send    			endp
         lea dx, PlayerTwoWaitRound
         CALL ShowMsg
 
+        CALL RecieveAllValues
+
         CheckKey_P2Round:
             CALL ClearBuffer
             CALL WaitKeyPress
@@ -1606,6 +1650,7 @@ Send    			endp
         Exit_P2Round:
             Call Terminate
         CONT_P2Round:
+
             RET
         
         RET
@@ -1661,6 +1706,9 @@ Send    			endp
         mov ax, 13h 
         int 10h   ;converting to graphics mode
 
+        CMP HOST, 1
+        JNZ GuestGameLoop
+
         GameLoop:
             CALL DrawGuiLayout
             CALL DisplayGUIValues
@@ -1674,16 +1722,43 @@ Send    			endp
             CALL ClearCommand
             CALL CommMenu
             CALL ClearCommand
+            CALL SendAllValues
             CALL DetectWinner
-                CALL PlayerTwoRound
+            CALL PlayerTwoRound
             CALL DetectWinner
             CALL ResetValues
             MOV p2_CpuEnabled, 1
 
         JMP GameLoop
 
+        GuestGameLoop:
+            CALL DrawGuiLayout
+            CALL DisplayGUIValues
+            CALL DrawFlyingObj
+            CALL DrawShooter
+            CALL PlayerTwoRound
+            CALL DetectWinner
+            CALL ClearCommand
+            Set 21 0
+            lea dx, InstructionMsg
+            CALL DisplayString
+            CALL PowrUpMenu
+            CALL ExecPwrUp
+            CALL ClearCommand
+            CALL CommMenu
+            CALL ClearCommand
+            CALL SendAllValues
+            CALL DetectWinner
+            CALL ResetValues
+            MOV p2_CpuEnabled, 1
+
+            JMP GuestGameLoop
+
+
+
         BreakGameLoop:
 
+            JMP BreakGameLoop
 
 
         RET
@@ -2607,201 +2682,6 @@ Send    			endp
             call Display_ByteNum
 
             
-        RET
-    ENDP
-    DisplayRegValues PROC FAR
-        CALL CLEAR_SCREEN
-
-        ; Show Opponent variables
-        lea dx, mesOponentData
-        Call DisplayString
-
-        lea dx, mesMem
-        CALL DisplayString
-        lea dx, ValMem
-        CALL DisplayString
-
-        lea dx, mesStack
-        CALL DisplayString
-        lea dx, ValStack
-        CALL DisplayString
-
-        LEA DX, mesRegAX
-        CALL DisplayString
-        PUSH ValRegAX
-        CALL DisplayHexanumber
-
-        mov dl,Byte ptr ValRegAX
-        CALL DisplayChar
-        mov dl, byte ptr ValRegAX+1
-        CALL DisplayChar
-
-        LEA DX, mesRegBX
-        CALL DisplayString
-        mov dl,Byte ptr ValRegBX
-        CALL DisplayChar
-        mov dl, byte ptr ValRegBX+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegCX
-        CALL DisplayString
-        mov dl,Byte ptr ValRegCX
-        CALL DisplayChar
-        mov dl, byte ptr ValRegCX+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegDX
-        CALL DisplayString
-        mov dl,Byte ptr ValRegDX
-        CALL DisplayChar
-        mov dl, byte ptr ValRegDX+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegSI
-        CALL DisplayString
-        mov dl,Byte ptr ValRegSI
-        CALL DisplayChar
-        mov dl, byte ptr ValRegSI+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegDI
-        CALL DisplayString
-        mov dl,Byte ptr ValRegDI
-        CALL DisplayChar
-        mov dl, byte ptr ValRegDI+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegBP
-        CALL DisplayString
-        mov dl,Byte ptr ValRegBP
-        CALL DisplayChar
-        mov dl, byte ptr ValRegBP+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegSP
-        CALL DisplayString
-        mov dl,Byte ptr ValRegSP
-        CALL DisplayChar
-        mov dl, byte ptr ValRegSP+1
-        CALL DisplayChar
-        
-        LEA DX, mesRegCF
-        CALL DisplayString
-        mov dl, ValCF
-        add dl, '0'
-        CALL DisplayChar
-
-        LEA DX, mesPoints
-        CALL DisplayString
-        mov dl, Player2_Points
-        add dl, '0'
-        CALL DisplayChar
-
-        LEA DX, mesForbidChar
-        CALL DisplayString
-        mov dl, Player2_ForbidChar
-        CALL DisplayChar
-
-        ; Show user Data
-
-        lea dx, mesMyData
-        Call DisplayString
-
-        lea dx, mesMem
-        CALL DisplayString
-        lea dx, ourValMem
-        CALL DisplayString
-
-        lea dx, mesStack
-        CALL DisplayString
-        lea dx, ourValStack
-        CALL DisplayString
-
-        LEA DX, mesRegAX
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegAX
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegAX+1
-        CALL DisplayChar
-
-        LEA DX, mesRegBX
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegBX
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegBX+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegCX
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegCX
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegCX+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegDX
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegDX
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegDX+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegSI
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegSI
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegSI+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegDI
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegDI
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegDI+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegBP
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegBP
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegBP+1
-        CALL DisplayChar 
-
-        LEA DX, mesRegSP
-        CALL DisplayString
-        mov dl,Byte ptr ourValRegSP
-        CALL DisplayChar
-        mov dl, byte ptr ourValRegSP+1
-        CALL DisplayChar
-        
-        LEA DX, mesRegCF
-        CALL DisplayString
-        mov dl, ourValCF
-        add dl, '0'
-        CALL DisplayChar
-
-        LEA DX, mesPoints
-        CALL DisplayString
-        mov dl, Player1_Points
-        add dl, '0'
-        CALL DisplayChar
-
-        LEA DX, mesForbidChar
-        CALL DisplayString
-        mov dl, Player2_ForbidChar
-        CALL DisplayChar
-
-        ; End
-        lea dx, mesBackScreen
-        CALL DisplayString
-        
-        ; Stop the screen
-        mov ah,0
-        int 16h
-
-        mov cx,22
-        mov ax, 13h 
-        int 10h   ;converting to graphics mode
-
         RET
     ENDP
     DrawShooter PROC FAR
@@ -6997,10 +6877,6 @@ Send    			endp
                 lea dx, Player1WinsMsg
                 CALL DisplayString
 
-                MOV CX, 1000
-                WasteTimeWin:
-                    DEC CX
-                    JNZ WasteTimeWin
                 POP AX
                 JMP BreakGameLoop
                 RET
@@ -7009,11 +6885,6 @@ Send    			endp
                 CALL ClearScreenTxtMode
                 lea dx, Player2WinsMsg
                 CALL DisplayString
-
-                MOV CX, 1000
-                WasteTimeWin:
-                    DEC CX
-                    JNZ WasteTimeWin
                 POP AX
                 JMP BreakGameLoop
 
@@ -7263,7 +7134,92 @@ Send    			endp
             Finishforbidden:
             RET
         ENDP
+        SendAllValues PROC FAR
 
+            ; Send all registers
+            SendRegister ValRegAX
+            SendRegister ValRegBX
+            SendRegister ValRegCX
+            SendRegister ValRegDX
+            SendRegister ValRegBP
+            SendRegister ValRegSP
+            SendRegister ValRegDI
+            SendRegister ValRegSI
+            MOV BL, ValCF
+            CALL SendByte
+
+            SendMem ValMem
+            SendMem ValStack
+
+            SendRegister ourValRegAX
+            SendRegister ourValRegBX
+            SendRegister ourValRegCX
+            SendRegister ourValRegDX
+            SendRegister ourValRegBP
+            SendRegister ourValRegSP
+            SendRegister ourValRegDI
+            SendRegister ourValRegSI
+            MOV BL, ourValCF
+            CALL SendByte
+
+            SendMem ourValMem
+            SendMem ourValStack
+
+            MOV BL, Player1_Points
+            CALL SendByte
+            MOV BL, Player2_Points
+            CALL SendByte
+
+            MOV BL, Player1_ForbidChar
+            CALL SendByte
+            MOV BL, Player2_ForbidChar
+            CALL SendByte
+
+            RET
+        ENDP
+        RecieveAllValues PROC FAR
+            ;Recieve Registers
+            RecieveRegister ourValRegAX
+            RecieveRegister ourValRegBX
+            RecieveRegister ourValRegCX
+            RecieveRegister ourValRegDX
+            RecieveRegister ourValRegBP
+            RecieveRegister ourValRegSP
+            RecieveRegister ourValRegDI
+            RecieveRegister ourValRegSI
+            
+            CALL RecieveByte
+            MOV ourValCF, BL
+
+            RecMem ourValMem
+            RecMem ourValStack
+
+            RecieveRegister ValRegAX
+            RecieveRegister ValRegBX
+            RecieveRegister ValRegCX
+            RecieveRegister ValRegDX
+            RecieveRegister ValRegBP
+            RecieveRegister ValRegSP
+            RecieveRegister ValRegDI
+            RecieveRegister ValRegSI
+            CALL RecieveByte
+            MOV ValCF, BL
+
+            RecMem ValMem
+            RecMem ValStack
+
+            CALL RecieveByte
+            MOV Player1_Points, BL
+            
+            CALL RecieveByte
+            MOV Player2_Points, BL
+            
+            CALL RecieveByte
+            MOV Player1_ForbidChar, BL
+            CALL RecieveByte
+            MOV Player2_ForbidChar, BL
+            RET
+        ENDP
         ReadInitialRegisters PROC FAR
 
             RET
