@@ -112,14 +112,15 @@
         CHK2:
             in al , dx 
             test al , 1
-        JZ CHK2              ; Not Ready
+        JZ Return_RecieveData              ; Not Ready
 
         ; If Ready read the VALUE in Receive data register
         mov dx , 03F8H
         in al , dx 
         mov bl , al
 
-        ret
+        Return_RecieveData:
+            ret
     RecieveData ENDP
     RecMsg PROC     ; Recieved string offset is saved in di
         RecieveMsg:

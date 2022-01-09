@@ -507,7 +507,7 @@
         error db 13,10,"Error Input",'$'
 
     ; --------------------------------------------- Interface Variables ----------------------------------------- ;
-		MESG3   DB     "Please, Enter Your Name: $"
+        MESG3   DB     "Please, Enter Your Name: $"
 		MESG4   DB     "Press Any Key to Start the Game...$"
 		MESG6   DB     "Initial Points : $"
 		MESG7   DB     "Level 1 OR 2 : $"
@@ -524,7 +524,9 @@
 		BORDER3  DB     10,13,"------------------------------------------------------------------------------"
 				DB     10,13,"**                          #  Notification Bar  #                           **"
 				DB           " ------------------------------------------------------------------------------$"
-		NAMEP1  DB     16 DUP('$')
+		ChatInviteMsg DB 10, 'You have recieved a chat invitation, to accept it press F1 key!$'
+        GameInviteMsg DB 10, 'You have recieved a game invitation, to accept it press F2 key!$'
+        NAMEP1  DB     16 DUP('$')
 		NAMEP1LEN   DW  0
 		NAMEP2  DB     16 DUP('$')
 		NAMEP2LEN   DW  0
@@ -840,25 +842,26 @@
         CALL MOVECURSOR
         MOV DX,OFFSET BORDER1
         CALL PRINTMESSAGE
-        MOV DL, 0
-        MOV DH, 22
-        CALL MOVECURSOR
-        MOV DX,OFFSET BORDER2
-        CALL PRINTMESSAGE
-        MOV BP, OFFSET   NAMEP2         ; SAVE THE NAEM OF THE SECOND PLAYER IN NAEMP2
-        CALL FIRSTSCREEN
-        MOV DX, NAMELENGTH
-        MOV NAMEP2LEN, DX
-        MOV NAMELENGTH,0
-        MOV BH , InitialPoints
-        MOV InitialPointsP2, BH
-        CALL CLEARSCREEN
+        ;MOV DL, 0
+        ;MOV DH, 22
+        ;CALL MOVECURSOR
+        ;MOV DX,OFFSET BORDER2
+        ;CALL PRINTMESSAGE
+        ;MOV BP, OFFSET   NAMEP2         ; SAVE THE NAEM OF THE SECOND PLAYER IN NAEMP2
+        ;CALL FIRSTSCREEN
+        ;MOV DX, NAMELENGTH
+        ;MOV NAMEP2LEN, DX
+        ;MOV NAMELENGTH,0
+        ;MOV BH , InitialPoints
+        ;MOV InitialPointsP2, BH
+        ;CALL CLEARSCREEN
         ;---------------------------------------------------------------------------------------------------------------------------------------	
         
 
         BACK_TO_MAIN_SCREEN:
 
         CALL RecieveInvitations
+        CALL PrintInvitation
 
         MOV Exit_Chat , 0
         MOV firs_half , 0400h
@@ -878,19 +881,28 @@
         JZ GuestChat
         CMP AcceptGame, 1
         JZ GuestGame
-            ; JMP TO CHAT OR GAME OR BACK TO MAIN SCREEN
+    
 
         
         JMP BACK_TO_MAIN_SCREEN
-        NEXTSCREEN: 
+        NEXTSCREEN:
+        ;;  IF THERE IS AN INVITATION AND USER WANT TO BECOME HOST
+        CMP GameInvite, 1
+        JE BACK_TO_MAIN_SCREEN
+        CMP ChatInvite, 1
+        JE BACK_TO_MAIN_SCREEN
         CMP  CHOSEN,1
         JNE CHECK_CHAT
         GAME_AGAIN:
-            ; MOV HOST, 1
-            ; Send Invitation (F2 SCAN CODE) 
-            ; WAIT TO RECIEVE ACCEPTION (F2 SCAN CODE)
+            MOV HOST, 1
+            CALL SendGameInvite
+            CALL WaitGameAcception
+            MOV CX, 100
+            WasteTime:
+                DEC CX
+                JNZ WasteTime
             GuestGame:
-            ; SEND THEN RECIEVE NAME AND INITIAL POINTS
+                CALL ExchangeInfo
 
             MOV BH , InitialPointsP1
             MOV BL , InitialPointsP2
@@ -905,11 +917,11 @@
         CALL GAME  
         CHECK_CHAT:  CMP CHOSEN,2
                     JNE EXITP_ROGRAM
-                    ; MOV HOST, 1
-                    ; Send Invitation (F1 SCAN CODE) 
-                    ; WAIT TO RECIEVE ACCEPTION (F1 SCAN CODE)
+                    MOV HOST, 1
+                    Call SendChatInvite 
+                    CALL WaitChatAcception
                     GuestChat:
-                    ; SEND THEN RECIEVE NAME AND INITIAL POINTS
+                        CALL ExchangeInfo
                     CALL CHATMODE
                     JMP BACK_TO_MAIN_SCREEN
         EXITP_ROGRAM:   MOV AH,0                        ; NORMAL TERMINATION OF THE GAME 
@@ -936,7 +948,25 @@
                     MOV AL,0
                     INT 21H
                     RET
-        PRINTMESSAGE  ENDP	
+        PRINTMESSAGE  ENDP
+        PrintInvitation PROC FAR
+            MOV DL, 0                     
+            MOV DH, 22                    
+            CALL MOVECURSOR
+            CMP ChatInvite, 1
+            JZ ShowChatInviteMsg
+            CMP GameInvite, 1
+            JZ ShowGameInviteMsg
+            RET
+            ShowChatInviteMsg:
+                MOV DX,OFFSET ChatInviteMsg
+                CALL PRINTMESSAGE
+                RET
+            ShowGameInviteMsg:
+                MOV DX,OFFSET GameInviteMsg
+                CALL PRINTMESSAGE
+                RET
+        ENDP	
     ;--------------------------------------------------------------------------------------------------------------------------------------------
     ;----------------------------------------------------------------------FIRST SCREEN FUNCTION-------------------------------------------------
             FIRSTSCREEN     PROC    NEAR
@@ -1742,7 +1772,7 @@ Send    			endp
             mov AH,0ch ; set for drawing a pixel
             mov AL,09h ; choose the blue color
             push cx
-            mov cx,200
+            mov cx,180
             INT 10H
             pop Cx
             inc dx
@@ -6961,6 +6991,8 @@ Send    			endp
                 MOV ChatInvite, 0
                 ;;; Accepted Invite
                 ;;; Send Acception
+                MOV BL, F1ScanCode
+                CALL SendByte
                 MOV AcceptChat, 1
                 JMP Return_CheckInvitationsAcception
 
@@ -6970,10 +7002,169 @@ Send    			endp
                 MOV GameInvite, 0
                 ;;; Accepted Invite
                 ;;; Send Acception
+                MOV BL, F2ScanCode
+                CALL SendByte
                 MOV AcceptGame, 1
                 JMP Return_CheckInvitationsAcception
 
             Return_CheckInvitationsAcception:
                 RET
         ENDP
+        SendGameInvite PROC FAR
+            PUSHA
+                MOV BL, F2ScanCode
+                CALL SendByte
+            POPA
+            RET
+        ENDP
+        SendChatInvite PROC FAR
+            PUSHA
+                MOV BL, F1ScanCode
+                CALL SendByte
+            POPA
+            RET
+        ENDP
+        SendByte PROC  ; data transferred is in BL (8 bits)
+            PUSHA
+            ;Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH		        ; Line Status Register
+            AGAIN:
+                In al, dx 			    ; Read Line Status
+                test al, 00100000b
+            JZ AGAIN                    ; Not empty
+
+            ;If empty put the VALUE in Transmit data register
+            mov dx, 3F8H		        ; Transmit data register
+            mov al, BL
+            out dx, al
+
+            POPA
+            ret
+        SendByte ENDP
+        RecieveByte PROC ; data is saved in BL
+
+            ;Check that Data is Ready
+            mov dx , 3FDH		; Line Status Register
+            CHK_RecieveByte:
+                in al , dx 
+                test al , 1
+            JZ CHK_RecieveByte              ; Not Ready
+
+            ; If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in al , dx 
+            mov bl , al
+
+            Return_RecieveByte:
+                ret
+        RecieveByte ENDP
+        WaitGameAcception PROC FAR
+            WaitGameAccept:
+                CALL RecieveByte
+                CMP BL, F2ScanCode
+                JZ GameAccepted
+                JMP WaitGameAccept
+            GameAccepted:
+                RET
+        ENDP
+        WaitChatAcception PROC FAR
+            WaitChatAccept:
+                CALL RecieveByte
+                CMP BL, F1ScanCode
+                JZ ChatAccepted
+                JMP WaitChatAccept
+            ChatAccepted:
+                RET
+        ENDP
+        ExchangeInfo PROC FAR
+
+            CMP HOST, 1
+            JZ SENDFIRST
+            JMP SENDSECOND
+
+            SENDFIRST:
+
+                lea si, NAMEP1
+                CALL SendMsg
+                LEA DI, NAMEP2
+                CALL RecMsg
+                
+                MOV BL, InitialPointsP1
+                CALL SendByte
+
+                CALL RecieveByte
+                MOV InitialPointsP2, BL
+
+                JMP Finish
+
+            SENDSECOND:
+                LEA DI, NAMEP2
+                CALL RecMsg
+                lea si, NAMEP1
+                CALL SendMsg
+
+                CALL RecieveByte
+                MOV InitialPointsP2, BL
+
+                MOV BL, InitialPointsP1
+                CALL SendByte
+
+
+            Finish:
+            RET
+        ENDP
+        SendMsg PROC  ; Sent string offset is saved in si, ended with '$'
+            SendMessage:
+                CALL SendData
+                inc si
+                mov dl, '$'
+                cmp dl , byte ptr [si]-1
+                jnz SendMessage
+
+            RET
+        SendMsg ENDP
+        SendData PROC  ; data transferred is pointed to by si (8 bits)
+
+            ;Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH		        ; Line Status Register
+            AGAIN_SendData:
+                In al, dx 			    ; Read Line Status
+                test al, 00100000b
+            JZ AGAIN_SendData                    ; Not empty
+
+            ;If empty put the VALUE in Transmit data register
+            mov dx, 3F8H		        ; Transmit data register
+            mov al, [si]
+            out dx, al
+
+            ret
+        SendData ENDP
+        RecMsg PROC     ; Recieved string offset is saved in di
+            RecieveMsg:
+                CALL RecieveByte
+                mov [di], bl
+                inc di
+                cmp bl, '$'
+                jnz RecieveMsg
+
+            RET
+        RecMsg ENDP
+        RecieveData PROC ; data is saved in BL
+
+            ;Check that Data is Ready
+            mov dx , 3FDH		; Line Status Register
+            CHK_RecieveData:
+                in al , dx 
+                test al , 1
+            JZ Return_RecieveData              ; Not Ready
+
+            ; If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in al , dx 
+            mov bl , al
+
+            Return_RecieveData:
+                ret
+        RecieveData ENDP
+        
 END   MAIN
