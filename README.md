@@ -16,7 +16,7 @@ A two player’s processor simulation game and a chatting module made by assembl
 
 # More about the game
 The users should be able to play a two player's processor simulation game. The final target for each player is to put certain value in one of the opponent registers. Players take turns writing assembly commands, and they could use special types of power up to prevent the opponent from reaching the required value.
-The users should be able to communicate with each other using serial communication. The game supported five addressing modes and five errors handling. More about the project in its [document](MP_Project DescriptionA_Fall_2021.pdf).
+The users should be able to communicate with each other using serial communication. The game supported five addressing modes and five errors handling. More about the project in its [document](MP_Project%20DescriptionA_Fall_2021.pdf).
 
 # Environment and tools used
 While developing this project, we have written x86 assembly and ran it using [DosBox](https://www.dosbox.com/download.php?main=1). We used serial connection software to simulate the serial connection between two PCs, more in that in the [Serial Connection section](#Serial-port-communication).
